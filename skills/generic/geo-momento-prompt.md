@@ -15,10 +15,15 @@ omitas nada.
 
 ## ═══ PARTE 1 — REGLA DE ORO ═══
 
-- El texto del HTML debe coincidir **exactamente** con el documento fuente (Word/PDF/AAA).
+- El texto del HTML debe coincidir **exactamente** con el documento fuente (AAA).
   No parafrasees, no resumas, no reorganices párrafos.
+- **El insumo llega convertido a HTML** (no Word en texto plano): **respeta los
+  `<strong>` (negrillas) y los párrafos `<p>` y la puntuación del origen**. No agregues
+  ni quites negrita salvo lo que indiquen estas reglas. No fusiones frases ni pierdas puntos.
 - Los rangos de semanas, el número de avances y los cuestionarios los tomas
   **exclusivamente de la AAA del curso** adjunta. Nunca uses números de otro curso.
+- **No inventes nombres de archivo ni IDs de Moodle**: si no los conoces, emite FLAG
+  `dato-faltante` (no escribas nombres como `Rubrica_Momento_1.pdf`).
 - Si algo no se encuentra o requiere una decisión que no puedes resolver → coloca un
   FLAG (ver Parte 2) y continúa.
 - "Módulo" / "módulos" → reemplaza siempre por "curso" / "cursos".
@@ -93,13 +98,19 @@ del momento completo usando `rowspan` igual al total de filas (avances × 2):
 <td rowspan="4" style="vertical-align: middle; text-align: center;">I <br> 40%</td>
 ```
 
-### 4.3 Datos de la tabla
+### 4.3 Negrita: solo el nombre del avance
+En la fila del avance, **solo** `<strong>Avance N. Nombre:</strong>` va en negrita (con
+dos puntos `:`); la descripción va en texto normal. **No** pongas toda la celda en
+negrita ni uses guion "–" en lugar de los dos puntos. La fila del cuestionario sí va
+completa en `<strong>`.
+
+### 4.4 Datos de la tabla
 Tómalos íntegramente de la AAA: nombres de avances, descripciones, pesos porcentuales,
 rangos de semanas y semanas de entrega.
 
 ---
 
-## ═══ PARTE 5 — PESTAÑAS DE CONTENIDO POR RANGO DE SEMANAS ═══
+## ═══ PARTE 5 — PESTAÑAS DE CONTENIDO (UNA POR SEMANA) ═══
 
 ### 5.1 Una pestaña por SEMANA individual
 
@@ -152,14 +163,28 @@ Cada recurso (bibliográfico o RED) se lista **una única vez**, justo debajo de
 actividad que lo usa. **Prohibido** repetir una lista general de recursos al final
 de la pestaña semanal.
 
-### 6.3 Listas de actividades numeradas
+### 6.3 Títulos de actividades
 
-En listas `1)`, `2)` o `a.`, `b.` separa cada ítem con `<br><br>`. El marcador
+Cada actividad se titula **`Actividad N: Nombre`** en negrita:
+
+```html
+<strong>Actividad 1: Organizador gráfico</strong>
+```
+
+- **Numeración continua por avance** (NO reinicia por semana): si el avance abarca
+  semanas 1-3, las actividades se numeran 1, 2, 3, 4... de corrido a lo largo de esas
+  semanas. El siguiente avance vuelve a empezar en Actividad 1.
+- **Elimina el andamiaje del AAA** como "Título de la actividad": usa solo el nombre real.
+- Corrige mayúscula inicial y tildes ("grafico" → "gráfico", "contexto" → "Contexto").
+
+### 6.4 Listas numeradas dentro de una actividad
+
+En listas de texto `1)`, `2)` o `a.`, `b.` separa cada ítem con `<br><br>`. El marcador
 va **dentro** del `<strong>` de forma consistente en todos los ítems:
 
 ```html
-<strong>a. Título de la actividad.</strong><br><br>
-<strong>b. Título de la siguiente actividad.</strong>
+<strong>a. Enunciado del ítem.</strong><br><br>
+<strong>b. Enunciado del siguiente ítem.</strong>
 ```
 
 ---
@@ -248,9 +273,10 @@ Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo:
 
 ```html
 <li>Autor (Año). Título del recurso. Editorial o fuente.<br>
-<strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong></li>
+<strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
 ```
 
+- **Punto final obligatorio después del enlace** (tras `</strong>`), como en el ejemplo.
 - eLibro y RAE: `rel="noreferrer noopener"`.
 - Proxy eLibro con guion: `elibro-net.ezproxy.udes.edu.co`.
 - Elimina "Lectura requerida." o "Lectura de ampliación temática." pegados a la cita.
@@ -287,6 +313,10 @@ Todo `<li>` de texto termina con `.` (o `:`, `?`, `!` según corresponda).
   ```html
   <strong><a href="@@PLUGINFILE@@/SYLLABUS_NombreCurso.pdf" target="_blank" rel="noopener">Syllabus</a></strong>
   ```
+- **Enlazar CADA mención, no solo la primera**: cada vez que en el texto aparezca el
+  syllabus, la rúbrica, el Anexo, una plantilla/formato o el mapa, esa mención se
+  hipervincula con `@@PLUGINFILE@@`. Si la rúbrica se nombra 4 veces, se enlaza 4 veces.
+- **No inventes el nombre de archivo**: si no lo conoces, FLAG `dato-faltante`.
 - **Prohibido** enlazar a OneDrive, SharePoint o URLs `draftfile.php`.
 
 ---
@@ -306,18 +336,22 @@ Antes de entregar el HTML verifica:
 
 - [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
 - [ ] Primera columna del Momento con `rowspan` total correcto.
-- [ ] Pestañas fusionadas por rango de semanas (de la AAA, no inventadas).
-- [ ] Contenido de semanas consolidado en un único panel por pestaña.
+- [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
+- [ ] Una pestaña por SEMANA individual (no fusionada), con subtítulo del Avance.
+- [ ] Actividades tituladas `Actividad N: Nombre` (numeración continua por avance, sin "Título de la actividad").
 - [ ] Recursos listados una sola vez debajo de su actividad (sin duplicar al final).
 - [ ] Botón de envío al final de la última semana de cada avance; texto con punto final.
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] "Producto Final" aplicado en TODO el HTML (tabla, pestaña, botón, textos).
 - [ ] REDs en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
-- [ ] Citas: texto plano + enlace en `<strong>` debajo.
+- [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
+- [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
+- [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
 - [ ] Sin `<p>` en `<li>`. Sin cursiva. Sin `<br>` entre bloques `p`/`ul`/`ol`.
 - [ ] Máximo `<br><br>` consecutivos.
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
+- [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
 - [ ] Lista de FLAGS entregada al final.
 
 ---
@@ -561,9 +595,12 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
 ## ═══ CÓMO USAR ESTE PROMPT ═══
 
 1. **Pega este prompt completo** como primer mensaje.
-2. **Adjunta o pega** la AAA del curso (tabla de resumen + contenido por semana/actividad).
+2. **Adjunta la AAA convertida a HTML** (no el Word en texto plano). Convierte primero el
+   Word a HTML con el convertidor del proyecto para que se preserven las **negrillas** y
+   la **puntuación**; pegar el Word como texto plano las pierde.
 3. **Indica**:
    - ¿Es Momento 1 o Momento 2?
    - Número del último avance del curso (para aplicar "Producto Final").
-   - IDs de Moodle por avance (`mod/assign/view.php?id=XXXX`) si los tienes.
+   - IDs de Moodle por avance (`mod/assign/view.php?id=XXXX`) y nombres de archivo si los
+     tienes (si no, la IA emitirá FLAG `dato-faltante`).
 4. **Pide**: "Genera el HTML del Momento Evaluativo N."

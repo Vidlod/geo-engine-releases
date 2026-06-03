@@ -61,6 +61,12 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 - Siempre en negrita (`<strong>`) y abriendo en pestaña nueva.
 - **Prohibido** enlazar a OneDrive/SharePoint o URLs temporales `draftfile.php`.
 - Si el archivo aún no existe, emite FLAG `red-sin-archivo` y deja solo el título en negrita.
+- **Enlazar CADA mención (no solo la primera)**: cada vez que el texto nombre el
+  syllabus, la rúbrica, la AAA, un Anexo, una plantilla/formato o el mapa, esa mención
+  va hipervinculada con `@@PLUGINFILE@@`. Si aparece 4 veces, se enlaza las 4 veces.
+- **No inventes nombres de archivo.** Si no conoces el nombre exacto (p. ej. la rúbrica
+  o el ID de Moodle), NO inventes uno como `Rubrica_Momento_1.pdf`: emite FLAG
+  `dato-faltante` indicando el archivo que falta.
 
 ## 4. Recursos Educativos Digitales (RED)
 
@@ -87,10 +93,11 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 ## 5. Citas bibliográficas
 
 - Texto de la cita en **plano** (sin negrita ni cursiva), una cita por `<li>`.
-- Enlace debajo, separado por `<br>`, visible y en negrita:
+- Enlace debajo, separado por `<br>`, visible y en negrita.
+- **Punto final obligatorio DESPUÉS del enlace** (tras `</strong>`):
 
 ```html
-<li>Autor (Año). Título...<br><strong><a href="URL" target="_blank" rel="noopener">URL</a></strong></li>
+<li>Autor (Año). Título...<br><strong><a href="URL" target="_blank" rel="noopener">URL</a></strong>.</li>
 ```
 
 - Quitar textos pegados como "Lectura requerida." o "Lectura de ampliación temática.".
@@ -129,3 +136,29 @@ python cli.py check "ruta/al/archivo.html" -v        # reporta lo que queda
 - `check` lista errores/advertencias; resuélvelos antes de dar por terminado.
 - Si **no** puedes ejecutar shell, aplica manualmente la lista de la sección 2.
 - El linter es la autoridad sobre las reglas mecánicas: no las repliques a mano si el linter corre.
+
+## 9. Insumo en HTML: respeta las negrillas del origen
+
+El insumo llega **convertido a HTML** (no Word en texto plano). Por tanto:
+
+- **Respeta los `<strong>` del origen**: lo que venga en negrita en el HTML de origen va
+  en negrita en el resultado (salvo las excepciones de las reglas: las citas
+  bibliográficas van en texto plano, sección 5).
+- **Respeta la puntuación y los párrafos `<p>` del origen**: no fusiones frases ni
+  elimines puntos. Cada `<p>` del origen es un párrafo aparte.
+- No agregues negrita donde el origen no la tiene, ni la quites donde sí la tiene.
+
+## 10. Títulos de actividades
+
+Las actividades se titulan **`Actividad N: Nombre`** en negrita:
+
+```html
+<strong>Actividad 1: Organizador gráfico</strong>
+```
+
+- **Numeración continua por avance** (no reinicia por semana): si un avance abarca varias
+  semanas, las actividades se numeran 1, 2, 3, 4... de corrido a lo largo de esas semanas.
+- **Elimina el texto de andamiaje del AAA** como "Título de la actividad": usa solo el
+  nombre real de la actividad.
+- Corrige mayúscula inicial y tildes del nombre (p. ej. "grafico" → "gráfico",
+  "contexto" → "Contexto").

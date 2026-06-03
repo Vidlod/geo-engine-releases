@@ -36,6 +36,10 @@ citas, "Producto Final" y uso del linter).
    - **Fusión rowspan**: las columnas "Duración Semana" y "Semana de Entrega" que
      comparten avance + cuestionario se fusionan con `rowspan="2"` (o el nº de filas).
      No repitas la misma semana en filas separadas.
+   - **Negrita solo en el nombre del avance**, NO en toda la celda:
+     `<strong>Avance 1. Recolección de datos:</strong> Informe con la elaboración...`
+     (el nombre con dos puntos `:` en negrita; la descripción en texto normal).
+     La fila del cuestionario sí va completa en `<strong>`.
 2. **Pestañas de contenido: una pestaña por SEMANA individual.** Cada semana tiene su
    propia pestaña, con el nombre de la semana y el número de su Avance en el subtítulo,
    p. ej. `Semana 1 / Avance 1`, `Semana 2 / Avance 1`, `Semana 3 / Avance 1`,

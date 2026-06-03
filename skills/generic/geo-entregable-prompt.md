@@ -14,10 +14,15 @@ las reglas que se detallan a continuación. No inventes, no parafrasees, no omit
 
 ## ═══ PARTE 1 — REGLA DE ORO ═══
 
-- El texto del HTML debe coincidir **exactamente** con el documento fuente (Word/PDF).
-  No parafrasees, no resumeas, no reorganices párrafos.
+- El texto del HTML debe coincidir **exactamente** con el documento fuente.
+  No parafrasees, no resumas, no reorganices párrafos.
+- **El insumo llega convertido a HTML** (no Word en texto plano): **respeta los
+  `<strong>` (negrillas), los párrafos `<p>` y la puntuación del origen**. No agregues
+  ni quites negrita salvo lo que indiquen estas reglas; no fusiones frases ni pierdas puntos.
 - Si algo **no se encuentra** en el documento o requiere una decisión que no puedes
   resolver, **no asumas ni inventes**: coloca un FLAG (ver Parte 2) y continúa.
+- **No inventes nombres de archivo ni IDs de Moodle**: si no los conoces, FLAG
+  `dato-faltante` (no escribas nombres genéricos como `Rubrica_Momento_1.pdf`).
 - Si el documento dice "Módulo" o "módulos" → reemplaza siempre por "curso" / "cursos"
   (minúscula, salvo inicio de oración o título).
 - Elimina cualquier mención a "a través del tablero de anotaciones" o
@@ -77,6 +82,11 @@ tomada de la columna "Nombre del entregable" de la tabla de la AAA:
 - Pestaña 1: **"Forma de entrega"** (si la plantilla dice "Formato de entrega" → corrígelo).
 - Pestaña 2: **"Tenga en cuenta"**.
 - El contenido de cada pestaña se toma del documento fuente tal como está.
+
+### 3.4 Títulos de actividades (dentro de "Forma de entrega")
+Cada actividad se titula **`Actividad N: Nombre`** en negrita (numeración continua del
+entregable). Elimina el andamiaje del AAA como "Título de la actividad" y corrige
+mayúsculas/tildes. Ejemplo: `<strong>Actividad 1: Organizador gráfico</strong>`.
 
 ---
 
@@ -172,10 +182,11 @@ abriendo en pestaña nueva:
 ## ═══ PARTE 8 — CITAS BIBLIOGRÁFICAS ═══
 
 - Texto de la cita: **plano**, sin negrita ni cursiva, una cita por viñeta `<li>`.
-- Enlace: debajo, separado por `<br>`, visible y **en negrita**:
+- Enlace: debajo, separado por `<br>`, visible y **en negrita**, con **punto final
+  después** del enlace (tras `</strong>`):
   ```html
   <li>Autor (Año). Título del libro o artículo. Editorial.<br>
-  <strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong></li>
+  <strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
   ```
 - Para enlaces de eLibro (proxy UDES), usar `rel="noreferrer noopener"`.
 - Para RAE: `rel="noreferrer noopener"`.
@@ -225,6 +236,8 @@ marcador va **dentro** del `<strong>`:
   ```html
   <strong><a href="@@PLUGINFILE@@/SYLLABUS_NombreCurso.pdf" target="_blank" rel="noopener">Syllabus</a></strong>
   ```
+- **Enlazar CADA mención, no solo la primera**: cada aparición en el texto de syllabus,
+  rúbrica, AAA, Anexo, plantilla/formato o mapa se hipervincula con `@@PLUGINFILE@@`.
 
 ---
 
@@ -246,14 +259,18 @@ Antes de entregar el HTML verifica:
 - [ ] `<h5>` subtítulo tomado textualmente de la AAA, sin duplicar en "Forma de entrega".
 - [ ] Regla "Documento:" aplicada correctamente (o con FLAG).
 - [ ] Pestañas: "Forma de entrega" (no "Formato") y "Tenga en cuenta".
+- [ ] Actividades tituladas `Actividad N: Nombre` (sin "Título de la actividad").
 - [ ] Párrafo de envío como último párrafo, encima del botón.
 - [ ] Botón de envío con punto final en el texto.
 - [ ] Todos los RED en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
-- [ ] Citas: texto plano + enlace visible en `<strong>` debajo.
+- [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
+- [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
+- [ ] Negrillas del origen respetadas; puntuación y párrafos sin fusionar.
 - [ ] Sin `<p>` dentro de `<li>`. Sin cursiva. Sin `<br>` entre bloques `p`/`ul`/`ol`.
 - [ ] Máximo `<br><br>` consecutivos.
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
+- [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
 - [ ] Lista de FLAGS entregada al final.
 
 ---
@@ -334,9 +351,12 @@ placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria
 ## ═══ CÓMO USAR ESTE PROMPT ═══
 
 1. **Pega este prompt completo** como primer mensaje.
-2. **Adjunta o pega el contenido** del Word/PDF del entregable.
+2. **Adjunta el entregable convertido a HTML** (no el Word en texto plano). Convierte
+   primero el Word con el convertidor del proyecto para preservar **negrillas** y
+   **puntuación**; el texto plano las pierde.
 3. **Indica** (si los tienes):
    - Descripción del entregable de la AAA (columna "Nombre del entregable").
-   - ID de Moodle del botón de envío (`mod/assign/view.php?id=XXXX`).
+   - ID de Moodle del botón de envío (`mod/assign/view.php?id=XXXX`) y nombres de archivo
+     (si no, la IA emitirá FLAG `dato-faltante`).
    - Número de avance y si es el último avance del curso.
 4. **Pide**: "Genera el HTML del Entregable/Avance N."
