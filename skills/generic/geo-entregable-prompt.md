@@ -258,6 +258,79 @@ Antes de entregar el HTML verifica:
 
 ---
 
+## ═══ PARTE 13 — ESQUELETO HTML REAL (NO MODIFICAR LA ESTRUCTURA) ═══
+
+El HTML que generes **debe respetar exactamente** este esqueleto. Solo reemplaza los
+placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria-*` ni
+`data-toggle`.
+
+```html
+<!-- TÍTULO: "Avance N" o "Producto Final" si es el último avance del curso -->
+<h3><span class="nolink">Avance [N]</span></h3>
+
+<!-- SUBTÍTULO: tipo + descripción exacta de la AAA. NO duplicar en "Forma de entrega". -->
+<h5>[Tipo]: <span style="">[Descripción exacta de la AAA.]</span></h5><br>
+
+<!-- CABECERA "DOCUMENTO:" solo si el PDF del entregable inicia con esa palabra.
+     Si no aparece, NO incluir y poner ese párrafo dentro de "Forma de entrega". -->
+<!-- <h5>Documento: <span style="">[Texto.]</span></h5> -->
+
+<div>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="forma-tab" data-toggle="tab" href="#forma"
+                role="tab" aria-controls="forma" aria-selected="true" tabindex="0">
+                Forma de entrega
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="tengaencuenta-tab" data-toggle="tab" href="#tengaencuenta"
+                role="tab" aria-controls="tengaencuenta" aria-selected="false" tabindex="-1">
+                Tenga en cuenta
+            </a>
+        </li>
+    </ul>
+    <div class="tab-content">
+
+        <!-- PESTAÑA 1: FORMA DE ENTREGA -->
+        <div class="tab-pane fade active show" id="forma" role="tabpanel" aria-labelledby="forma-tab">
+            <div class="card-body">
+                <p style="text-align: justify;">[Instrucciones del entregable, exactas del PDF.]</p>
+                <ul>
+                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
+                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
+                </ul>
+                <!-- PÁRRAFO DE ENVÍO: siempre el último párrafo antes del botón -->
+                <p style="text-align: justify;">[Párrafo de envío: "Envíe el documento en formato PDF..."]</p>
+                <!-- BOTÓN: centrado, con punto final -->
+                <br><br>
+                <div style="text-align: center;">
+                    <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
+                        <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                        </button>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 2: TENGA EN CUENTA -->
+        <div class="tab-pane fade" id="tengaencuenta" role="tabpanel" aria-labelledby="tengaencuenta-tab">
+            <div class="card-body">
+                <ul>
+                    <li style="margin-bottom: 10px;">[Condición formal 1.]</li>
+                    <li style="margin-bottom: 10px;">[Condición formal 2.]</li>
+                    <li style="margin-bottom: 10px;">[Condición formal 3.]</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+```
+
+---
+
 ## ═══ CÓMO USAR ESTE PROMPT ═══
 
 1. **Pega este prompt completo** como primer mensaje.

@@ -1,0 +1,100 @@
+<!--
+  ESQUELETO ESTRUCTURAL — Entregable / Avance (GEO · Moodle UDES)
+  ================================================================
+  Este archivo contiene la estructura HTML real que usa Moodle.
+  El contenido es PLACEHOLDER (marcado con [MAYÚSCULAS]).
+  Reemplaza cada placeholder con la información del curso actual.
+  NO cambies las clases CSS, los atributos Bootstrap ni la jerarquía de etiquetas.
+-->
+
+<!-- TÍTULO PRINCIPAL: "Avance N" o "Producto Final" si es el último avance del curso -->
+<h3><span class="nolink">Avance [N]</span></h3>
+
+<!-- SUBTÍTULO: tomado EXACTAMENTE de la AAA columna "Nombre del entregable".
+     Estructura: Tipo de entregable: Descripción.
+     NO duplicar este texto dentro de la pestaña "Forma de entrega". -->
+<h5>[Tipo de entregable]: <span style="">[Descripción exacta del entregable tomada de la AAA.]</span></h5><br>
+
+<!-- CABECERA "DOCUMENTO:" — SOLO si el PDF del entregable inicia con la palabra
+     "Documento." o "Documento:". Si no aparece esa palabra, NO incluir este bloque
+     y poner ese primer párrafo dentro de la pestaña "Forma de entrega". -->
+<!-- <h5>Documento: <span style="">[Texto del documento.]</span></h5> -->
+
+<div>
+    <!-- NAV-TABS: dos pestañas fijas para todo entregable -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <!-- PESTAÑA 1: siempre "Forma de entrega" (corregir si dice "Formato de entrega") -->
+            <a class="nav-link active" id="forma-tab" data-toggle="tab" href="#forma"
+                role="tab" aria-controls="forma" aria-selected="true" tabindex="0">
+                Forma de entrega
+            </a>
+        </li>
+        <li class="nav-item">
+            <!-- PESTAÑA 2: siempre "Tenga en cuenta" -->
+            <a class="nav-link" id="tengaencuenta-tab" data-toggle="tab" href="#tengaencuenta"
+                role="tab" aria-controls="tengaencuenta" aria-selected="false" tabindex="-1">
+                Tenga en cuenta
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ─────────────────────────────────────────────────────────────
+             PESTAÑA 1: FORMA DE ENTREGA
+             Contiene las instrucciones del entregable del documento PDF/Word.
+             El párrafo de envío va SIEMPRE como último párrafo, encima del botón.
+             ───────────────────────────────────────────────────────────── -->
+        <div class="tab-pane fade active show" id="forma" role="tabpanel" aria-labelledby="forma-tab">
+            <div class="card-body">
+
+                <!-- Si el PDF NO tiene cabecera "Documento:", el primer párrafo va aquí -->
+                <p style="text-align: justify;">[Primer párrafo de instrucciones del entregable, exacto del PDF.]</p>
+
+                <!-- Párrafos adicionales de instrucciones, si los hay -->
+                <p style="text-align: justify;">[Segundo párrafo de instrucciones, si aplica.]</p>
+
+                <!-- Lista de actividades del entregable, si aplica -->
+                <ul>
+                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre de la actividad]:</strong> [Descripción de la actividad.]</li>
+                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre de la actividad]:</strong> [Descripción de la actividad.]</li>
+                    <!-- tantas actividades como indique el PDF -->
+                </ul>
+
+                <!-- PÁRRAFO DE ENVÍO: siempre el ÚLTIMO párrafo antes del botón -->
+                <p style="text-align: justify;">[Párrafo de envío: "Envíe el documento en formato PDF en las fechas establecidas." — texto exacto del PDF.]</p>
+
+                <!-- BOTÓN DE ENVÍO: centrado, con punto final en el texto.
+                     Reemplaza [ID] por el número de la tarea en Moodle.
+                     Si no tienes el ID: FLAG dato-faltante -->
+                <!-- FLAG: dato-faltante Falta el ID de la tarea Moodle para el botón del Avance [N] -->
+                <br><br>
+                <div style="text-align: center;">
+                    <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
+                        <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                        </button>
+                    </a>
+                </div>
+
+            </div>
+        </div><!-- /forma -->
+
+        <!-- ─────────────────────────────────────────────────────────────
+             PESTAÑA 2: TENGA EN CUENTA
+             Condiciones formales de entrega del entregable.
+             ───────────────────────────────────────────────────────────── -->
+        <div class="tab-pane fade" id="tengaencuenta" role="tabpanel" aria-labelledby="tengaencuenta-tab">
+            <div class="card-body">
+                <ul>
+                    <li style="margin-bottom: 10px;">[Condición formal 1, exacta del PDF.]</li>
+                    <li style="margin-bottom: 10px;">[Condición formal 2, exacta del PDF.]</li>
+                    <li style="margin-bottom: 10px;">[Condición formal 3, exacta del PDF.]</li>
+                    <!-- tantas condiciones como indique el PDF -->
+                </ul>
+            </div>
+        </div><!-- /tengaencuenta -->
+
+    </div><!-- /tab-content -->
+</div>

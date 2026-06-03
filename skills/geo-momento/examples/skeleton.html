@@ -1,0 +1,256 @@
+<!--
+  ESQUELETO ESTRUCTURAL — Momento Evaluativo (GEO · Moodle UDES)
+  ================================================================
+  Este archivo contiene la estructura HTML real que usa Moodle.
+  El contenido es PLACEHOLDER (marcado con [MAYÚSCULAS]).
+  Reemplaza cada placeholder con la información del curso actual.
+  NO cambies las clases CSS, los atributos Bootstrap ni la jerarquía de etiquetas.
+-->
+
+<section class="py-1 header">
+    <div class="container py-4">
+        <header class="text-center mb-1 pb-1 text-white"></header>
+        <div class="row">
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 COLUMNA IZQUIERDA: navegación vertical (nav-pills)
+                 Una entrada por sección del momento.
+                 El último enlace activo lleva class="nav-link mb-3 p-3 shadow border active"
+                 Los demás llevan class="nav-link mb-3 p-3 shadow border" y tabindex="-1"
+                 ═══════════════════════════════════════════════════════════ -->
+            <div class="col-md-3">
+                <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab"
+                    role="tablist" aria-orientation="vertical">
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-home-tab"
+                        data-toggle="pill" href="#v-pills-home" role="tab"
+                        aria-controls="v-pills-home" aria-selected="false" tabindex="-1">
+                        <i class="fa fa-calendar-check-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">RESUMEN DE ENTREGAS</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile-tab"
+                        data-toggle="pill" href="#v-pills-profile" role="tab"
+                        aria-controls="v-pills-profile" aria-selected="false" tabindex="-1">
+                        <i class="fa fa-bars mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">DESCRIPCIÓN GENERAL</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile1-tab"
+                        data-toggle="pill" href="#v-pills-profile1" role="tab"
+                        aria-controls="v-pills-profile1" aria-selected="false" tabindex="-1">
+                        <i class="fa fa-check-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">INSTRUMENTO DE EVALUACIÓN</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile2-tab"
+                        data-toggle="pill" href="#v-pills-profile2" role="tab"
+                        aria-controls="v-pills-profile2" aria-selected="false" tabindex="-1">
+                        <i class="fa fa-share-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">INSTRUMENTO PARA ENVIAR ENTREGABLE</span>
+                    </a>
+
+                    <!-- TÍTULO DE LA ÚLTIMA PESTAÑA: "CONTENIDO DE LOS ENTREGABLES X Y Z"
+                         Ajusta los números según los avances del momento. Esta pestaña
+                         es la activa por defecto (active, aria-selected="true", tabindex="0") -->
+                    <a class="nav-link mb-3 p-3 shadow border active" id="v-pills-settings-tab"
+                        data-toggle="pill" href="#v-pills-settings" role="tab"
+                        aria-controls="v-pills-settings" aria-selected="true" tabindex="0">
+                        <i class="fa fa-pencil-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">CONTENIDO DE LOS ENTREGABLES [N] Y [N]</span>
+                    </a>
+
+                </div>
+            </div><!-- /col-md-3 -->
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 COLUMNA DERECHA: contenido de cada pestaña (tab-content)
+                 ═══════════════════════════════════════════════════════════ -->
+            <div class="col-md-9">
+                <div class="tab-content" id="v-pills-tabContent">
+
+                    <!-- ─────────────────────────────────────────────────────
+                         PESTAÑA 1: RESUMEN DE ENTREGAS
+                         ───────────────────────────────────────────────────── -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5"
+                        id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+                        <h4 class="mb-4">Resumen de Entregas</h4>
+                        <div style="text-align: center;">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Momento Evaluativo</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Duración Semana</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Entregable</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;" nowrap="">Peso %</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Semana de Entrega</th>
+                                    </tr>
+                                    <!-- AVANCE 1 + su cuestionario: rowspan="4" en Momento (total filas = avances x 2) -->
+                                    <tr>
+                                        <td rowspan="4" style="vertical-align: middle; text-align: center;">[MOMENTO N] <br>[X]%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[SEMANAS AVANCE 1]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre del avance:]</strong> [Descripción del avance tomada de la AAA.]</td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[SEMANA ENTREGA]</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación – Unidad N - Nombre de unidad]</strong></td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                    </tr>
+                                    <!-- AVANCE 2 + su cuestionario -->
+                                    <tr>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[SEMANAS AVANCE 2]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre del avance:]</strong> [Descripción del avance tomada de la AAA.]</td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[SEMANA ENTREGA]</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación - Unidad N – Nombre de unidad]</strong></td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                    </tr>
+                                    <!-- Repite el bloque de 2 filas por cada avance adicional del momento -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────────
+                         PESTAÑA 2: DESCRIPCIÓN GENERAL
+                         ───────────────────────────────────────────────────── -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5"
+                        id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                        <h4 class="mb-4">Descripción General</h4>
+                        <p style="text-align: justify;">[Párrafo introductorio del momento: qué debe entregar el estudiante, en qué formato, etc. Texto exacto de la AAA.]</p>
+                        <p style="text-align: justify;"><strong>[Título de condiciones formales, si aplica.]</strong></p>
+                        <ul>
+                            <li style="margin-bottom: 10px;">[Condición formal 1.]</li>
+                            <li style="margin-bottom: 10px;">[Condición formal 2.]</li>
+                            <!-- tantas viñetas como indique la AAA -->
+                        </ul>
+                        <p style="text-align: justify;">[Párrafo de contextualización del curso / problemática, si aplica.]</p>
+                        <p style="text-align: justify;">[Párrafo de REDs generales del momento, si aplica.]</p>
+                        <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
+                        <p style="text-align: justify;">[Instrucciones de los formatos de plantilla a usar, con enlaces @@PLUGINFILE@@.]</p>
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────────
+                         PESTAÑA 3: INSTRUMENTO DE EVALUACIÓN (Rúbrica)
+                         ───────────────────────────────────────────────────── -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5"
+                        id="v-pills-profile1" role="tabpanel" aria-labelledby="v-pills-profile1-tab">
+                        <h4 class="mb-4">Instrumento de Evaluación</h4>
+                        <strong><a href="@@PLUGINFILE@@/[NOMBRE_RUBRICA.pdf]" target="_blank" rel="noopener">
+                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                                <i class="fa fa fa-file-pdf-o fa-lg"></i> Rúbrica
+                            </button>
+                        </a></strong>
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────────
+                         PESTAÑA 4: INSTRUMENTO PARA ENVIAR ENTREGABLE
+                         Un botón por cada avance del momento (sin punto final en estos botones).
+                         ───────────────────────────────────────────────────── -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5"
+                        id="v-pills-profile2" role="tabpanel" aria-labelledby="v-pills-profile2-tab">
+                        <h4 class="mb-4">Instrumento para Enviar Entregable</h4>
+                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener">
+                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
+                            </button>
+                        </a>
+                        <p></p>
+                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener">
+                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
+                            </button>
+                        </a>
+                        <!-- Repite un <a><button> por cada avance adicional del momento.
+                             El último avance del ÚLTIMO momento dice "Producto Final" en lugar de "Avance N". -->
+                    </div>
+
+                    <!-- ─────────────────────────────────────────────────────
+                         PESTAÑA 5: CONTENIDO DE LOS ENTREGABLES
+                         Esta pestaña es la activa por defecto (active show).
+                         Contiene nav-tabs horizontales, una pestaña por RANGO de semanas.
+                         ───────────────────────────────────────────────────── -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5 active show"
+                        id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">
+                        <h4 class="mb-4">Contenido de los Entregables [N] y [N]</h4>
+                        <div>
+                            <!-- NAV-TABS HORIZONTALES: una pestaña por rango de semanas (por avance).
+                                 NO una pestaña por semana individual.
+                                 La primera pestaña lleva class="nav-link active" y aria-selected="true".
+                                 Las demás llevan class="nav-link" y tabindex="-1". -->
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="semana1-tab" data-toggle="tab"
+                                        href="#semana1" role="tab" aria-controls="semana1" aria-selected="true">
+                                        Semanas [X - Y] <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana2-tab" data-toggle="tab"
+                                        href="#semana2" role="tab" aria-controls="semana2"
+                                        aria-selected="false" tabindex="-1">
+                                        Semanas [X - Y] <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                    </a>
+                                </li>
+                                <!-- Repite <li class="nav-item"> por cada avance adicional del momento -->
+                            </ul>
+
+                            <div class="tab-content" id="myTabContent">
+
+                                <!-- PANEL DE SEMANAS DEL AVANCE 1 (active show) -->
+                                <div class="tab-pane fade active show" id="semana1"
+                                    role="tabpanel" aria-labelledby="semana1-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">[Texto introductorio de la semana / avance. Texto exacto de la AAA.]</p>
+                                        <p style="text-align: justify;"><strong>[Actividad N: Nombre de la actividad.]</strong></p>
+                                        <p style="text-align: justify;">[Instrucciones de la actividad. Texto exacto de la AAA.]</p>
+                                        <!-- Recursos de esta actividad inmediatamente debajo, sin <br> entre </p> y <ul> -->
+                                        <ul>
+                                            <li style="margin-bottom: 10px;">[Cita o RED 1.]</li>
+                                            <li style="margin-bottom: 10px;">[Cita o RED 2.]</li>
+                                        </ul>
+                                        <!-- Más actividades del mismo rango de semanas, siguiendo el mismo patrón -->
+                                        <!-- Párrafo de envío: SOLO en la última semana del avance -->
+                                        <p style="text-align: justify;">[Párrafo de envío: "Realice la entrega del entregable en la plataforma..."]</p>
+                                        <!-- Botón: SOLO al final de la última semana del avance -->
+                                        <br><br>
+                                        <div style="text-align: center;">
+                                            <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" target="_blank" rel="noopener">
+                                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL DE SEMANAS DEL AVANCE 2 -->
+                                <div class="tab-pane fade" id="semana2"
+                                    role="tabpanel" aria-labelledby="semana2-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">[Texto introductorio del avance 2.]</p>
+                                        <!-- ... actividades, recursos, párrafo de envío y botón ... -->
+                                        <br><br>
+                                        <div style="text-align: center;">
+                                            <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" target="_blank" rel="noopener">
+                                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                                                </button>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Repite <div class="tab-pane fade"> por cada avance adicional -->
+
+                            </div><!-- /tab-content -->
+                        </div>
+                    </div><!-- /v-pills-settings -->
+
+                </div><!-- /tab-content principal -->
+            </div><!-- /col-md-9 -->
+        </div><!-- /row -->
+    </div><!-- /container -->
+</section>
