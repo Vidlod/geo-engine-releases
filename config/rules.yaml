@@ -1,0 +1,56 @@
+# Configuración del linter geo-engine.
+# Si PyYAML no está instalado, se usan los defaults embebidos en geo_engine/config.py.
+# Cambiar reglas aquí NO requiere tocar el código.
+
+rules:
+  max-br:
+    enabled: true
+    max: 2                      # máximo de <br> consecutivos
+
+  br-before-close:
+    enabled: true
+    tags: [li, ul, ol, div]     # no permitir <br> antes de cerrar estas etiquetas
+
+  br-between-blocks:
+    enabled: true
+    blocks: [p, ul, ol]         # sin <br> entre estos bloques (acotado: no afecta el botón <div>)
+
+  max-spaces:
+    enabled: true
+    max: 2                      # máximo de espacios consecutivos (sin contar indentación)
+
+  terminology-module:
+    enabled: true               # "módulo" -> "curso"
+
+  emoticon-span:
+    enabled: true
+    chars: [y, x]               # caracteres a envolver en <span>
+
+  link-target:
+    enabled: true
+    rel: noopener               # rel por defecto al añadir a enlaces sin él
+
+  elibro-proxy:
+    enabled: true               # corrige elibronet -> elibro-net
+
+  tablero-anotaciones:
+    enabled: true               # elimina la frase prohibida
+
+  no-italics:
+    enabled: true
+    remove_i: false             # true para eliminar también <i> (ojo: puede ser ícono)
+
+  li-paragraph:
+    enabled: true               # detecta <p> dentro de <li>
+
+  li-period:
+    enabled: true
+    endings: [".", ":", "?", "!"]
+
+  producto-final:
+    enabled: true
+    # last_avance se toma de config/course.yaml (course.last_avance).
+    # Puedes fijarlo aquí para forzar un valor; si lo dejas vacío, manda course.yaml.
+    last_avance: null
+    case_insensitive: false       # true para también capturar "avance N" en minúscula
+    replacement: "Producto Final"

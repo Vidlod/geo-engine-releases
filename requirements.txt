@@ -1,0 +1,9 @@
+# El núcleo del linter funciona SIN dependencias (usa defaults embebidos).
+# PyYAML habilita los archivos de config: rules.yaml y course.yaml (este último es
+# necesario para la regla `producto-final`, que lee course.last_avance).
+PyYAML>=6.0
+
+# Fase 2 (motor de plantillas) — descomentar cuando se implemente:
+# mammoth>=1.6      # conversión Word -> HTML
+# Flask>=3.0        # web app para compañeros no técnicos
+# openpyxl>=3.1     # lectura de glosario en Excel

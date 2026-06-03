@@ -1,0 +1,41 @@
+# Datos del curso actual (los usan las skills y, en Fase 2, el motor de plantillas).
+# Ejemplo basado en el curso de Estadística Descriptiva.
+
+course:
+  name: "Estadística Descriptiva"
+
+  # Nomenclatura "Producto Final": el último avance del último momento se renombra
+  # globalmente a "Producto Final". Aquí, Momento 2 / Avance 5.
+  last_momento: 2
+  last_avance: 5            # en TODO el HTML, "Avance 5" -> "Producto Final"
+
+  files:
+    syllabus: "SYLLABUS_Estadística_Descriptiva.pdf"
+    instrucciones: "Instrucciones_Generales_Estadistica.pdf"
+    rubrica_1: "Rubrica1_Estadística_Descriptiva.pdf"
+    rubrica_2: "Rubrica2Estadística_Descriptiva.pdf"
+    mapa: "Mapa_Curso_Estadística.pdf"
+    anexo_1: "Anexo1_Base_de_datos.xlsx"
+
+  # Rangos de semanas por avance (varían por curso; tomar de la AAA).
+  # El botón de envío va en la ÚLTIMA semana de cada avance (week_boton).
+  momentos:
+    1:
+      avances:
+        - { nombre: "Avance 1", semanas: "1 - 3", week_boton: 3 }
+        - { nombre: "Avance 2", semanas: "4 - 5", week_boton: 5 }
+    2:
+      avances:
+        - { nombre: "Avance 3",       semanas: "6 - 7",   week_boton: 7 }
+        - { nombre: "Avance 4",       semanas: "8 - 9",   week_boton: 9 }
+        - { nombre: "Producto Final", semanas: "10 - 12", week_boton: 12 }  # era "Avance 5"
+
+  # URLs de tareas de Moodle (mod/assign). Fuente ÚNICA: las usan tanto los botones de
+  # envío de los Momentos como los enlaces de la Línea del Tiempo.
+  # El número (id=XXXX) es el identificador interno de la tarea en Moodle.
+  moodle_assign:
+    avance_1:       "https://virtual.udes.edu.co/mod/assign/view.php?id=3940"
+    avance_2:       "https://virtual.udes.edu.co/mod/assign/view.php?id=3950"
+    avance_3:       "https://virtual.udes.edu.co/mod/assign/view.php?id=3951"
+    avance_4:       "https://virtual.udes.edu.co/mod/assign/view.php?id=3952"
+    producto_final: "https://virtual.udes.edu.co/mod/assign/view.php?id=3953"
