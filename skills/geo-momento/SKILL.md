@@ -36,11 +36,11 @@ citas, "Producto Final" y uso del linter).
    - **Fusión rowspan**: las columnas "Duración Semana" y "Semana de Entrega" que
      comparten avance + cuestionario se fusionan con `rowspan="2"` (o el nº de filas).
      No repitas la misma semana en filas separadas.
-2. **Pestañas de contenido por rango de semanas** (NO una pestaña por semana suelta si
-   pertenecen al mismo avance). Fusiónalas en una sola pestaña por avance, p. ej.
-   "Semanas 1 - 3", "Semanas 4 - 5" (Momento 1); "Semanas 6 - 7", "Semanas 8 - 9",
-   "Semanas 10 - 12" (Momento 2). **Deriva los rangos de la AAA**, no los inventes.
-   Consolida todo el contenido de esas semanas en un único panel.
+2. **Pestañas de contenido: una pestaña por SEMANA individual.** Cada semana tiene su
+   propia pestaña, con el nombre de la semana y el número de su Avance en el subtítulo,
+   p. ej. `Semana 1 / Avance 1`, `Semana 2 / Avance 1`, `Semana 3 / Avance 1`,
+   `Semana 4 / Avance 2`, `Semana 5 / Avance 2`. El número total de pestañas = total
+   de semanas del momento (tomado de la AAA). No fusiones ni agrupes.
 3. **Botón de envío** centrado al final de la **última semana de cada avance**
    (formato estándar de Moodle, con `mod/assign/view.php?id=...`).
 4. **Pestaña "Instrumento para Enviar Entregable"**: tantos botones como avances tenga
@@ -77,7 +77,7 @@ citas, "Producto Final" y uso del linter).
 ## Hecho cuando
 
 - [ ] Tabla de Resumen con fusión `rowspan` correcta (avance + cuestionario).
-- [ ] Pestañas fusionadas por rango de semanas (derivadas de la AAA / `course.yaml`).
+- [ ] Una pestaña por semana individual, con nombre `Semana N` y subtítulo `Avance N`.
 - [ ] Botón de envío en la última semana de cada avance; texto con punto final.
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] Producto Final aplicado globalmente; recursos sin duplicar.

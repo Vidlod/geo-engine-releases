@@ -101,18 +101,21 @@ rangos de semanas y semanas de entrega.
 
 ## ═══ PARTE 5 — PESTAÑAS DE CONTENIDO POR RANGO DE SEMANAS ═══
 
-### 5.1 Una pestaña por avance (NO por semana individual)
+### 5.1 Una pestaña por SEMANA individual
 
-Queda **prohibido** tener una pestaña separada por cada semana. Las semanas que
-pertenecen al mismo avance se fusionan en una única pestaña con el rango:
+Cada semana tiene su **propia pestaña**. El texto de la pestaña es el número de semana
+(`Semana 1`, `Semana 2`, etc.) y el subtítulo `<small>` indica el avance al que
+pertenece. Total de pestañas = total de semanas del momento.
 
-| Avance | Ejemplo de nombre de pestaña |
+| Pestaña | Subtítulo |
 |---|---|
-| Avance 1 (semanas 1-3) | `Semanas 1 - 3` |
-| Avance 2 (semanas 4-5) | `Semanas 4 - 5` |
-| Avance 3 (semanas 6-7) | `Semanas 6 - 7` |
+| `Semana 1` | `Avance 1` |
+| `Semana 2` | `Avance 1` |
+| `Semana 3` | `Avance 1` |
+| `Semana 4` | `Avance 2` |
+| `Semana 5` | `Avance 2` |
 
-Los rangos exactos los tomas de la AAA del curso.
+El número de semanas y su asignación a cada avance se toman de la AAA del curso.
 
 ### 5.2 Estructura de las pestañas (Bootstrap nav-tabs)
 
@@ -473,49 +476,59 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                         id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">
                         <h4 class="mb-4">Contenido de los Entregables [N] y [N]</h4>
                         <div>
-                            <!-- Nav-tabs horizontales: una pestaña por RANGO de semanas (por avance) -->
+                            <!-- Nav-tabs horizontales: UNA PESTAÑA POR SEMANA INDIVIDUAL -->
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
                                 <li class="nav-item">
                                     <a class="nav-link active" id="semana1-tab" data-toggle="tab"
                                         href="#semana1" role="tab" aria-controls="semana1" aria-selected="true">
-                                        Semanas [X - Y] <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                        Semana 1 <small class="d-block" style="text-align: center;">Avance [N]</small>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" id="semana2-tab" data-toggle="tab"
                                         href="#semana2" role="tab" aria-controls="semana2"
                                         aria-selected="false" tabindex="-1">
-                                        Semanas [X - Y] <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                        Semana 2 <small class="d-block" style="text-align: center;">Avance [N]</small>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana3-tab" data-toggle="tab"
+                                        href="#semana3" role="tab" aria-controls="semana3"
+                                        aria-selected="false" tabindex="-1">
+                                        Semana 3 <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                    </a>
+                                </li>
+                                <!-- Una pestaña por cada semana del momento -->
                             </ul>
                             <div class="tab-content" id="myTabContent">
 
-                                <!-- Panel avance 1 (active show) -->
+                                <!-- Semana 1 — sin botón (no es la última del avance) -->
                                 <div class="tab-pane fade active show" id="semana1"
                                     role="tabpanel" aria-labelledby="semana1-tab">
                                     <div class="card-body">
-                                        <p style="text-align: justify;">[Texto introductorio / actividades / recursos.]</p>
+                                        <p style="text-align: justify;">[Texto de la semana 1.]</p>
                                         <ul>
                                             <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
                                         </ul>
-                                        <p style="text-align: justify;">[Párrafo de envío — solo en la última semana del avance.]</p>
-                                        <br><br>
-                                        <div style="text-align: center;">
-                                            <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
-                                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
-                                                </button>
-                                            </a>
-                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Panel avance 2 -->
+                                <!-- Semana 2 — sin botón -->
                                 <div class="tab-pane fade" id="semana2"
                                     role="tabpanel" aria-labelledby="semana2-tab">
                                     <div class="card-body">
-                                        <p style="text-align: justify;">[Texto introductorio / actividades / recursos.]</p>
+                                        <p style="text-align: justify;">[Texto de la semana 2.]</p>
+                                        <ul>
+                                            <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Semana 3 — CON botón: última semana del Avance 1 -->
+                                <div class="tab-pane fade" id="semana3"
+                                    role="tabpanel" aria-labelledby="semana3-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">[Texto de la semana 3.]</p>
                                         <ul>
                                             <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
                                         </ul>
@@ -530,6 +543,7 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Repite por cada semana; botón solo en la última semana de cada avance -->
 
                             </div>
                         </div>
