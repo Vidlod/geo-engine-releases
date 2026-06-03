@@ -152,6 +152,13 @@ El insumo llega **convertido a HTML** (no Word en texto plano). Por tanto:
 - **Respeta la puntuación y los párrafos `<p>` del origen**: no fusiones frases ni
   elimines puntos. Cada `<p>` del origen es un párrafo aparte.
 - No agregues negrita donde el origen no la tiene, ni la quites donde sí la tiene.
+- **No fusiones ni parafrasees instrucciones repetidas**: si el origen da una instrucción
+  por cada entregable/plantilla (ej. "Desarrolle el entregable siguiendo las indicaciones
+  de la forma **Entregable 1**... No modifique ni elimine elementos de la forma." y luego
+  "Así mismo, desarrolle el entregable siguiendo las indicaciones de la forma
+  **Entregable 2**..."), cada una va como su **propio bloque** separado por `<br><br>`, con
+  su enlace `@@PLUGINFILE@@`. Prohibido combinarlas en una sola frase tipo "Diligencie el
+  formato Entregable_1 y entregable_2...".
 
 ## 10. Títulos de actividades
 
@@ -187,13 +194,30 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
 - **Único caso permitido de separador**: un `<p></p>` vacío **entre dos botones
   consecutivos** en la pestaña "Instrumento para Enviar Entregable".
 
-## 12. Recursos: ¿viñeta o negrita?
+## 12. Recursos: distinguir RED del experto vs cita bibliográfica
 
-Al listar recursos debajo de la actividad que los menciona:
+Hay **dos tipos** de recurso y se formatean distinto. No los confundas.
 
-- **Recurso con enlace en el Word** (referencia bibliográfica) → viñeta `<li>` con la
-  cita completa en texto plano + el enlace visible en negrita debajo (sección 5).
-- **RED sin enlace** (mapas, infografías, presentaciones, etc.) → se deja en **negrita**
-  simple `<strong>Título</strong>` (o con `@@PLUGINFILE@@` si es archivo local), no como cita.
-- **No dupliques**: si un recurso ya se listó en su actividad (primer uso), no lo repitas
-  en ninguna lista general posterior de esa semana.
+### A) RED (recursos del curso / del experto disciplinar)
+Syllabus, rúbrica, mapa, video de bienvenida/presentación, infografías, presentaciones,
+podcasts, etc. **Aunque el AAA los escriba con formato autor-año** (p. ej.
+`Torres, L. (2025). Mapa mental Estadística Descriptiva.`), **son RED, NO citas**:
+
+- **Quita la atribución autor-año** (el autor del curso está en `course.yaml` → `autor_red`,
+  p. ej. "Torres, L. (2025)."). Deja **solo el título** del recurso.
+- Va en **negrita**; con `@@PLUGINFILE@@` si hay archivo en el mapa, o solo negrita +
+  FLAG `red-sin-archivo` si no hay archivo.
+
+```html
+<li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+<li style="margin-bottom: 10px;"><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+```
+
+### B) Cita bibliográfica externa
+Libros/artículos de terceros (Posada 2016, Martínez 2013, etc.) con su URL externa propia:
+- Viñeta `<li>` con la cita en **texto plano** (conserva autor-año) + el enlace externo
+  visible en negrita debajo, separado por `<br>` (sección 5).
+
+### Reglas comunes
+- Las viñetas de RED y de citas pueden convivir en la misma `<ul>` (como en la referencia).
+- **No dupliques** un recurso ya listado en su actividad (primer uso).

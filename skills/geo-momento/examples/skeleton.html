@@ -130,7 +130,9 @@
                         <p style="text-align: justify;">[Párrafo de contextualización del curso / problemática, si aplica.]</p>
                         <p style="text-align: justify;">[Párrafo de REDs generales del momento, si aplica.]</p>
                         <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
-                        <p style="text-align: justify;">[Instrucciones de los formatos de plantilla a usar, con enlaces @@PLUGINFILE@@.]</p>
+                        <!-- UNA instrucción por entregable, separadas por <br><br>, cada una con su enlace.
+                             NO fusionar en "Diligencie el formato Entregable_1 y entregable_2..." ni parafrasear. -->
+                        <p style="text-align: justify;">Desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable_1].docx" target="_blank" rel="noopener">[Entregable 1]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.<br><br>Así mismo, desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable_2].docx" target="_blank" rel="noopener">[Entregable 2]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.</p>
                     </div>
 
                     <!-- ─────────────────────────────────────────────────────
@@ -212,9 +214,12 @@
                                 <div class="tab-pane fade active show" id="semana1"
                                     role="tabpanel" aria-labelledby="semana1-tab">
                                     <div class="card-body">
-                                        <p style="text-align: justify;">[Texto de la semana 1. Exacto de la AAA.]</p>
+                                        <p style="text-align: justify;">[Texto de bienvenida. Enlaza inline syllabus/rúbrica/mapa con @@PLUGINFILE@@.]</p>
+                                        <!-- RED del experto: título en negrita + enlace (sin "Autor (Año)."); video sin archivo = solo negrita -->
                                         <ul>
-                                            <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
+                                            <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/[Mapa].pdf" target="_blank" rel="noopener">Mapa mental [Curso]</a></strong>.</li>
+                                            <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/[SYLLABUS].pdf" target="_blank" rel="noopener">Syllabus del curso [Curso]</a></strong>.</li>
+                                            <li style="margin-bottom: 10px;"><strong>Video de presentación y bienvenida del curso [Curso]</strong>.</li>
                                         </ul>
                                         <!-- SIN botón: no es la última semana del Avance 1 -->
                                     </div>

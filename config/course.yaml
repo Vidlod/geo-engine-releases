@@ -4,6 +4,11 @@
 course:
   name: "Estadística Descriptiva"
 
+  # Autor del curso / experto disciplinar. Sus RED aparecen en el AAA con formato
+  # autor-año (ej. "Torres, L. (2025). Mapa mental..."). Esa atribución se ELIMINA en el
+  # HTML y el recurso se trata como RED (negrita + @@plugin), no como cita bibliográfica.
+  autor_red: "Torres, L."
+
   # Nomenclatura "Producto Final": el último avance del último momento se renombra
   # globalmente a "Producto Final". Aquí, Momento 2 / Avance 5.
   last_momento: 2

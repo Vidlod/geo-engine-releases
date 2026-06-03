@@ -244,6 +244,23 @@ Si el usuario no indica cuál es el último avance → pregunta antes de generar
 
 ## ═══ PARTE 10 — RECURSOS EDUCATIVOS DIGITALES (RED) ═══
 
+> ⚠️ **RED del experto ≠ cita bibliográfica.** Los recursos propios del curso (syllabus,
+> rúbrica, mapa, video de bienvenida/presentación, infografías, presentaciones, podcasts),
+> **aunque el AAA los escriba como "Autor (Año). Título."** (p. ej.
+> `Torres, L. (2025). Mapa mental...`), son **RED, NO citas**:
+> - **Quita la atribución autor-año** y deja solo el **título** del recurso.
+> - Va en **negrita** con `@@PLUGINFILE@@` si hay archivo, o **solo negrita** + FLAG
+>   `red-sin-archivo` si no hay archivo.
+> - Ejemplo correcto (semana de bienvenida):
+>   ```html
+>   <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+>   <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/SYLLABUS_Estadística_Descriptiva.pdf" target="_blank" rel="noopener">Syllabus del curso Estadística Descriptiva</a></strong>.</li>
+>   <li style="margin-bottom: 10px;"><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+>   ```
+> - **Incorrecto:** `<li>Torres, L. (2025). Mapa mental Estadística Descriptiva.</li>` (es cita, sin negrita, sin enlace).
+> Solo las fuentes **externas** (Posada, Martínez, Suárez...) con URL propia conservan el
+> formato de cita (autor-año + enlace externo, ver Parte 11).
+
 - Cada RED en su propia viñeta `<li>`. Nunca como párrafo suelto.
 - Con archivo local:
   ```html
@@ -350,6 +367,8 @@ Antes de entregar el HTML verifica:
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] "Producto Final" aplicado en TODO el HTML (tabla, pestaña, botón, textos).
 - [ ] REDs en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
+- [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
+- [ ] Instrucciones de Condiciones Particulares: una por entregable (con `<br><br>`), sin fusionar ni parafrasear.
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
@@ -478,8 +497,10 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                         </ul>
                         <p style="text-align: justify;">[Párrafo contextualización / problemática.]</p>
                         <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
-                        <p style="text-align: justify;">[Instrucciones de plantillas con @@PLUGINFILE@@.]</p>
+                        <p style="text-align: justify;">Desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable 1].docx" target="_blank" rel="noopener">[Entregable 1]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.<br><br>Así mismo, desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable 2].docx" target="_blank" rel="noopener">[Entregable 2]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.</p>
                     </div>
+                    <!-- IMPORTANTE: una instrucción por entregable, separadas por <br><br>, cada una con su enlace.
+                         NO las fusiones en "Diligencie el formato Entregable_1 y entregable_2..." ni parafrasees. -->
 
                     <!-- PESTAÑA 3: INSTRUMENTO DE EVALUACIÓN -->
                     <div class="tab-pane fade shadow rounded bg-white p-5"

@@ -141,6 +141,13 @@ Formato estándar centrado, siempre con **punto final** en el texto del botón:
 
 ## ═══ PARTE 6 — RECURSOS EDUCATIVOS DIGITALES (RED) ═══
 
+> ⚠️ **RED del experto ≠ cita bibliográfica.** Los recursos propios del curso (syllabus,
+> rúbrica, mapa, video de bienvenida, infografías, presentaciones, podcasts), **aunque el
+> AAA los escriba como "Autor (Año). Título."** (ej. `Torres, L. (2025). Mapa mental...`),
+> son **RED**: **quita la atribución autor-año**, deja solo el título en **negrita** con
+> `@@PLUGINFILE@@` (o solo negrita + FLAG si no hay archivo). Solo las fuentes **externas**
+> con URL propia conservan el formato de cita (Parte 8).
+
 - **Cada RED va en su propia viñeta `<li>`**; nunca como párrafo suelto.
 - Con archivo local:
   ```html
@@ -268,6 +275,7 @@ Antes de entregar el HTML verifica:
 - [ ] Párrafo de envío como último párrafo, encima del botón.
 - [ ] Botón de envío con punto final en el texto.
 - [ ] Todos los RED en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
+- [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos sin fusionar.
