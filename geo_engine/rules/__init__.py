@@ -12,13 +12,20 @@ from .links import ElibroProxyRule, LinkTargetRule
 from .lists import ListItemPeriodRule, ParagraphInListRule
 from .naming import ProductoFinalRule
 from .phrases import TableroAnotacionesRule
-from .spacing import BrBeforeCloseRule, BrBetweenBlocksRule, MaxBrRule, MaxSpacesRule
+from .spacing import (
+    BrBeforeButtonRule,
+    BrBeforeCloseRule,
+    BrBetweenBlocksRule,
+    MaxBrRule,
+    MaxSpacesRule,
+)
 from .terminology import TerminologyRule
 
 ALL_RULES = [
     MaxBrRule,
     BrBeforeCloseRule,
     BrBetweenBlocksRule,
+    BrBeforeButtonRule,
     MaxSpacesRule,
     TerminologyRule,
     EmoticonRule,

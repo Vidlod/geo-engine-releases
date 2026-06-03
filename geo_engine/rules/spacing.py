@@ -133,6 +133,46 @@ class BrBetweenBlocksRule(Rule):
         return rx.sub(_sub, html), fixed
 
 
+class BrBeforeButtonRule(Rule):
+    """Prohíbe <br> antes del <div> centrado del botón de envío (Regla 28 del proyecto).
+
+    El botón va directo tras el último párrafo (margen nativo). Detecta y elimina
+    los <br> que precedan a un `<div ... text-align: center ...>`.
+    """
+
+    id = "br-before-button"
+    description = "Sin <br> antes del <div> centrado del botón de envío."
+    severity = SEVERITY_ERROR
+    auto_fixable = True
+
+    _RE = re.compile(
+        r"(?:<br\s*/?>\s*)+(<div[^>]*text-align:\s*center[^>]*>)", re.IGNORECASE
+    )
+
+    def check(self, html: str, ctx: Dict[str, Any]) -> List[Finding]:
+        out: List[Finding] = []
+        for m in self._RE.finditer(html):
+            out.append(Finding(
+                self.id, self.severity,
+                "Salto(s) <br> antes del <div> centrado del botón; debe ir directo.",
+                line_at(html, m.start()), snippet_at(html, m.start(), m.end()),
+            ))
+        return out
+
+    def fix(self, html: str, ctx: Dict[str, Any]) -> Tuple[str, List[Finding]]:
+        fixed: List[Finding] = []
+
+        def _sub(m: "re.Match[str]") -> str:
+            fixed.append(Finding(
+                self.id, self.severity,
+                "Eliminado <br> antes del <div> del botón.",
+                line_at(html, m.start()), fixed=True,
+            ))
+            return m.group(1)
+
+        return self._RE.sub(_sub, html), fixed
+
+
 class MaxSpacesRule(Rule):
     id = "max-spaces"
     description = "No más de N espacios consecutivos (sin contar la indentación)."

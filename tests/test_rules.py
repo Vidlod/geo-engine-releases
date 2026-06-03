@@ -36,11 +36,12 @@ def test_br_between_blocks():
     assert "<br>" not in fixed.html
 
 
-def test_br_between_blocks_respeta_boton():
-    # El <br><br> antes del <div> del botón NO se toca.
+def test_br_before_button():
+    # El <br><br> antes del <div> centrado del botón SÍ se elimina (Regla 28).
     html = "<p>texto.</p><br><br><div style=\"text-align: center;\"><a>x</a></div>"
     fixed = _linter().fix(html)
-    assert "<br><br><div" in fixed.html
+    assert "<br>" not in fixed.html
+    assert "</p><div" in fixed.html
 
 
 def test_terminology_module():

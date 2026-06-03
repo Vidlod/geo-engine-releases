@@ -13,7 +13,10 @@ rules:
 
   br-between-blocks:
     enabled: true
-    blocks: [p, ul, ol]         # sin <br> entre estos bloques (acotado: no afecta el botón <div>)
+    blocks: [p, ul, ol]         # sin <br> entre estos bloques
+
+  br-before-button:
+    enabled: true               # sin <br> antes del <div> centrado del botón de envío
 
   max-spaces:
     enabled: true

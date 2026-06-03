@@ -122,7 +122,6 @@ pestaña, justo encima del botón. Cualquier otro párrafo descriptivo va arriba
 Formato estándar centrado, siempre con **punto final** en el texto del botón:
 
 ```html
-<br><br>
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
@@ -135,6 +134,8 @@ Formato estándar centrado, siempre con **punto final** en el texto del botón:
 - Reemplaza `XXXX` por el ID de la tarea de Moodle del avance correspondiente.
 - Si no tienes el ID → emite `<!-- FLAG: dato-faltante Falta el enlace mod/assign para Avance N -->`.
 - El último avance dice `Enviar Producto Final.` (con punto).
+- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (margen
+  nativo). Nunca `<br>`/`<br><br>` ni `<p></p>` vacío entre el contenido y el botón.
 
 ---
 
@@ -320,7 +321,6 @@ placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria
                 <!-- PÁRRAFO DE ENVÍO: siempre el último párrafo antes del botón -->
                 <p style="text-align: justify;">[Párrafo de envío: "Envíe el documento en formato PDF..."]</p>
                 <!-- BOTÓN: centrado, con punto final -->
-                <br><br>
                 <div style="text-align: center;">
                     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
                         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">

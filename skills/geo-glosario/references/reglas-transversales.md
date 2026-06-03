@@ -37,8 +37,9 @@ en un agente sin acceso a shell:
 - Máximo 2 espacios consecutivos.
 - Sin `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
 - Sin `<br>` **entre bloques** `</p>`↔`<ul>`/`<ol>`: van consecutivos (`</p><ul>`).
-  (Moodle ya aplica margen; el `<br>` duplica el espacio. Excepción: el `<br><br>`
-  antes del `<div>` del botón de envío sí va.)
+  (Moodle ya aplica margen; el `<br>` duplica el espacio.)
+- **Botón de envío sin `<br>` antes**: va directo tras el último párrafo (margen nativo).
+  Nunca `<br>`/`<br><br>` ni `<p></p>` vacío antes del `<div>` del botón (ver sección 11).
 - Sin cursiva: nada de `<em>` ni `font-style:italic`. (`<i>` puede ser ícono → revisar.)
 - `(y)` / `(x)` → `(<span>y</span>)` / `(<span>x</span>)` (filtro emoticonos Moodle).
 - "módulo/Módulo/módulos" → "curso/cursos".
@@ -106,8 +107,8 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 
 - **Sin saltos entre bloques**: NO pongas `<br>`/`<br><br>` entre `</p>` y `<ul>`, ni entre
   `</ul>` y `<p>`. Deben ir **consecutivos** (`</p><ul>`, `</ul><p>`). Moodle aplica margen a
-  los bloques; un `<br>` intermedio produce doble espacio.
-  *(Excepción: el `<br><br>` que precede al `<div>` centrado del botón de envío SÍ va.)*
+  los bloques; un `<br>` intermedio produce doble espacio. Esto **incluye** el `<div>` del
+  botón de envío: va directo tras el último párrafo, sin `<br>` (ver sección 11).
 - Si una viñeta supera 3 renglones, o dos viñetas tienen 2 renglones → `style="margin-bottom: 10px;"`
   en cada `<li>` del grupo. (Es visual: si dudas, emite FLAG en vez de adivinar.)
 
@@ -162,3 +163,33 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
   nombre real de la actividad.
 - Corrige mayúscula inicial y tildes del nombre (p. ej. "grafico" → "gráfico",
   "contexto" → "Contexto").
+
+## 11. Espaciado de los botones de envío
+
+- El botón va **directo tras el último párrafo**, separado solo por el margen nativo.
+- **Prohibido** `<br>`/`<br><br>` o `<p></p>` vacío entre el contenido y el botón:
+
+```html
+<p style="text-align: justify;">...último párrafo / párrafo de envío.</p>
+<div style="text-align: center;">
+    <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
+        <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance N.
+        </button>
+    </a>
+</div>
+```
+
+- **Único caso permitido de separador**: un `<p></p>` vacío **entre dos botones
+  consecutivos** en la pestaña "Instrumento para Enviar Entregable".
+
+## 12. Recursos: ¿viñeta o negrita?
+
+Al listar recursos debajo de la actividad que los menciona:
+
+- **Recurso con enlace en el Word** (referencia bibliográfica) → viñeta `<li>` con la
+  cita completa en texto plano + el enlace visible en negrita debajo (sección 5).
+- **RED sin enlace** (mapas, infografías, presentaciones, etc.) → se deja en **negrita**
+  simple `<strong>Título</strong>` (o con `@@PLUGINFILE@@` si es archivo local), no como cita.
+- **No dupliques**: si un recurso ya se listó en su actividad (primer uso), no lo repitas
+  en ninguna lista general posterior de esa semana.

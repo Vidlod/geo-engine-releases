@@ -14,6 +14,7 @@ DEFAULT_CONFIG = {
         "max-br": {"enabled": True, "max": 2},
         "br-before-close": {"enabled": True, "tags": ["li", "ul", "ol", "div"]},
         "br-between-blocks": {"enabled": True, "blocks": ["p", "ul", "ol"]},
+        "br-before-button": {"enabled": True},
         "max-spaces": {"enabled": True, "max": 2},
         "terminology-module": {"enabled": True},
         "emoticon-span": {"enabled": True, "chars": ["y", "x"]},

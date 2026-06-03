@@ -56,7 +56,7 @@ Un Momento Evaluativo contiene en orden:
 ```
 1. Tabla de Resumen de Entregas
 2. Descripción General del Momento
-3. Pestañas de contenido (una por rango de semanas / avance)
+3. Pestañas de contenido (una por semana individual)
 4. Pestaña "Instrumento para Enviar Entregable"
 ```
 
@@ -135,15 +135,14 @@ El número de semanas y su asignación a cada avance se toman de la AAA del curs
     <li class="nav-item">
         <a class="nav-link active" id="semana1-tab" data-toggle="tab"
            href="#semana1" role="tab" aria-controls="semana1" aria-selected="true">
-           Semanas 1 - 3 <small class="d-block" style="text-align: center;">Avance 1</small>
+           Semana 1 <small class="d-block" style="text-align: center;">Avance 1</small>
         </a>
     </li>
-    <!-- … más pestañas … -->
+    <!-- … una pestaña por cada semana del momento … -->
 </ul>
 ```
 
-Todo el contenido de las semanas de un avance se consolida en **un único panel**
-`tab-pane` correspondiente a esa pestaña.
+Cada semana tiene su propio panel `tab-pane`.
 
 ---
 
@@ -202,7 +201,6 @@ Toma la última semana de cada avance de la AAA del curso:
 ### 7.2 Formato del botón (siempre con punto final en el texto)
 
 ```html
-<br><br>
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
@@ -215,6 +213,8 @@ Toma la última semana de cada avance de la AAA del curso:
 - Reemplaza `XXXX` por el ID de la tarea de Moodle.
 - Si no tienes el ID → `<!-- FLAG: dato-faltante Falta el enlace mod/assign para Avance N -->`.
 - Último avance: `Enviar Producto Final.` (con punto).
+- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (margen
+  nativo). Nunca `<br>`/`<br><br>` ni `<p></p>` vacío antes del botón.
 
 ---
 
@@ -223,6 +223,7 @@ Toma la última semana de cada avance de la AAA del curso:
 Esta pestaña contiene **exactamente** tantos botones como avances tenga el momento.
 Mismo formato del botón (Parte 7). Si el momento tiene 3 avances → 3 botones.
 Si faltan los IDs de Moodle → emite FLAG por cada uno.
+**Único separador permitido entre botones consecutivos: un `<p></p>` vacío** (nada de `<br>`).
 
 ---
 
@@ -567,7 +568,6 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                             <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
                                         </ul>
                                         <p style="text-align: justify;">[Párrafo de envío.]</p>
-                                        <br><br>
                                         <div style="text-align: center;">
                                             <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
                                                 <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
