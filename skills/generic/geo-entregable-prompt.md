@@ -238,7 +238,11 @@ marcador va **dentro** del `<strong>`:
   <strong><a href="@@PLUGINFILE@@/SYLLABUS_NombreCurso.pdf" target="_blank" rel="noopener">Syllabus</a></strong>
   ```
 - **Enlazar CADA mención, no solo la primera**: cada aparición en el texto de syllabus,
-  rúbrica, AAA, Anexo, plantilla/formato o mapa se hipervincula con `@@PLUGINFILE@@`.
+  rúbrica (incl. "la rúbrica"/"rúbrica de evaluación"), AAA, Anexo, plantilla/formato o
+  mapa se hipervincula con `@@PLUGINFILE@@`. Si "rúbrica" sale 5 veces → 5 enlaces.
+- **Usa el MAPA DE ARCHIVOS que te dé el usuario** (término → nombre exacto). **Prohibido
+  inventar** nombres a partir del texto (nada de `Rubrica_Momento_I.pdf`). Si un término
+  no está en el mapa → FLAG `dato-faltante`.
 
 ---
 
@@ -354,9 +358,17 @@ placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria
 2. **Adjunta el entregable convertido a HTML** (no el Word en texto plano). Convierte
    primero el Word con el convertidor del proyecto para preservar **negrillas** y
    **puntuación**; el texto plano las pierde.
-3. **Indica** (si los tienes):
+3. **Pega el MAPA DE ARCHIVOS** (término → nombre exacto), para que los enlaces
+   `@@PLUGINFILE@@` usen nombres reales y no inventados. Ejemplo:
+   ```
+   MAPA DE ARCHIVOS:
+   - rúbrica       → Rubrica1_Estadística_Descriptiva.pdf
+   - Anexo 1       → Anexo1_Base_de_datos.xlsx
+   - Entregable 1  → Entregable1_Recolección de datos.docx
+   (los que no estén → FLAG dato-faltante, no inventar)
+   ```
+4. **Indica** (si los tienes):
    - Descripción del entregable de la AAA (columna "Nombre del entregable").
-   - ID de Moodle del botón de envío (`mod/assign/view.php?id=XXXX`) y nombres de archivo
-     (si no, la IA emitirá FLAG `dato-faltante`).
+   - ID de Moodle del botón de envío (`mod/assign/view.php?id=XXXX`).
    - Número de avance y si es el último avance del curso.
-4. **Pide**: "Genera el HTML del Entregable/Avance N."
+5. **Pide**: "Genera el HTML del Entregable/Avance N."

@@ -9,13 +9,27 @@ course:
   last_momento: 2
   last_avance: 5            # en TODO el HTML, "Avance 5" -> "Producto Final"
 
+  # MAPA DE ARCHIVOS — término que aparece en el texto -> nombre EXACTO del archivo.
+  # El HTML debe enlazar cada mención con @@PLUGINFILE@@/<nombre exacto>. NO inventar
+  # nombres: si un término no está aquí, emitir FLAG dato-faltante.
   files:
     syllabus: "SYLLABUS_Estadística_Descriptiva.pdf"
     instrucciones: "Instrucciones_Generales_Estadistica.pdf"
     rubrica_1: "Rubrica1_Estadística_Descriptiva.pdf"
     rubrica_2: "Rubrica2Estadística_Descriptiva.pdf"
-    mapa: "Mapa_Curso_Estadística.pdf"
-    anexo_1: "Anexo1_Base_de_datos.xlsx"
+    mapa: "Mapa_Curso_Estadística.pdf"            # "mapa conceptual" / "mapa mental"
+    anexo_1: "Anexo1_Base_de_datos.xlsx"          # "Anexo 1. Base de datos..."
+    entregable_1: "Entregable1_Recolección de datos.docx"     # plantilla Avance 1
+    entregable_2: "Entregable2_Organización de datos.docx"    # plantilla Avance 2
+    infografia_variables: "VARIABLES.pdf"         # RED "Infografía de variables"
+
+  # RED mencionados que AÚN no tienen archivo (emitir FLAG red-sin-archivo, dejar en negrita).
+  red_sin_archivo:
+    - "Video Tutorial para la descarga del software Infostat"
+    - "Presentación cálculo del tamaño muestral"
+    - "Presentación unidad 2 – Fundamentos de estadística"
+    - "Presentación Tablas de frecuencias"
+    - "Video de presentación y bienvenida del curso"
 
   # Rangos de semanas por avance (varían por curso; tomar de la AAA).
   # El botón de envío va en la ÚLTIMA semana de cada avance (week_boton).

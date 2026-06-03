@@ -314,10 +314,15 @@ Todo `<li>` de texto termina con `.` (o `:`, `?`, `!` según corresponda).
   ```html
   <strong><a href="@@PLUGINFILE@@/SYLLABUS_NombreCurso.pdf" target="_blank" rel="noopener">Syllabus</a></strong>
   ```
-- **Enlazar CADA mención, no solo la primera**: cada vez que en el texto aparezca el
-  syllabus, la rúbrica, el Anexo, una plantilla/formato o el mapa, esa mención se
-  hipervincula con `@@PLUGINFILE@@`. Si la rúbrica se nombra 4 veces, se enlaza 4 veces.
-- **No inventes el nombre de archivo**: si no lo conoces, FLAG `dato-faltante`.
+- **Enlazar CADA mención, no solo la primera.** Recursos que van hipervinculados
+  **siempre que aparezcan** en CUALQUIER semana: **syllabus, rúbrica** (incl. "la rúbrica"
+  y "rúbrica de evaluación"), **mapa** (conceptual/mental), **Anexo N**,
+  **plantilla/formato** (Entregable N), **instrucciones generales**. Si "rúbrica" sale 5
+  veces → se enlaza 5 veces.
+- **Usa el MAPA DE ARCHIVOS que te dé el usuario** (término → nombre exacto). Está
+  **prohibido inventar** nombres a partir del texto (nada de
+  `Anexo_1._Base_de_datos_indicadores...xlsx` ni `Rubrica_Momento_I.pdf`). Usa el nombre
+  corto y exacto del mapa. Si un término no está en el mapa → FLAG `dato-faltante`.
 - **Prohibido** enlazar a OneDrive, SharePoint o URLs `draftfile.php`.
 
 ---
@@ -598,9 +603,21 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
 2. **Adjunta la AAA convertida a HTML** (no el Word en texto plano). Convierte primero el
    Word a HTML con el convertidor del proyecto para que se preserven las **negrillas** y
    la **puntuación**; pegar el Word como texto plano las pierde.
-3. **Indica**:
+3. **Pega el MAPA DE ARCHIVOS** (término → nombre exacto del archivo), para que los
+   enlaces `@@PLUGINFILE@@` usen los nombres reales y no inventados. Ejemplo:
+   ```
+   MAPA DE ARCHIVOS:
+   - syllabus            → SYLLABUS_Estadística_Descriptiva.pdf
+   - rúbrica             → Rubrica1_Estadística_Descriptiva.pdf
+   - mapa conceptual     → Mapa_Curso_Estadística.pdf
+   - Anexo 1             → Anexo1_Base_de_datos.xlsx
+   - Entregable 1        → Entregable1_Recolección de datos.docx
+   - Entregable 2        → Entregable2_Organización de datos.docx
+   - Infografía variables→ VARIABLES.pdf
+   (los que no estén en el mapa → FLAG dato-faltante, no inventar)
+   ```
+4. **Indica**:
    - ¿Es Momento 1 o Momento 2?
    - Número del último avance del curso (para aplicar "Producto Final").
-   - IDs de Moodle por avance (`mod/assign/view.php?id=XXXX`) y nombres de archivo si los
-     tienes (si no, la IA emitirá FLAG `dato-faltante`).
-4. **Pide**: "Genera el HTML del Momento Evaluativo N."
+   - IDs de Moodle por avance (`mod/assign/view.php?id=XXXX`).
+5. **Pide**: "Genera el HTML del Momento Evaluativo N."

@@ -62,12 +62,16 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 - Siempre en negrita (`<strong>`) y abriendo en pestaña nueva.
 - **Prohibido** enlazar a OneDrive/SharePoint o URLs temporales `draftfile.php`.
 - Si el archivo aún no existe, emite FLAG `red-sin-archivo` y deja solo el título en negrita.
-- **Enlazar CADA mención (no solo la primera)**: cada vez que el texto nombre el
-  syllabus, la rúbrica, la AAA, un Anexo, una plantilla/formato o el mapa, esa mención
-  va hipervinculada con `@@PLUGINFILE@@`. Si aparece 4 veces, se enlaza las 4 veces.
-- **No inventes nombres de archivo.** Si no conoces el nombre exacto (p. ej. la rúbrica
-  o el ID de Moodle), NO inventes uno como `Rubrica_Momento_1.pdf`: emite FLAG
-  `dato-faltante` indicando el archivo que falta.
+- **Usa el MAPA DE ARCHIVOS, no inventes nombres.** Los nombres EXACTOS de archivo están
+  en `config/course.yaml` → `files:` (skills) o en el mapa que provee el usuario (chat).
+  Está **prohibido** inventar nombres a partir del texto visible (p. ej.
+  `Anexo_1._Base_de_datos_indicadores...xlsx` o `Rubrica_Momento_I.pdf`). Si un término
+  no está mapeado, emite FLAG `dato-faltante` y deja el título solo en negrita.
+- **Enlazar CADA mención (no solo la primera).** Recursos recurrentes que se enlazan
+  **siempre que aparezcan** en el texto, en CUALQUIER pestaña/semana:
+  **syllabus, rúbrica** (incl. "la rúbrica", "rúbrica de evaluación"), **mapa**
+  (conceptual/mental), **Anexo N**, **plantilla/formato** (Entregable N), **instrucciones
+  generales**. Si "rúbrica" sale 5 veces, va hipervinculada las 5 veces.
 
 ## 4. Recursos Educativos Digitales (RED)
 
