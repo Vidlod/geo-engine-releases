@@ -14,17 +14,26 @@ function norm(text) {
   return (text || '').replace(/\s+/g, ' ').trim();
 }
 
-/** Strip HTML tags and decode common entities to get plain text. */
-function htmlToText(html) {
+function decodeEntities(html) {
+  if (typeof document !== 'undefined') {
+    const temp = document.createElement('textarea');
+    temp.innerHTML = html;
+    return temp.value;
+  }
   return html
-    .replace(/<br\s*\/?>/gi, ' ')
-    .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#0?39;/g, "'");
+    .replace(/&#0?39;/g, "'")
+    .replace(/&#160;/g, ' ');
+}
+
+/** Strip HTML tags and decode common entities to get plain text. */
+function htmlToText(html) {
+  const stripped = html.replace(/<[^>]+>/g, '');
+  return decodeEntities(stripped);
 }
 
 /**
