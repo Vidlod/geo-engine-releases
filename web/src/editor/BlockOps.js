@@ -65,11 +65,20 @@ function parseAllBlocks(html, tagName) {
  * Find a block in the HTML by normalised text content.
  * Falls back to prefix matching if exact match fails.
  */
-export function findBlock(html, textContent, tagName = 'p') {
+export function findBlock(html, textContent, tagName = 'p', blockIndex = null) {
+  const blocks = parseAllBlocks(html, tagName);
+
+  if (blockIndex !== null && blockIndex >= 0 && blockIndex < blocks.length) {
+    const candidate = blocks[blockIndex];
+    const target = norm(textContent);
+    // Safety check: verify that the content is reasonably matching (first 30 chars)
+    if (!target || candidate.text.startsWith(target.substring(0, 30)) || target.startsWith(candidate.text.substring(0, 30))) {
+      return candidate;
+    }
+  }
+
   const target = norm(textContent);
   if (!target) return null;
-
-  const blocks = parseAllBlocks(html, tagName);
 
   // 1. Exact match
   for (const b of blocks) {
@@ -99,9 +108,9 @@ export function findBlock(html, textContent, tagName = 'p') {
  * @param {string} [tagName='p']
  * @returns {{ original: string, replacement: string } | null}
  */
-export function mergeBlocks(html, currTextContent, prevTextContent, tagName = 'p') {
-  const prevBlock = findBlock(html, prevTextContent, tagName);
-  const currBlock = findBlock(html, currTextContent, tagName);
+export function mergeBlocks(html, currTextContent, prevTextContent, tagName = 'p', currBlockIndex = null, prevBlockIndex = null) {
+  const prevBlock = findBlock(html, prevTextContent, tagName, prevBlockIndex);
+  const currBlock = findBlock(html, currTextContent, tagName, currBlockIndex);
 
   if (!prevBlock || !currBlock) {
     console.warn('[BlockOps] mergeBlocks: could not find one or both blocks.',
@@ -251,8 +260,8 @@ export function getBlockDisplay(innerHTML) {
  * @param {string} [tagName='p']
  * @returns {{ original: string, replacement: string } | null}
  */
-export function splitBlock(html, textContent, displayOffset, tagName = 'p') {
-  const block = findBlock(html, textContent, tagName);
+export function splitBlock(html, textContent, displayOffset, tagName = 'p', blockIndex = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
   if (!block) {
     console.warn('[BlockOps] splitBlock: could not find block.');
     return null;
@@ -287,53 +296,161 @@ export function splitBlock(html, textContent, displayOffset, tagName = 'p') {
 /* ── Add space ────────────────────────────────────────────── */
 
 /**
- * Insert a spacer `<p><br></p>` after a block element.
+ * Add or adjust spacing after a block element by updating its `margin-bottom` inline style.
+ *
+ * Strategy: modify the element's own style. If a custom `marginValue` is specified,
+ * set it directly. If the value drops to baseline (10px for li, 16px for p), the inline
+ * property is cleaned up and removed entirely.
+ *
+ * @param {string} html          Full HTML string
+ * @param {string} textContent   Normalised text (for findBlock)
+ * @param {string} [tagName='p']
+ * @param {number|null} [blockIndex=null]
+ * @param {number|null} [marginValue=null]
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = null, marginValue = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] addSpaceAfter: could not find block.');
+    return null;
+  }
+
+  let newAttrs = block.attrs;
+  const marginRegex = /margin-bottom\s*:\s*(\d+)px/i;
+  const existingMatch = newAttrs.match(marginRegex);
+
+  if (marginValue !== null) {
+    const newVal = parseInt(marginValue, 10);
+    const baseline = tagName === 'li' ? 10 : 16;
+
+    if (newVal <= baseline) {
+      // Revert to baseline: remove margin-bottom entirely to keep HTML clean
+      if (existingMatch) {
+        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
+          let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+          cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+          if (!cleaned) return '';
+          return `style="${cleaned}"`;
+        });
+        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
+          let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+          cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+          if (!cleaned) return '';
+          return `style='${cleaned}'`;
+        });
+      }
+    } else {
+      // Set specified custom value
+      if (existingMatch) {
+        newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
+      } else if (newAttrs.includes('style=')) {
+        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style="${trimmed}${sep} margin-bottom: ${newVal}px;"`;
+        });
+        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style='${trimmed}${sep} margin-bottom: ${newVal}px;'`;
+        });
+      } else {
+        newAttrs = ` style="margin-bottom: ${newVal}px;"` + newAttrs;
+      }
+    }
+  } else {
+    // Default incremental logic (+10px) if no custom value is specified
+    if (existingMatch) {
+      const currentVal = parseInt(existingMatch[1], 10);
+      const newVal = currentVal + 10;
+      newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
+    } else if (newAttrs.includes('style=')) {
+      const initialMargin = tagName === 'li' ? 20 : 26;
+      newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
+        const trimmed = p1.trim();
+        const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+        return `style="${trimmed}${sep} margin-bottom: ${initialMargin}px;"`;
+      });
+      newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
+        const trimmed = p1.trim();
+        const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+        return `style='${trimmed}${sep} margin-bottom: ${initialMargin}px;'`;
+      });
+    } else {
+      const initialMargin = tagName === 'li' ? 20 : 26;
+      newAttrs = ` style="margin-bottom: ${initialMargin}px;"` + newAttrs;
+    }
+  }
+
+  return {
+    original: block.fullMatch,
+    replacement: `<${tagName}${newAttrs}>${block.innerHTML}</${tagName}>`,
+  };
+}
+
+/* ── Remove space ─────────────────────────────────────────── */
+
+/**
+ * Remove spacing added by `addSpaceAfter` by decreasing `margin-bottom`.
+ *
+ * - `<li>` with `margin-bottom: 20px` → 10px (template default). At 10px → null (nothing to remove).
+ * - `<p>` with inline `margin-bottom` → decreases by 10px. At ≤ 16px → removes the property
+ *   entirely (letting Moodle CSS default take over).
  *
  * @param {string} html          Full HTML string
  * @param {string} textContent   Normalised text (for findBlock)
  * @param {string} [tagName='p']
  * @returns {{ original: string, replacement: string } | null}
  */
-export function addSpaceAfter(html, textContent, tagName = 'p') {
-  const block = findBlock(html, textContent, tagName);
+export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
   if (!block) {
-    console.warn('[BlockOps] addSpaceAfter: could not find block.');
+    console.warn('[BlockOps] removeSpaceAfter: could not find block.');
     return null;
   }
 
-  // Detect indentation
-  const lineStart = html.lastIndexOf('\n', block.start);
-  const indent = lineStart >= 0
-    ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
-    : '';
+  let newAttrs = block.attrs;
+  const marginRegex = /margin-bottom\s*:\s*(\d+)px/i;
+  const existingMatch = newAttrs.match(marginRegex);
+
+  if (!existingMatch) {
+    // No inline margin-bottom → nothing to remove
+    return null;
+  }
+
+  const currentVal = parseInt(existingMatch[1], 10);
 
   if (tagName === 'li') {
-    let newAttrs = block.attrs;
-    if (newAttrs.includes('style=')) {
-      if (!/margin-bottom\s*:/i.test(newAttrs)) {
-        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (match, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style="${trimmed}${sep} margin-bottom: 10px;"`;
-        });
-        newAttrs = newAttrs.replace(/style='([^']*)'/i, (match, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style='${trimmed}${sep} margin-bottom: 10px;'`;
-        });
-      }
+    // Template default for <li> is 10px — don't go below that
+    if (currentVal <= 10) return null;
+    const newVal = currentVal - 10;
+    newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
+  } else {
+    // For <p>: Moodle CSS default is ~16px. If we'd drop to ≤16, remove the property.
+    const newVal = currentVal - 10;
+    if (newVal <= 16) {
+      // Remove margin-bottom from the style value
+      newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
+        let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+        cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+        if (!cleaned) return '';
+        return `style="${cleaned}"`;
+      });
+      newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
+        let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+        cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+        if (!cleaned) return '';
+        return `style='${cleaned}'`;
+      });
     } else {
-      newAttrs = ` style="margin-bottom: 10px;"` + newAttrs;
+      newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
     }
-    return {
-      original: block.fullMatch,
-      replacement: `<li${newAttrs}>${block.innerHTML}</li>`,
-    };
   }
 
   return {
     original: block.fullMatch,
-    replacement: `${block.fullMatch}\n${indent}<p>&nbsp;</p>`,
+    replacement: `<${tagName}${newAttrs}>${block.innerHTML}</${tagName}>`,
   };
 }
 
@@ -352,8 +469,8 @@ export function addSpaceAfter(html, textContent, tagName = 'p') {
  * @param {string} [tagName='p']
  * @returns {{ original: string, replacement: string } | null}
  */
-export function splitAtBreaks(html, textContent, tagName = 'p') {
-  const block = findBlock(html, textContent, tagName);
+export function splitAtBreaks(html, textContent, tagName = 'p', blockIndex = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
   if (!block) {
     console.warn('[BlockOps] splitAtBreaks: could not find block.');
     return null;

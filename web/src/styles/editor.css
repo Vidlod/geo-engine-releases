@@ -399,3 +399,160 @@
   border-radius: 2px;
   opacity: 0.6;
 }
+
+/* ── Visual Guides for Custom Added Margins (Dynamic via JS) ── */
+.geo-spacer-guide {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent, #6366f1);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(99, 102, 241, 0.03),
+    rgba(99, 102, 241, 0.03) 4px,
+    rgba(99, 102, 241, 0.08) 4px,
+    rgba(99, 102, 241, 0.08) 8px
+  );
+  border-top: 1px dashed rgba(99, 102, 241, 0.3);
+  border-bottom: 1px dashed rgba(99, 102, 241, 0.3);
+  pointer-events: none;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+/* Neutral/Gray theme for original space guides */
+.geo-spacer-guide--original {
+  color: #71717a;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(113, 113, 122, 0.02),
+    rgba(113, 113, 122, 0.02) 4px,
+    rgba(113, 113, 122, 0.06) 4px,
+    rgba(113, 113, 122, 0.06) 8px
+  );
+  border-color: rgba(113, 113, 122, 0.25);
+}
+
+/* ── Space Editor Dialog ── */
+.space-editor {
+  position: absolute;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff;
+  border: 2px solid var(--accent, #3b71ca);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: inline-editor-in 0.15s ease-out;
+  width: 230px;
+}
+
+.space-editor__title {
+  font-size: 0.75rem;
+  color: var(--accent, #3b71ca);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.space-editor__presets {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.space-editor__preset-btn {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid var(--border, #eee);
+  border-radius: 4px;
+  font-size: 11px;
+  background: #f9f9fb;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.1s ease;
+  font-weight: 600;
+}
+
+.space-editor__preset-btn:hover {
+  background: rgba(59, 113, 202, 0.08);
+  border-color: var(--accent, #3b71ca);
+  color: var(--accent, #3b71ca);
+}
+
+.space-editor__custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.space-editor__label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.space-editor__input {
+  width: 60px;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  outline: none;
+}
+
+.space-editor__input:focus {
+  border-color: var(--accent, #3b71ca);
+  box-shadow: 0 0 0 2px rgba(59, 113, 202, 0.15);
+}
+
+.space-editor__unit {
+  font-size: 11px;
+  color: #666;
+}
+
+.space-editor__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.space-editor__btn {
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.space-editor__btn--confirm {
+  background: var(--accent, #3b71ca);
+  color: white;
+}
+
+.space-editor__btn--confirm:hover {
+  background: #2a5298;
+}
+
+.space-editor__btn--cancel {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.space-editor__btn--cancel:hover {
+  background: #e5e7eb;
+}
+

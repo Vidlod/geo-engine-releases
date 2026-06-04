@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter } from './BlockOps.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -23,7 +23,7 @@ const SKIP_TAGS = new Set([
 const STRUCTURAL_TAGS = new Set(['TH']);
 
 /** Tags that count as "blocks" for merge/split. */
-const BLOCK_TAGS = ['P', 'LI'];
+const BLOCK_TAGS = ['P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
 export class Preview {
   /**
@@ -299,19 +299,25 @@ export class Preview {
     menu.style.display = 'none';
     root.appendChild(menu);
 
+    // ── Spacer Guide (appears on block hover to visualize margin-bottom) ──
+    const spacerGuide = document.createElement('div');
+    spacerGuide.className = 'geo-spacer-guide';
+    spacerGuide.style.display = 'none';
+    root.appendChild(spacerGuide);
+
     /** @type {HTMLElement|null} */
     let hoveredBlock = null;
     /** @type {HTMLElement|null} */
     let selectedBlock = null;
     let menuOpen = false;
 
-    // ── Hover → show/hide grip ──
+    // ── Hover → show/hide grip and spacer guide ──
     root.addEventListener('mouseover', (e) => {
       if (menuOpen || this._inlineEditor?.isOpen) return;
       const target = /** @type {HTMLElement} */ (e.target);
       if (target === grip || menu.contains(target)) return;
 
-      const block = target.closest('p, li');
+      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6');
       const isValidBlock = block && !block.closest('.nav, .nav-tabs, .nav-pills');
 
       if (isValidBlock) {
@@ -319,20 +325,91 @@ export class Preview {
           hoveredBlock = /** @type {HTMLElement} */ (block);
           this._positionGrip(grip, /** @type {HTMLElement} */ (block));
           grip.style.display = '';
+
+          // ── Spacer guide visualization ──
+          const tagName = block.tagName.toUpperCase();
+          const marginStr = block.style.marginBottom;
+          let marginPx = 0;
+          let isOriginal = false;
+
+          // 1. Calculate space using the physical distance to next element (if available)
+          let nextEl = block.nextElementSibling;
+          while (nextEl && (nextEl === grip || nextEl === menu || nextEl === spacerGuide || nextEl.style.display === 'none')) {
+            nextEl = nextEl.nextElementSibling;
+          }
+
+          if (nextEl) {
+            const br = block.getBoundingClientRect();
+            const nextBr = nextEl.getBoundingClientRect();
+            const realGap = nextBr.top - br.bottom;
+            if (realGap > 0) {
+              marginPx = realGap;
+            }
+          }
+
+          // 2. Fallback to CSS inline / default value if gap measurement is not applicable
+          if (marginPx === 0) {
+            marginPx = marginStr ? parseInt(marginStr, 10) : 0;
+            if (!marginStr) {
+              if (tagName === 'LI') {
+                const styleAttr = block.getAttribute('style') || '';
+                const match = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
+                marginPx = match ? parseInt(match[1], 10) : 10;
+              } else if (tagName.startsWith('H')) {
+                marginPx = 8;
+              } else {
+                marginPx = 16;
+              }
+            }
+          }
+
+          // Determine original flag based on baselines
+          const baseline = tagName === 'LI' ? 10 : (tagName.startsWith('H') ? 8 : 16);
+          if (Math.abs(marginPx - baseline) <= 2) {
+            isOriginal = true;
+          }
+
+          if (marginPx > 0) {
+            const cr = root.getBoundingClientRect();
+            const br = block.getBoundingClientRect();
+
+            spacerGuide.style.top = `${br.bottom - cr.top + root.scrollTop}px`;
+            spacerGuide.style.left = `${br.left - cr.left}px`;
+            spacerGuide.style.width = `${br.width}px`;
+            spacerGuide.style.height = `${marginPx}px`;
+
+            if (isOriginal) {
+              spacerGuide.className = 'geo-spacer-guide geo-spacer-guide--original';
+              spacerGuide.textContent = `ESPACIO ORIGINAL: ${baseline}px ⤓`;
+            } else {
+              spacerGuide.className = 'geo-spacer-guide';
+              const extra = Math.round(marginPx - baseline);
+              if (extra > 0) {
+                spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Total ${Math.round(marginPx)}px) ⤓`;
+              } else {
+                spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${Math.round(marginPx)}px ⤓`;
+              }
+            }
+            spacerGuide.style.display = 'flex';
+          } else {
+            spacerGuide.style.display = 'none';
+          }
         }
       } else {
         if (!menuOpen) {
           grip.style.display = 'none';
           hoveredBlock = null;
+          spacerGuide.style.display = 'none';
         }
       }
     });
 
-    // ── Mouse leaves preview → hide grip (if menu closed) ──
+    // ── Mouse leaves preview → hide grip and guide ──
     root.addEventListener('mouseleave', () => {
       if (!menuOpen) {
         grip.style.display = 'none';
         hoveredBlock = null;
+        spacerGuide.style.display = 'none';
       }
     });
 
@@ -382,7 +459,7 @@ export class Preview {
       if (this._inlineEditor?.isOpen) return;
 
       const target = /** @type {HTMLElement} */ (e.target);
-      const block = target.closest('p, li');
+      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6');
       if (!block || block.closest('.nav, .nav-tabs, .nav-pills')) return;
 
       e.preventDefault();
@@ -427,7 +504,8 @@ export class Preview {
       else if (action === 'split')       this._doSplit(blockEl);
       else if (action === 'clean-br')    this._doCleanBr(blockEl);
       else if (action === 'split-lines') this._doSplitLines(blockEl);
-      else if (action === 'add-space')   this._doAddSpace(blockEl);
+      else if (action === 'add-space')   this._showSpaceEditor(blockEl);
+      else if (action === 'remove-space') this._doRemoveSpace(blockEl);
     });
 
     // ── Click outside → close menu ──
@@ -499,6 +577,16 @@ export class Preview {
     // ── Spacing ──
     html += `<button class="block-menu__item" data-action="add-space"><span class="block-menu__icon">➕</span>Añadir espacio después</button>`;
 
+    // Show "remove space" only if the element has extra margin-bottom
+    const style = block.getAttribute('style') || '';
+    const marginMatch = style.match(/margin-bottom\s*:\s*(\d+)px/i);
+    const hasExtraMargin = marginMatch && (
+      block.tagName === 'LI' ? parseInt(marginMatch[1], 10) > 10 : true
+    );
+    if (hasExtraMargin) {
+      html += `<button class="block-menu__item" data-action="remove-space"><span class="block-menu__icon">➖</span>Quitar espacio después</button>`;
+    }
+
     menu.innerHTML = html;
   }
 
@@ -524,8 +612,11 @@ export class Preview {
     const prevText = this._norm(prevEl.textContent);
     const currText = this._norm(currEl.textContent);
 
+    const prevIndex = this._getBlockIndex(prevEl);
+    const currIndex = this._getBlockIndex(currEl);
+
     const html = this._engine.getResult();
-    const patch = mergeBlocks(html, currText, prevText, tagName);
+    const patch = mergeBlocks(html, currText, prevText, tagName, currIndex, prevIndex);
 
     if (patch) {
       try {
@@ -548,7 +639,8 @@ export class Preview {
     const blockText = this._norm(blockEl.textContent);
 
     const html = this._engine.getResult();
-    const block = findBlock(html, blockText, tagName);
+    const blockIndex = this._getBlockIndex(blockEl);
+    const block = findBlock(html, blockText, tagName, blockIndex);
     if (!block) {
       console.warn('[Preview] _doCleanBr: could not find block.');
       return;
@@ -580,7 +672,8 @@ export class Preview {
     const blockText = this._norm(blockEl.textContent);
 
     const html = this._engine.getResult();
-    const patch = splitAtBreaks(html, blockText, tagName);
+    const blockIndex = this._getBlockIndex(blockEl);
+    const patch = splitAtBreaks(html, blockText, tagName, blockIndex);
 
     if (patch) {
       try {
@@ -607,7 +700,8 @@ export class Preview {
 
     // Get display text (with <br> shown as \n)
     const html = this._engine.getResult();
-    const block = findBlock(html, blockText, tagName);
+    const blockIndex = this._getBlockIndex(blockEl);
+    const block = findBlock(html, blockText, tagName, blockIndex);
     if (!block) {
       console.warn('[Preview] _doSplit: could not find block.');
       return;
@@ -673,7 +767,8 @@ export class Preview {
       }
 
       const html = this._engine.getResult();
-      const patch = splitBlock(html, blockText, cursorPos, tagName);
+      const blockIndex = this._getBlockIndex(blockEl);
+      const patch = splitBlock(html, blockText, cursorPos, tagName, blockIndex);
 
       if (patch) {
         try {
@@ -702,13 +797,142 @@ export class Preview {
 
   /* ── Add Space implementation ──────────────────────────── */
 
-  /** Insert a `<p><br></p>` spacer after the current block. @private */
-  _doAddSpace(blockEl) {
+  /** Show an interactive popup to set custom margin-bottom on the block. @private */
+  _showSpaceEditor(blockEl) {
+    const tagName = blockEl.tagName.toLowerCase();
+    const blockText = this._norm(blockEl.textContent);
+    const blockIndex = this._getBlockIndex(blockEl);
+
+    // Get current margin size
+    const styleAttr = blockEl.getAttribute('style') || '';
+    const match = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
+    const baseline = tagName === 'li' ? 10 : (tagName.startsWith('h') ? 8 : 16);
+    const currentMargin = match ? parseInt(match[1], 10) : baseline;
+
+    // Create overlay container
+    const overlay = document.createElement('div');
+    overlay.className = 'space-editor';
+
+    const title = document.createElement('div');
+    title.className = 'space-editor__title';
+    title.textContent = 'Ajustar espacio inferior';
+
+    // Preset buttons
+    const presetsDiv = document.createElement('div');
+    presetsDiv.className = 'space-editor__presets';
+
+    const presets = [
+      { label: '+10px', val: baseline + 10 },
+      { label: '+20px', val: baseline + 20 },
+      { label: '+30px', val: baseline + 30 },
+      { label: 'Original', val: baseline },
+    ];
+
+    presets.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'space-editor__preset-btn';
+      btn.textContent = p.label;
+      btn.addEventListener('click', () => {
+        inputField.value = String(p.val);
+      });
+      presetsDiv.appendChild(btn);
+    });
+
+    // Custom input area
+    const customDiv = document.createElement('div');
+    customDiv.className = 'space-editor__custom';
+
+    const label = document.createElement('label');
+    label.className = 'space-editor__label';
+    label.textContent = 'Tamaño:';
+
+    const inputField = document.createElement('input');
+    inputField.type = 'number';
+    inputField.className = 'space-editor__input';
+    inputField.min = '0';
+    inputField.max = '200';
+    inputField.value = String(currentMargin);
+
+    const unit = document.createElement('span');
+    unit.className = 'space-editor__unit';
+    unit.textContent = 'px';
+
+    customDiv.append(label, inputField, unit);
+
+    // Actions area
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'space-editor__actions';
+
+    const btnSave = document.createElement('button');
+    btnSave.type = 'button';
+    btnSave.className = 'space-editor__btn space-editor__btn--confirm';
+    btnSave.textContent = 'Guardar';
+
+    const btnCancel = document.createElement('button');
+    btnCancel.type = 'button';
+    btnCancel.className = 'space-editor__btn space-editor__btn--cancel';
+    btnCancel.textContent = 'Cancelar';
+
+    actionsDiv.append(btnSave, btnCancel);
+    overlay.append(title, presetsDiv, customDiv, actionsDiv);
+
+    // Position overlay over the block element
+    const containerRect = this._container.getBoundingClientRect();
+    const blockRect = blockEl.getBoundingClientRect();
+
+    // Position slightly below the element, aligned to its left
+    overlay.style.top = `${blockRect.bottom - containerRect.top + this._container.scrollTop + 4}px`;
+    overlay.style.left = `${blockRect.left - containerRect.left}px`;
+
+    this._container.appendChild(overlay);
+    inputField.focus();
+    inputField.select();
+
+    // Confirm handler
+    btnSave.addEventListener('click', () => {
+      const val = parseInt(inputField.value, 10);
+      overlay.remove();
+      if (isNaN(val) || val < 0) return;
+
+      const html = this._engine.getResult();
+      const patch = addSpaceAfter(html, blockText, tagName, blockIndex, val);
+
+      if (patch) {
+        try {
+          this._engine.addPatch(patch.original, patch.replacement);
+          this.render();
+          this._onEdit();
+        } catch (err) {
+          console.error('[Preview] Set space size failed:', err);
+        }
+      }
+    });
+
+    // Cancel handler
+    btnCancel.addEventListener('click', () => overlay.remove());
+
+    // Close on Escape key or submit on Enter
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        overlay.remove();
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnSave.click();
+      }
+    });
+  }
+
+  /** Decrease margin-bottom on the current block. @private */
+  _doRemoveSpace(blockEl) {
     const tagName = blockEl.tagName.toLowerCase();
     const blockText = this._norm(blockEl.textContent);
 
     const html = this._engine.getResult();
-    const patch = addSpaceAfter(html, blockText, tagName);
+    const blockIndex = this._getBlockIndex(blockEl);
+    const patch = removeSpaceAfter(html, blockText, tagName, blockIndex);
 
     if (patch) {
       try {
@@ -716,14 +940,26 @@ export class Preview {
         this.render();
         this._onEdit();
       } catch (err) {
-        console.error('[Preview] Add space failed:', err);
+        console.error('[Preview] Remove space failed:', err);
       }
     } else {
-      console.warn('[Preview] addSpaceAfter returned null.');
+      console.warn('[Preview] removeSpaceAfter returned null (already at baseline).');
     }
   }
 
   /* ── Block helpers ──────────────────────────────────────── */
+
+  /**
+   * Get the absolute index of a block element relative to all blocks of the same tag.
+   * @private
+   * @param {HTMLElement} blockEl
+   * @returns {number}
+   */
+  _getBlockIndex(blockEl) {
+    const tagName = blockEl.tagName.toUpperCase();
+    const allOfSameTag = Array.from(this._container.querySelectorAll(tagName));
+    return allOfSameTag.indexOf(blockEl);
+  }
 
   /**
    * Find the previous or next sibling block element of the same tag.
