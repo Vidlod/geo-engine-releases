@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter } from './BlockOps.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -75,6 +75,9 @@ export class Preview {
     container.id = 'geo-preview-container';
     container.innerHTML = this._engine.getResult();
 
+    // Assign early to prevent synchronous hover/pointer events from crashing
+    this._container = container;
+
     // Wrap text nodes for inline editing
     this._textNodeMap.clear();
     this._wrapTextNodes(container);
@@ -91,7 +94,14 @@ export class Preview {
     // Mount
     this._panel.innerHTML = '';
     this._panel.appendChild(container);
-    this._container = container;
+
+    // ── Prevent content links from navigating ──
+    container.addEventListener('click', (e) => {
+      const link = /** @type {HTMLElement} */ (e.target).closest('a[href]');
+      if (link && !link.closest('.nav, .nav-tabs, .nav-pills')) {
+        e.preventDefault();
+      }
+    });
 
     container.addEventListener('click', this._handleClick);
   }
@@ -163,6 +173,13 @@ export class Preview {
       span.setAttribute('data-geo-editable', '');
       span.setAttribute('data-geo-index', String(index));
       span.textContent = text;
+
+      // Mark text inside links so the editor can handle them specially
+      const parentLink = node.parentElement?.closest('a[href]');
+      if (parentLink && !parentLink.closest('.nav')) {
+        span.setAttribute('data-geo-link', '');
+      }
+
       node.parentNode?.replaceChild(span, node);
       this._textNodeMap.set(index, { element: span, originalText: text });
       index++;
@@ -185,13 +202,18 @@ export class Preview {
     if (this._inlineEditor?.isOpen) this._inlineEditor.close();
 
     const currentText = span.textContent ?? '';
+    const isLinkText = span.hasAttribute('data-geo-link');
 
     this._inlineEditor = new InlineEditor(
       this._container,
       (newText) => {
         if (newText !== currentText) {
           try {
-            this._engine.addPatch(currentText, newText);
+            if (isLinkText) {
+              this._patchLinkText(currentText, newText);
+            } else {
+              this._engine.addPatch(currentText, newText);
+            }
             this.render();
             this._onEdit();
           } catch (err) { console.error('[Preview] Patch failed:', err); }
@@ -203,100 +225,288 @@ export class Preview {
     this._inlineEditor.open(span, currentText);
   }
 
+  /**
+   * Patch text that lives inside an `<a>` tag.
+   * If text was appended at the end → place it AFTER `</a>`.
+   * If text was prepended at the start → place it BEFORE `<a>`.
+   * Otherwise → normal in-place replacement.
+   * @private
+   */
+  _patchLinkText(originalText, newText) {
+    const html = this._engine.getResult();
+
+    // Find common prefix and suffix between old and new text
+    let prefixLen = 0;
+    const minLen = Math.min(originalText.length, newText.length);
+    while (prefixLen < minLen && originalText[prefixLen] === newText[prefixLen]) prefixLen++;
+
+    let suffixLen = 0;
+    while (
+      suffixLen < minLen - prefixLen &&
+      originalText[originalText.length - 1 - suffixLen] === newText[newText.length - 1 - suffixLen]
+    ) suffixLen++;
+
+    // Case 1: text appended at the end (original text unchanged, extra at end)
+    if (prefixLen === originalText.length) {
+      const appended = newText.substring(originalText.length);
+      // Find the pattern: originalText</a>  →  originalText</a>appended
+      const needle = originalText + '</a>';
+      if (html.includes(needle)) {
+        this._engine.addPatch(needle, originalText + '</a>' + appended);
+        return;
+      }
+    }
+
+    // Case 2: text prepended at the start (original text unchanged, extra at start)
+    if (suffixLen === originalText.length) {
+      const prepended = newText.substring(0, newText.length - originalText.length);
+      // Find a link opening tag right before the original text
+      // Pattern: <a ...>originalText  →  prepended<a ...>originalText
+      const re = new RegExp(`(<a\\b[^>]*>)(${this._escRegex(originalText)})`);
+      const match = html.match(re);
+      if (match) {
+        this._engine.addPatch(match[0], prepended + match[0]);
+        return;
+      }
+    }
+
+    // Default: normal replacement (text changed in the middle)
+    this._engine.addPatch(originalText, newText);
+  }
+
+  /** Escape special regex characters in a string. @private */
+  _escRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   /* ═══════════════════════════════════════════════════════════
-     Block toolbar  (merge / split)
+     Block menu  (grip handle + dropdown)
      ═══════════════════════════════════════════════════════════ */
 
   /** @private */
   _setupBlockToolbar(root) {
-    // ── Create toolbar DOM ──
-    const tb = document.createElement('div');
-    tb.className = 'block-toolbar';
-    tb.innerHTML = `
-      <button class="block-toolbar__btn block-toolbar__btn--merge"
-              data-action="merge-up"  title="Unir con el párrafo anterior">⬆ Unir</button>
-      <button class="block-toolbar__btn block-toolbar__btn--clean"
-              data-action="clean-br"  title="Quitar saltos de línea (<br>) dentro del párrafo">⊟ Quitar saltos</button>
-      <button class="block-toolbar__btn block-toolbar__btn--split"
-              data-action="split"     title="Separar este párrafo en dos">✂ Separar</button>
-      <button class="block-toolbar__btn block-toolbar__btn--merge"
-              data-action="merge-down" title="Unir con el párrafo siguiente">⬇ Unir</button>
-    `;
-    tb.style.display = 'none';
-    root.appendChild(tb);
-    this._blockToolbar = tb;
-    this._activeBlock = null;
+    // ── Grip handle (appears on hover) ──
+    const grip = document.createElement('button');
+    grip.className = 'block-grip';
+    grip.setAttribute('aria-label', 'Opciones de bloque');
+    grip.innerHTML = '⋮⋮';
+    grip.style.display = 'none';
+    root.appendChild(grip);
 
-    // ── Hover detection on block elements ──
+    // ── Dropdown menu (appears on grip click) ──
+    const menu = document.createElement('div');
+    menu.className = 'block-menu';
+    menu.style.display = 'none';
+    root.appendChild(menu);
+
+    /** @type {HTMLElement|null} */
+    let hoveredBlock = null;
+    /** @type {HTMLElement|null} */
+    let selectedBlock = null;
+    let menuOpen = false;
+
+    // ── Hover → show/hide grip ──
     root.addEventListener('mouseover', (e) => {
-      if (this._inlineEditor?.isOpen) return;
+      if (menuOpen || this._inlineEditor?.isOpen) return;
       const target = /** @type {HTMLElement} */ (e.target);
+      if (target === grip || menu.contains(target)) return;
+
       const block = target.closest('p, li');
-      if (!block || block === this._activeBlock) return;
+      const isValidBlock = block && !block.closest('.nav, .nav-tabs, .nav-pills');
 
-      // Skip nav items and items inside tab navs
-      if (block.closest('.nav, .nav-tabs, .nav-pills')) return;
-
-      this._activeBlock = /** @type {HTMLElement} */ (block);
-      this._positionToolbar(tb, /** @type {HTMLElement} */ (block));
-      tb.style.display = 'flex';
-
-      // Update button visibility based on context
-      const prevBtn = tb.querySelector('[data-action="merge-up"]');
-      const nextBtn = tb.querySelector('[data-action="merge-down"]');
-      const cleanBtn = tb.querySelector('[data-action="clean-br"]');
-      const hasPrev = !!this._findAdjacentBlock(/** @type {HTMLElement} */ (block), 'prev');
-      const hasNext = !!this._findAdjacentBlock(/** @type {HTMLElement} */ (block), 'next');
-      const hasBr = !!block.querySelector('br');
-      if (prevBtn)  /** @type {HTMLElement} */ (prevBtn).style.display  = hasPrev ? '' : 'none';
-      if (nextBtn)  /** @type {HTMLElement} */ (nextBtn).style.display  = hasNext ? '' : 'none';
-      if (cleanBtn) /** @type {HTMLElement} */ (cleanBtn).style.display = hasBr   ? '' : 'none';
+      if (isValidBlock) {
+        if (block !== hoveredBlock) {
+          hoveredBlock = /** @type {HTMLElement} */ (block);
+          this._positionGrip(grip, /** @type {HTMLElement} */ (block));
+          grip.style.display = '';
+        }
+      } else {
+        if (!menuOpen) {
+          grip.style.display = 'none';
+          hoveredBlock = null;
+        }
+      }
     });
 
-    // ── Hide on mouse leave ──
-    const hideCheck = () => {
-      setTimeout(() => {
-        if (tb.matches(':hover')) return;
-        if (this._activeBlock?.matches(':hover')) return;
-        tb.style.display = 'none';
-        this._activeBlock = null;
-      }, 150);
-    };
+    // ── Mouse leaves preview → hide grip (if menu closed) ──
+    root.addEventListener('mouseleave', () => {
+      if (!menuOpen) {
+        grip.style.display = 'none';
+        hoveredBlock = null;
+      }
+    });
 
-    root.addEventListener('mouseleave', hideCheck);
-    tb.addEventListener('mouseleave', hideCheck);
+    // ── Click grip → open/close menu ──
+    grip.addEventListener('click', (e) => {
+      // If clicked on the invisible bridge (right side of the grip button)
+      if (e.offsetX > 22) {
+        // Find the editable element underneath
+        grip.style.pointerEvents = 'none';
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        grip.style.pointerEvents = '';
 
-    // ── Button clicks ──
-    tb.addEventListener('click', (e) => {
-      const btn = /** @type {HTMLElement} */ (e.target).closest('[data-action]');
-      if (!btn || !this._activeBlock) return;
+        const editable = under?.closest('[data-geo-editable]');
+        if (editable) {
+          // Trigger click on the editable element to open the inline editor
+          editable.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            clientX: e.clientX,
+            clientY: e.clientY
+          }));
+          return;
+        }
+      }
 
       e.preventDefault();
       e.stopPropagation();
 
-      const action = btn.getAttribute('data-action');
-      const blockEl = this._activeBlock;
-      tb.style.display = 'none';
+      if (menuOpen) {
+        this._closeBlockMenu(menu, grip);
+        menuOpen = false;
+        selectedBlock = null;
+        return;
+      }
 
-      if (action === 'merge-up') this._doMerge(blockEl, 'up');
-      else if (action === 'merge-down') this._doMerge(blockEl, 'down');
-      else if (action === 'split') this._doSplit(blockEl);
-      else if (action === 'clean-br') this._doCleanBr(blockEl);
-
-      this._activeBlock = null;
+      if (!hoveredBlock) return;
+      selectedBlock = hoveredBlock;
+      selectedBlock.classList.add('block-selected');
+      this._buildMenu(menu, selectedBlock);
+      this._positionMenu(menu, grip);
+      menu.style.display = '';
+      menuOpen = true;
     });
+
+    // ── Right-click → custom context menu ──
+    root.addEventListener('contextmenu', (e) => {
+      if (this._inlineEditor?.isOpen) return;
+
+      const target = /** @type {HTMLElement} */ (e.target);
+      const block = target.closest('p, li');
+      if (!block || block.closest('.nav, .nav-tabs, .nav-pills')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (menuOpen) {
+        this._closeBlockMenu(menu, grip);
+      }
+
+      selectedBlock = /** @type {HTMLElement} */ (block);
+      selectedBlock.classList.add('block-selected');
+      this._buildMenu(menu, selectedBlock);
+
+      // Position menu at cursor coordinates
+      const cr = this._container.getBoundingClientRect();
+      menu.style.top = `${e.clientY - cr.top + this._container.scrollTop + 2}px`;
+      menu.style.left = `${e.clientX - cr.left + 2}px`;
+      menu.style.display = '';
+
+      grip.style.display = 'none';
+      menuOpen = true;
+    });
+
+    // ── Click menu item → action ──
+    menu.addEventListener('click', (e) => {
+      const item = /** @type {HTMLElement} */ (e.target).closest('[data-action]');
+      if (!item || !selectedBlock) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const action = item.getAttribute('data-action');
+      const blockEl = selectedBlock;
+
+      this._closeBlockMenu(menu, grip);
+      menuOpen = false;
+      selectedBlock = null;
+      hoveredBlock = null;
+
+      if (action === 'merge-up')     this._doMerge(blockEl, 'up');
+      else if (action === 'merge-down')  this._doMerge(blockEl, 'down');
+      else if (action === 'split')       this._doSplit(blockEl);
+      else if (action === 'clean-br')    this._doCleanBr(blockEl);
+      else if (action === 'split-lines') this._doSplitLines(blockEl);
+      else if (action === 'add-space')   this._doAddSpace(blockEl);
+    });
+
+    // ── Click outside → close menu ──
+    document.addEventListener('click', (e) => {
+      if (!menuOpen) return;
+      if (grip.contains(/** @type {Node} */ (e.target))) return;
+      if (menu.contains(/** @type {Node} */ (e.target))) return;
+
+      this._closeBlockMenu(menu, grip);
+      menuOpen = false;
+      selectedBlock = null;
+    });
+
+    // ── Escape → close menu ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menuOpen) {
+        this._closeBlockMenu(menu, grip);
+        menuOpen = false;
+        selectedBlock = null;
+      }
+    });
+
+    this._blockGrip = grip;
+    this._blockMenu = menu;
   }
 
-  /** @private */
-  _positionToolbar(toolbar, block) {
-    const containerRect = this._container.getBoundingClientRect();
-    const blockRect = block.getBoundingClientRect();
+  /** Position the grip handle to the left of a block. @private */
+  _positionGrip(grip, block) {
+    const cr = this._container.getBoundingClientRect();
+    const br = block.getBoundingClientRect();
+    grip.style.top = `${br.top - cr.top + this._container.scrollTop + 4}px`;
+    grip.style.left = `${br.left - cr.left - 28}px`;
+  }
 
-    const top = blockRect.top - containerRect.top + this._container.scrollTop - 4;
-    toolbar.style.top = `${top}px`;
-    toolbar.style.right = '100%';
-    toolbar.style.left = 'auto';
-    toolbar.style.marginRight = '8px';
+  /** Position the dropdown menu below the grip handle. @private */
+  _positionMenu(menu, grip) {
+    const cr = this._container.getBoundingClientRect();
+    const gr = grip.getBoundingClientRect();
+    menu.style.top = `${gr.bottom - cr.top + this._container.scrollTop + 4}px`;
+    menu.style.left = `${gr.left - cr.left}px`;
+  }
+
+  /** Build menu items based on the selected block's context. @private */
+  _buildMenu(menu, block) {
+    const hasPrev = !!this._findAdjacentBlock(block, 'prev');
+    const hasNext = !!this._findAdjacentBlock(block, 'next');
+    const hasBr = !!block.querySelector('br');
+
+    let html = '';
+
+    // ── Merge group ──
+    if (hasPrev || hasNext) {
+      if (hasPrev) html += `<button class="block-menu__item" data-action="merge-up"><span class="block-menu__icon">⬆</span>Unir con anterior</button>`;
+      if (hasNext) html += `<button class="block-menu__item" data-action="merge-down"><span class="block-menu__icon">⬇</span>Unir con siguiente</button>`;
+      html += '<div class="block-menu__sep"></div>';
+    }
+
+    // ── Break operations ──
+    if (hasBr) {
+      html += `<button class="block-menu__item" data-action="split-lines"><span class="block-menu__icon">↕</span>Separar todas las líneas</button>`;
+      html += `<button class="block-menu__item" data-action="clean-br"><span class="block-menu__icon">⊟</span>Quitar saltos de línea</button>`;
+      html += '<div class="block-menu__sep"></div>';
+    }
+
+    // ── Split ──
+    html += `<button class="block-menu__item" data-action="split"><span class="block-menu__icon">✂</span>Separar en un punto</button>`;
+    html += '<div class="block-menu__sep"></div>';
+
+    // ── Spacing ──
+    html += `<button class="block-menu__item" data-action="add-space"><span class="block-menu__icon">➕</span>Añadir espacio después</button>`;
+
+    menu.innerHTML = html;
+  }
+
+  /** Close the dropdown and clean up selection. @private */
+  _closeBlockMenu(menu, grip) {
+    menu.style.display = 'none';
+    const selected = this._container?.querySelector('.block-selected');
+    if (selected) selected.classList.remove('block-selected');
   }
 
   /* ── Merge implementation ──────────────────────────────── */
@@ -362,6 +572,29 @@ export class Preview {
     }
   }
 
+  /* ── Split Lines implementation ────────────────────────── */
+
+  /** Convert each `<br>` inside a block into a separate paragraph. @private */
+  _doSplitLines(blockEl) {
+    const tagName = blockEl.tagName.toLowerCase();
+    const blockText = this._norm(blockEl.textContent);
+
+    const html = this._engine.getResult();
+    const patch = splitAtBreaks(html, blockText, tagName);
+
+    if (patch) {
+      try {
+        this._engine.addPatch(patch.original, patch.replacement);
+        this.render();
+        this._onEdit();
+      } catch (err) {
+        console.error('[Preview] Split lines failed:', err);
+      }
+    } else {
+      console.warn('[Preview] splitAtBreaks returned null.');
+    }
+  }
+
   /* ── Split implementation ──────────────────────────────── */
 
   /** @private */
@@ -372,15 +605,24 @@ export class Preview {
     // Close any existing editor
     if (this._inlineEditor?.isOpen) this._inlineEditor.close();
 
-    // Show the full paragraph text in a large textarea with split instructions
-    this._showSplitEditor(blockEl, blockText, tagName);
+    // Get display text (with <br> shown as \n)
+    const html = this._engine.getResult();
+    const block = findBlock(html, blockText, tagName);
+    if (!block) {
+      console.warn('[Preview] _doSplit: could not find block.');
+      return;
+    }
+    const display = getBlockDisplay(block.innerHTML);
+
+    this._showSplitEditor(blockEl, blockText, display.text, tagName);
   }
 
   /**
-   * Opens a textarea over the paragraph with the full text for splitting.
+   * Opens a textarea over the paragraph with the display text for splitting.
+   * The display text shows `<br>` as visible newlines.
    * @private
    */
-  _showSplitEditor(blockEl, blockText, tagName) {
+  _showSplitEditor(blockEl, blockText, displayText, tagName) {
     // Create the split overlay
     const overlay = document.createElement('div');
     overlay.className = 'split-editor';
@@ -391,8 +633,8 @@ export class Preview {
 
     const textarea = document.createElement('textarea');
     textarea.className = 'split-editor__textarea';
-    textarea.value = blockText;
-    textarea.rows = 4;
+    textarea.value = displayText;
+    textarea.rows = Math.min(displayText.split('\n').length + 1, 10);
 
     const actions = document.createElement('div');
     actions.className = 'split-editor__actions';
@@ -425,7 +667,7 @@ export class Preview {
       const cursorPos = textarea.selectionStart;
       overlay.remove();
 
-      if (cursorPos <= 0 || cursorPos >= blockText.length) {
+      if (cursorPos <= 0 || cursorPos >= displayText.length) {
         console.warn('[Preview] Split position at boundary, ignoring.');
         return;
       }
@@ -456,6 +698,29 @@ export class Preview {
         overlay.remove();
       }
     });
+  }
+
+  /* ── Add Space implementation ──────────────────────────── */
+
+  /** Insert a `<p><br></p>` spacer after the current block. @private */
+  _doAddSpace(blockEl) {
+    const tagName = blockEl.tagName.toLowerCase();
+    const blockText = this._norm(blockEl.textContent);
+
+    const html = this._engine.getResult();
+    const patch = addSpaceAfter(html, blockText, tagName);
+
+    if (patch) {
+      try {
+        this._engine.addPatch(patch.original, patch.replacement);
+        this.render();
+        this._onEdit();
+      } catch (err) {
+        console.error('[Preview] Add space failed:', err);
+      }
+    } else {
+      console.warn('[Preview] addSpaceAfter returned null.');
+    }
   }
 
   /* ── Block helpers ──────────────────────────────────────── */

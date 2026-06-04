@@ -105,10 +105,20 @@ export function mergeBlocks(html, currTextContent, prevTextContent, tagName = 'p
     return null;
   }
 
-  // Safety: only merge if the content between them is whitespace-only
-  const between = html.substring(prevBlock.end, currBlock.start).trim();
-  if (between.length > 0) {
-    console.warn('[BlockOps] mergeBlocks: non-whitespace between blocks:', between.substring(0, 100));
+  // Safety: only merge if the content between them is safely deletable
+  const between = html.substring(prevBlock.end, currBlock.start);
+  
+  let s = between;
+  s = s.replace(/<!--[\s\S]*?-->/g, ''); // comments
+  s = s.replace(/(&nbsp;|&#160;|<br\s*\/?>|\s)+/gi, ''); // whitespace/breaks
+  let prevStr;
+  do {
+    prevStr = s;
+    s = s.replace(/<([a-z0-9]+)[^>]*><\/\1>/gi, ''); // empty tags
+  } while (s !== prevStr);
+
+  if (s.length > 0) {
+    console.warn('[BlockOps] mergeBlocks: non-empty content between blocks:', between.substring(0, 100));
     return null;
   }
 
@@ -119,54 +129,128 @@ export function mergeBlocks(html, currTextContent, prevTextContent, tagName = 'p
   return { original, replacement: merged };
 }
 
-/* ── Split ────────────────────────────────────────────────── */
+/* ── Display-text mapping ─────────────────────────────────── */
 
 /**
- * Convert a plain-text offset to an HTML offset inside innerHTML,
- * skipping over HTML tags and counting decoded entities as 1 char.
+ * Build a "display text" from innerHTML:
+ *  • `<br>` → `\n`
+ *  • other tags stripped
+ *  • runs of whitespace collapsed (newlines preserved)
+ *  • HTML entities decoded
+ *
+ * Also returns `toHtml(displayOffset)` to map a cursor position
+ * in the display text back to the corresponding byte-offset in
+ * the innerHTML string.
+ *
+ * @param {string} innerHTML
+ * @returns {{ text: string, toHtml: (offset: number) => number }}
  */
-function textOffsetToHtmlOffset(innerHTML, textOffset) {
-  let textCount = 0;
+export function getBlockDisplay(innerHTML) {
+  /** @type {string[]} */
+  const chars = [];
+  /** @type {number[]} — chars[i] came from innerHTML[offsets[i]] */
+  const offsets = [];
   let i = 0;
+  let lastWasSpace = false;
+  let lineStart = true;
   const len = innerHTML.length;
 
-  while (i < len && textCount < textOffset) {
+  while (i < len) {
+    // ── HTML tags ──
     if (innerHTML[i] === '<') {
+      const rest = innerHTML.substring(i);
+      const brMatch = rest.match(/^<br\s*\/?>/i);
+      if (brMatch) {
+        offsets.push(i);
+        chars.push('\n');
+        lastWasSpace = false;
+        lineStart = true;
+        i += brMatch[0].length;
+        continue;
+      }
+      // Skip other tags
       while (i < len && innerHTML[i] !== '>') i++;
       i++;
       continue;
     }
+
+    // ── HTML entities ──
     if (innerHTML[i] === '&') {
       const semi = innerHTML.indexOf(';', i);
       if (semi !== -1 && semi - i < 10) {
-        textCount++;
+        const ent = innerHTML.substring(i, semi + 1);
+        const isSpace = ent === '&nbsp;';
+        if (isSpace) {
+          if (!lastWasSpace && !lineStart) {
+            offsets.push(i); chars.push(' '); lastWasSpace = true;
+          }
+        } else {
+          const ch = ent === '&amp;' ? '&' :
+                     ent === '&lt;'  ? '<' :
+                     ent === '&gt;'  ? '>' :
+                     ent === '&quot;' ? '"' :
+                     ent === '&#39;' || ent === '&#039;' ? "'" : '?';
+          offsets.push(i); chars.push(ch);
+          lastWasSpace = false; lineStart = false;
+        }
         i = semi + 1;
         continue;
       }
     }
-    textCount++;
+
+    // ── Whitespace ──
+    if (/\s/.test(innerHTML[i])) {
+      if (!lastWasSpace && !lineStart) {
+        offsets.push(i); chars.push(' '); lastWasSpace = true;
+      }
+      i++;
+      continue;
+    }
+
+    // ── Regular character ──
+    offsets.push(i); chars.push(innerHTML[i]);
+    lastWasSpace = false; lineStart = false;
     i++;
   }
-  return i;
+
+  // Trim trailing spaces (but keep trailing \n)
+  while (chars.length && chars[chars.length - 1] === ' ') {
+    chars.pop(); offsets.pop();
+  }
+
+  return {
+    text: chars.join(''),
+    toHtml(displayOffset) {
+      if (displayOffset <= 0) return 0;
+      if (displayOffset >= offsets.length) return len;
+      return offsets[displayOffset];
+    },
+  };
 }
 
+/* ── Split ────────────────────────────────────────────────── */
+
 /**
- * Split a block element into two at the given text offset.
+ * Split a block element into two at the given *display-text* offset.
+ *
+ * The offset comes from a textarea showing `getBlockDisplay(innerHTML).text`,
+ * so it accounts for collapsed whitespace and `<br>` → `\n`.
  *
  * @param {string} html            Full HTML string
- * @param {string} textContent     Text content of the block
- * @param {number} splitTextOffset Offset in plain-text chars
+ * @param {string} textContent     Normalised text (for findBlock)
+ * @param {number} displayOffset   Cursor position in display text
  * @param {string} [tagName='p']
  * @returns {{ original: string, replacement: string } | null}
  */
-export function splitBlock(html, textContent, splitTextOffset, tagName = 'p') {
+export function splitBlock(html, textContent, displayOffset, tagName = 'p') {
   const block = findBlock(html, textContent, tagName);
   if (!block) {
     console.warn('[BlockOps] splitBlock: could not find block.');
     return null;
   }
 
-  const htmlOffset = textOffsetToHtmlOffset(block.innerHTML, splitTextOffset);
+  const display = getBlockDisplay(block.innerHTML);
+  const htmlOffset = display.toHtml(displayOffset);
 
   let before = block.innerHTML.substring(0, htmlOffset);
   let after = block.innerHTML.substring(htmlOffset);
@@ -175,16 +259,88 @@ export function splitBlock(html, textContent, splitTextOffset, tagName = 'p') {
   before = before.replace(/(\s|<br\s*\/?>)+$/gi, '');
   after = after.replace(/^(\s|<br\s*\/?>)+/gi, '');
 
+  if (!before.trim() || !after.trim()) return null; // nothing useful on one side
+
   // Detect indentation
   const lineStart = html.lastIndexOf('\n', block.start);
   const indent = lineStart >= 0
     ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
     : '';
 
-  const original = block.fullMatch;
-  const replacement =
-    `<${tagName}${block.attrs}>${before}</${tagName}>\n` +
-    `${indent}<${tagName}${block.attrs}>${after}</${tagName}>`;
+  return {
+    original: block.fullMatch,
+    replacement:
+      `<${tagName}${block.attrs}>${before}</${tagName}>\n` +
+      `${indent}<${tagName}${block.attrs}>${after}</${tagName}>`,
+  };
+}
 
-  return { original, replacement };
+/* ── Add space ────────────────────────────────────────────── */
+
+/**
+ * Insert a spacer `<p><br></p>` after a block element.
+ *
+ * @param {string} html          Full HTML string
+ * @param {string} textContent   Normalised text (for findBlock)
+ * @param {string} [tagName='p']
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function addSpaceAfter(html, textContent, tagName = 'p') {
+  const block = findBlock(html, textContent, tagName);
+  if (!block) {
+    console.warn('[BlockOps] addSpaceAfter: could not find block.');
+    return null;
+  }
+
+  // Detect indentation
+  const lineStart = html.lastIndexOf('\n', block.start);
+  const indent = lineStart >= 0
+    ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
+    : '';
+
+  return {
+    original: block.fullMatch,
+    replacement: `${block.fullMatch}\n${indent}<p><br></p>`,
+  };
+}
+
+/* ── Split at BR ──────────────────────────────────────────── */
+
+/**
+ * Split a block element into multiple blocks at every `<br>` boundary.
+ *
+ * Converts:  `<p A>line1<br>line2<br><br>line3</p>`
+ * Into:      `<p A>line1</p>\n<p A>line2</p>\n<p A>line3</p>`
+ *
+ * Consecutive `<br>` tags are treated as a single boundary.
+ *
+ * @param {string} html          Full HTML string
+ * @param {string} textContent   Text content of the block
+ * @param {string} [tagName='p']
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function splitAtBreaks(html, textContent, tagName = 'p') {
+  const block = findBlock(html, textContent, tagName);
+  if (!block) {
+    console.warn('[BlockOps] splitAtBreaks: could not find block.');
+    return null;
+  }
+
+  // Check there are actually <br> tags to split on
+  if (!/<br\s*\/?>/i.test(block.innerHTML)) return null;
+
+  // Detect indentation
+  const lineStart = html.lastIndexOf('\n', block.start);
+  const indent = lineStart >= 0
+    ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
+    : '';
+
+  // Replace consecutive <br> (+ surrounding whitespace) with a paragraph boundary
+  const boundary = `</${tagName}>\n${indent}<${tagName}${block.attrs}>`;
+  const newInner = block.innerHTML.replace(/(\s*<br\s*\/?>\s*)+/gi, boundary);
+
+  return {
+    original: block.fullMatch,
+    replacement: `<${tagName}${block.attrs}>${newInner}</${tagName}>`,
+  };
 }

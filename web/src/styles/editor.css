@@ -34,6 +34,31 @@
   outline-offset: 1px;
 }
 
+/* Links inside preview: no navigation, edit-only mode */
+.preview-container a:not(.nav-link) {
+  cursor: text;
+  pointer-events: auto;
+}
+
+/* Link text indicator — orange tint so user knows it's inside a link */
+.preview-container [data-geo-link]:hover {
+  background: rgba(234, 88, 12, 0.08);
+  outline-color: rgba(234, 88, 12, 0.4);
+}
+.preview-container [data-geo-link]::before {
+  content: '🔗';
+  font-size: 0.55em;
+  position: absolute;
+  top: -8px;
+  left: -2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.preview-container [data-geo-link]:hover::before {
+  opacity: 0.7;
+}
+
 .preview-container [data-geo-editable].geo-editing {
   background: rgba(59, 113, 202, 0.12);
   outline: 2px solid var(--accent);
@@ -122,82 +147,117 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Block Toolbar — floats on the left of paragraphs on hover
+   Block Grip Handle — small icon on the left of paragraphs
    ═══════════════════════════════════════════════════════════════ */
 
-/* Paragraph hover highlight */
+/* Subtle hover on paragraphs */
 .preview-container p:hover,
 .preview-container li:not(.nav-item):hover {
-  outline: 2px dashed rgba(59, 113, 202, 0.15);
+  outline: 1px dashed rgba(59, 113, 202, 0.1);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
-.block-toolbar {
+/* Selected block highlight */
+.preview-container .block-selected {
+  outline: 2px solid rgba(99, 102, 241, 0.3) !important;
+  outline-offset: 2px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.block-grip {
   position: absolute;
   z-index: 400;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px;
-  background: var(--bg-elevated, #1e1e2e);
-  border: 1px solid var(--border, #333);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  animation: block-tb-in 0.15s ease-out;
-}
-
-@keyframes block-tb-in {
-  from { opacity: 0; transform: translateX(4px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.block-toolbar__btn {
+  width: 22px;
+  height: 28px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 5px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  font-family: var(--font-sans, system-ui);
-  border: 1px solid transparent;
+  justify-content: center;
+  background: var(--bg-elevated, #1e1e2e);
+  border: 1px solid var(--border, #333);
+  border-radius: 6px;
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  letter-spacing: 1px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  padding: 0;
+  line-height: 1;
 }
 
-.block-toolbar__btn--merge {
-  background: rgba(139, 92, 246, 0.15);
-  color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.2);
-}
-.block-toolbar__btn--merge:hover {
-  background: rgba(139, 92, 246, 0.3);
-  color: #c4b5fd;
-  border-color: rgba(139, 92, 246, 0.4);
-}
-
-.block-toolbar__btn--split {
-  background: rgba(234, 179, 8, 0.15);
-  color: #fbbf24;
-  border-color: rgba(234, 179, 8, 0.2);
-}
-.block-toolbar__btn--split:hover {
-  background: rgba(234, 179, 8, 0.3);
-  color: #fcd34d;
-  border-color: rgba(234, 179, 8, 0.4);
+/* Invisible bridge to prevent hover from breaking when moving cursor to the button */
+.block-grip::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  left: -10px;
+  right: -32px;
+  background: transparent;
 }
 
-.block-toolbar__btn--clean {
-  background: rgba(20, 184, 166, 0.15);
-  color: #2dd4bf;
-  border-color: rgba(20, 184, 166, 0.2);
+.preview-container:hover .block-grip { opacity: 0.5; }
+.block-grip:hover { opacity: 1 !important; background: var(--accent, #3b71ca); color: #fff; border-color: var(--accent, #3b71ca); }
+
+/* ═══════════════════════════════════════════════════════════════
+   Block Dropdown Menu
+   ═══════════════════════════════════════════════════════════════ */
+
+.block-menu {
+  position: absolute;
+  z-index: 500;
+  min-width: 210px;
+  background: var(--bg-elevated, #1e1e2e);
+  border: 1px solid var(--border, #333);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.04);
+  padding: 4px;
+  animation: block-menu-in 0.12s ease-out;
 }
-.block-toolbar__btn--clean:hover {
-  background: rgba(20, 184, 166, 0.3);
-  color: #5eead4;
-  border-color: rgba(20, 184, 166, 0.4);
+
+@keyframes block-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.block-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-family: var(--font-sans, system-ui);
+  color: var(--text-secondary, #ccc);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-align: left;
+}
+
+.block-menu__item:hover {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--text-primary, #fff);
+}
+
+.block-menu__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.block-menu__sep {
+  height: 1px;
+  margin: 3px 8px;
+  background: var(--border, #333);
+  opacity: 0.5;
 }
 
 /* ═══════════════════════════════════════════════════════════════
