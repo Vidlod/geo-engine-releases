@@ -308,27 +308,43 @@ export function addSpaceAfter(html, textContent, tagName = 'p') {
     : '';
 
   if (tagName === 'li') {
-    let newAttrs = block.attrs;
-    if (newAttrs.includes('style=')) {
-      if (!/margin-bottom\s*:/i.test(newAttrs)) {
-        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (match, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style="${trimmed}${sep} margin-bottom: 10px;"`;
-        });
-        newAttrs = newAttrs.replace(/style='([^']*)'/i, (match, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style='${trimmed}${sep} margin-bottom: 10px;'`;
-        });
-      }
+    // Find parent list tag
+    const beforeBlock = html.substring(0, block.start);
+    const lastUl = beforeBlock.lastIndexOf('<ul');
+    const lastOl = beforeBlock.lastIndexOf('<ol');
+    const parentTag = (lastUl > lastOl) ? 'ul' : 'ol';
+
+    // Check if there is another <li> before the list ends
+    const afterBlock = html.substring(block.end);
+    const nextLi = afterBlock.search(/<li\b/i);
+    const nextClose = afterBlock.search(new RegExp(`</${parentTag}>`, 'i'));
+
+    if (nextLi !== -1 && nextLi < nextClose) {
+      // Middle li: split the list and insert a spacer paragraph
+      return {
+        original: block.fullMatch,
+        replacement: `${block.fullMatch}\n${indent}</${parentTag}>\n${indent}<p>&nbsp;</p>\n${indent}<${parentTag}>`,
+      };
     } else {
-      newAttrs = ` style="margin-bottom: 10px;"` + newAttrs;
+      // Last li: add space after the closing tag of the list
+      const closeMatch = afterBlock.match(new RegExp(`</${parentTag}>`, 'i'));
+      if (closeMatch) {
+        const closeTag = closeMatch[0];
+        const closeIndex = afterBlock.indexOf(closeTag);
+        const originalText = html.substring(block.start, block.end + closeIndex + closeTag.length);
+        
+        // Indentation of the parent list for alignment
+        const parentLineStart = html.lastIndexOf('\n', Math.max(lastUl, lastOl));
+        const parentIndent = parentLineStart >= 0
+          ? (html.substring(parentLineStart + 1, Math.max(lastUl, lastOl)).match(/^(\s*)/)?.[1] ?? '')
+          : '';
+
+        return {
+          original: originalText,
+          replacement: `${originalText}\n${parentIndent}<p>&nbsp;</p>`,
+        };
+      }
     }
-    return {
-      original: block.fullMatch,
-      replacement: `<li${newAttrs}>${block.innerHTML}</li>`,
-    };
   }
 
   return {
