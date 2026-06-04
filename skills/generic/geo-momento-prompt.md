@@ -368,7 +368,7 @@ Antes de entregar el HTML verifica:
 - [ ] "Producto Final" aplicado en TODO el HTML (tabla, pestaña, botón, textos).
 - [ ] REDs en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
 - [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
-- [ ] Instrucciones de Condiciones Particulares: una por entregable (con `<br><br>`), sin fusionar ni parafrasear.
+- [ ] Condiciones Particulares: misma estructura de párrafos que el Word (un `<p>` si el Word tiene uno), con los entregables enlazados con `@@PLUGINFILE@@`.
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
@@ -497,10 +497,10 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                         </ul>
                         <p style="text-align: justify;">[Párrafo contextualización / problemática.]</p>
                         <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
-                        <p style="text-align: justify;">Desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable 1].docx" target="_blank" rel="noopener">[Entregable 1]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.<br><br>Así mismo, desarrolle el entregable siguiendo las indicaciones de la forma <strong><a href="@@PLUGINFILE@@/[Entregable 2].docx" target="_blank" rel="noopener">[Entregable 2]</a></strong> suministrado para su estructuración. Lea con atención las instrucciones para su correcto diligenciamiento. No modifique ni elimine elementos de la forma.</p>
+                        <!-- Copia el texto EXACTO del Word. Si el Word tiene UN párrafo, va en UN <p>.
+                             Enlaza cada entregable mencionado con @@PLUGINFILE@@. -->
+                        <p style="text-align: justify;">[Texto exacto del Word con los entregables enlazados: <strong><a href="@@PLUGINFILE@@/[Entregable_1].docx" target="_blank" rel="noopener">[Entregable 1]</a></strong> y <strong><a href="@@PLUGINFILE@@/[Entregable_2].docx" target="_blank" rel="noopener">[Entregable 2]</a></strong>.]</p>
                     </div>
-                    <!-- IMPORTANTE: una instrucción por entregable, separadas por <br><br>, cada una con su enlace.
-                         NO las fusiones en "Diligencie el formato Entregable_1 y entregable_2..." ni parafrasees. -->
 
                     <!-- PESTAÑA 3: INSTRUMENTO DE EVALUACIÓN -->
                     <div class="tab-pane fade shadow rounded bg-white p-5"

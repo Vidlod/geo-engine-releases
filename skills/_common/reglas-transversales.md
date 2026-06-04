@@ -150,15 +150,13 @@ El insumo llega **convertido a HTML** (no Word en texto plano). Por tanto:
   en negrita en el resultado (salvo las excepciones de las reglas: las citas
   bibliográficas van en texto plano, sección 5).
 - **Respeta la puntuación y los párrafos `<p>` del origen**: no fusiones frases ni
-  elimines puntos. Cada `<p>` del origen es un párrafo aparte.
+  elimines puntos. Cada `<p>` del origen es un párrafo aparte. Esta regla no tiene
+  excepciones — aplica a TODO el HTML, incluyendo Condiciones Particulares de Entrega.
 - No agregues negrita donde el origen no la tiene, ni la quites donde sí la tiene.
-- **No fusiones ni parafrasees instrucciones repetidas**: si el origen da una instrucción
-  por cada entregable/plantilla (ej. "Desarrolle el entregable siguiendo las indicaciones
-  de la forma **Entregable 1**... No modifique ni elimine elementos de la forma." y luego
-  "Así mismo, desarrolle el entregable siguiendo las indicaciones de la forma
-  **Entregable 2**..."), cada una va como su **propio bloque** separado por `<br><br>`, con
-  su enlace `@@PLUGINFILE@@`. Prohibido combinarlas en una sola frase tipo "Diligencie el
-  formato Entregable_1 y entregable_2...".
+- **No inventes separaciones**: si el Word tiene un solo párrafo que menciona varios
+  entregables (p. ej. Entregable 1 y Entregable 2 en el mismo `<p>`), genera un solo
+  `<p>`. Los saltos de línea internos (`<br><br>`) que el HTML convertido traiga del Word
+  se conservan, pero **no crees párrafos `<p>` extras ni bloques que el Word no tiene**.
 
 ## 10. Títulos de actividades
 

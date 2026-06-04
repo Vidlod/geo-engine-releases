@@ -13,7 +13,27 @@ las partes mecánicas.
 | 1 | **Linter determinista** | ✅ Funcional |
 | 2 | Motor de plantillas (parsers + templates) | ⬜ Pendiente |
 | 3 | Skill de Claude (criterio) | ⬜ Pendiente |
-| 4 | Web app (compañeros no técnicos) | ⬜ Pendiente |
+| 4 | **Web app — GEO Engine Editor** | ✅ Funcional |
+
+## Web App (Editor Visual)
+
+Editor visual de HTML para Moodle que permite modificar **texto** sin romper la estructura del código.
+
+```bash
+cd web
+npm install
+npm run dev        # → http://localhost:3000
+```
+
+Desplegable en Vercel: `web/vercel.json` ya está configurado.
+
+**Características:**
+- Carga archivos HTML con drag & drop
+- Previsualización fiel con estilos de Moodle (Bootstrap)
+- Edición inline: clic en texto → editar → la estructura HTML se preserva byte a byte
+- Linter integrado (14 reglas portadas de Python a JS, check-only)
+- Copiar HTML / Descargar archivo
+- Dark mode con glassmorphism
 
 ## Instalación
 
