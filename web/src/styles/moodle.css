@@ -1,22 +1,31 @@
 /* ═══════════════════════════════════════════════════════════════
    GEO Engine — Moodle Preview Styles
-   Minimal subset of Bootstrap 4 + Moodle theme to render
-   course content faithfully inside the preview panel.
+   Bootstrap 4 subset + Moodle theme for faithful preview
+   of course content (Momentos, Entregables, etc.)
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── Box-sizing for preview ── */
+.preview-container *,
+.preview-container *::before,
+.preview-container *::after {
+  box-sizing: border-box;
+}
 
 /* ── Base typography (Moodle defaults) ── */
 .preview-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: #212529;
 }
 
-.preview-container h1 { font-size: 2rem; font-weight: 500; margin-bottom: 0.5rem; }
+.preview-container h1 { font-size: 2rem;   font-weight: 500; margin-bottom: 0.5rem; }
 .preview-container h2 { font-size: 1.75rem; font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h3 { font-size: 1.5rem; font-weight: 500; margin-bottom: 0.5rem; color: #3b71ca; }
+.preview-container h3 { font-size: 1.5rem;  font-weight: 500; margin-bottom: 0.5rem; color: #3b71ca; }
 .preview-container h4 { font-size: 1.25rem; font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h5 { font-size: 1.1rem; font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h6 { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+.preview-container h5 { font-size: 1.1rem;  font-weight: 500; margin-bottom: 0.5rem; }
+.preview-container h6 { font-size: 1rem;    font-weight: 500; margin-bottom: 0.5rem; }
 
 .preview-container p {
   margin-top: 0;
@@ -32,6 +41,11 @@
   font-weight: 700;
 }
 
+.preview-container small, .preview-container .small {
+  font-size: 80%;
+  font-weight: 400;
+}
+
 .preview-container ul, .preview-container ol {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -42,39 +56,112 @@
   margin-bottom: 0;
 }
 
-/* ── Tables (Bootstrap .table) ── */
-.preview-container .table {
+.preview-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ═════════════════════════════════════════
+   Bootstrap Grid System
+   ═════════════════════════════════════════ */
+
+.preview-container .container {
   width: 100%;
-  margin-bottom: 1rem;
-  border-collapse: collapse;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
-.preview-container .table th,
-.preview-container .table td {
-  padding: 0.75rem;
-  vertical-align: top;
-  border-top: 1px solid #dee2e6;
+.preview-container .row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -15px;
+  margin-left: -15px;
 }
 
-.preview-container .table thead th {
-  vertical-align: bottom;
-  border-bottom: 2px solid #dee2e6;
+.preview-container [class*="col-"] {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
 }
 
-.preview-container .table-bordered {
-  border: 1px solid #dee2e6;
+/* col-md-* (always applied since preview is wide enough) */
+.preview-container .col-md-1  { flex: 0 0 8.333%;  max-width: 8.333%; }
+.preview-container .col-md-2  { flex: 0 0 16.666%; max-width: 16.666%; }
+.preview-container .col-md-3  { flex: 0 0 25%;     max-width: 25%; }
+.preview-container .col-md-4  { flex: 0 0 33.333%; max-width: 33.333%; }
+.preview-container .col-md-5  { flex: 0 0 41.666%; max-width: 41.666%; }
+.preview-container .col-md-6  { flex: 0 0 50%;     max-width: 50%; }
+.preview-container .col-md-7  { flex: 0 0 58.333%; max-width: 58.333%; }
+.preview-container .col-md-8  { flex: 0 0 66.666%; max-width: 66.666%; }
+.preview-container .col-md-9  { flex: 0 0 75%;     max-width: 75%; }
+.preview-container .col-md-10 { flex: 0 0 83.333%; max-width: 83.333%; }
+.preview-container .col-md-11 { flex: 0 0 91.666%; max-width: 91.666%; }
+.preview-container .col-md-12 { flex: 0 0 100%;    max-width: 100%; }
+
+/* ═════════════════════════════════════════
+   Nav Pills — Vertical sidebar (Momentos)
+   ═════════════════════════════════════════ */
+
+.preview-container .nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
 }
 
-.preview-container .table-bordered th,
-.preview-container .table-bordered td {
-  border: 1px solid #dee2e6;
+.preview-container .nav-pills .nav-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  color: #3b71ca;
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
 }
 
-.preview-container .table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(0, 0, 0, 0.05);
+.preview-container .nav-pills .nav-link:hover {
+  background-color: #e8eef7;
 }
 
-/* ── Nav Tabs (Bootstrap) ── */
+.preview-container .nav-pills .nav-link.active {
+  color: #fff;
+  background-color: #3b71ca;
+}
+
+/* Vertical nav pills (flex-column) — the sidebar in Momentos */
+.preview-container .nav.flex-column {
+  flex-direction: column;
+}
+
+/* Custom nav-pills styling matching Moodle theme */
+.preview-container .nav-pills-custom .nav-link {
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  transition: all 0.2s ease;
+  border: 1px solid #dee2e6 !important;
+}
+
+.preview-container .nav-pills-custom .nav-link:hover {
+  background-color: #e8eef7;
+  box-shadow: 0 2px 8px rgba(59, 113, 202, 0.15);
+}
+
+.preview-container .nav-pills-custom .nav-link.active {
+  color: #fff;
+  background-color: #3b71ca;
+  border-color: #3b71ca !important;
+  box-shadow: 0 4px 12px rgba(59, 113, 202, 0.3);
+}
+
+/* ═════════════════════════════════════════
+   Nav Tabs (horizontal — Semanas)
+   ═════════════════════════════════════════ */
+
 .preview-container .nav-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -114,19 +201,86 @@
   font-weight: 600;
 }
 
+/* ═════════════════════════════════════════
+   Tab Content & Panes
+   ═════════════════════════════════════════ */
+
 .preview-container .tab-content {
-  padding-top: 1rem;
+  padding-top: 0;
 }
 
 .preview-container .tab-pane {
   display: none;
 }
 
-.preview-container .tab-pane.active {
+.preview-container .tab-pane.active,
+.preview-container .tab-pane.show.active {
   display: block;
 }
 
-/* ── Buttons (Bootstrap) ── */
+/* Fade transition (Bootstrap) */
+.preview-container .fade {
+  opacity: 1;
+  transition: opacity 0.15s linear;
+}
+
+/* ═════════════════════════════════════════
+   Cards (card-body used inside tab panes)
+   ═════════════════════════════════════════ */
+
+.preview-container .card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border: 1px solid rgba(0,0,0,0.125);
+  border-radius: 0.25rem;
+}
+
+.preview-container .card-body {
+  flex: 1 1 auto;
+  padding: 1.25rem;
+}
+
+/* ═════════════════════════════════════════
+   Tables (Bootstrap .table)
+   ═════════════════════════════════════════ */
+
+.preview-container .table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+
+.preview-container .table th,
+.preview-container .table td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid #dee2e6;
+}
+
+.preview-container .table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.preview-container .table-bordered {
+  border: 1px solid #dee2e6;
+}
+
+.preview-container .table-bordered th,
+.preview-container .table-bordered td {
+  border: 1px solid #dee2e6;
+}
+
+.preview-container .table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ═════════════════════════════════════════
+   Buttons (Bootstrap)
+   ═════════════════════════════════════════ */
+
 .preview-container .btn {
   display: inline-block;
   font-weight: 400;
@@ -160,7 +314,10 @@
   border-radius: 0.3rem;
 }
 
-/* ── Spinner (Bootstrap) ── */
+/* ═════════════════════════════════════════
+   Spinner (Bootstrap)
+   ═════════════════════════════════════════ */
+
 .preview-container .spinner-grow {
   display: inline-block;
   width: 2rem;
@@ -183,7 +340,36 @@
   100% { transform: scale(1); opacity: 0; }
 }
 
-/* ── Audio player ── */
+/* ═════════════════════════════════════════
+   Font Awesome Icons (minimal subset)
+   Uses Unicode fallback — Moodle loads FA
+   from CDN but we just show a placeholder
+   ═════════════════════════════════════════ */
+
+.preview-container .fa {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+  font-size: 1em;
+  width: 1.2em;
+  text-align: center;
+}
+
+/* Map common FA icons to Unicode symbols */
+.preview-container .fa-calendar-check-o::before { content: "📋"; }
+.preview-container .fa-bars::before              { content: "☰"; }
+.preview-container .fa-check-square-o::before    { content: "☑"; }
+.preview-container .fa-share-square-o::before    { content: "📤"; }
+.preview-container .fa-pencil-square-o::before   { content: "✏️"; }
+.preview-container .fa-file-pdf-o::before        { content: "📄"; }
+.preview-container .fa-lg { font-size: 1.33em; }
+
+/* ═════════════════════════════════════════
+   Audio player
+   ═════════════════════════════════════════ */
+
 .preview-container audio {
   display: block;
   width: 100%;
@@ -191,6 +377,115 @@
   margin-top: 8px;
 }
 
-/* ── Generic Bootstrap utilities used in Moodle ── */
-.preview-container .text-center { text-align: center; }
+/* ═════════════════════════════════════════
+   Bootstrap Utility Classes
+   (subset used in Moodle content)
+   ═════════════════════════════════════════ */
+
+/* Text alignment */
+.preview-container .text-center  { text-align: center; }
+.preview-container .text-left    { text-align: left; }
+.preview-container .text-right   { text-align: right; }
+.preview-container .text-justify { text-align: justify; }
+
+/* Font weight */
 .preview-container .font-weight-bold, .preview-container .fw-bold { font-weight: 700; }
+.preview-container .font-weight-normal { font-weight: 400; }
+
+/* Text transform */
+.preview-container .text-uppercase { text-transform: uppercase; }
+.preview-container .text-lowercase { text-transform: lowercase; }
+
+/* Text color */
+.preview-container .text-white   { color: #fff; }
+.preview-container .text-muted   { color: #6c757d; }
+.preview-container .text-primary { color: #3b71ca; }
+.preview-container .text-danger  { color: #dc3545; }
+.preview-container .text-success { color: #28a745; }
+
+/* Background */
+.preview-container .bg-white   { background-color: #fff; }
+.preview-container .bg-light   { background-color: #f8f9fa; }
+.preview-container .bg-primary { background-color: #3b71ca; }
+
+/* Display */
+.preview-container .d-block      { display: block; }
+.preview-container .d-inline     { display: inline; }
+.preview-container .d-flex       { display: flex; }
+.preview-container .d-none       { display: none; }
+
+/* Spacing — margin */
+.preview-container .m-0  { margin: 0; }
+.preview-container .m-1  { margin: 0.25rem; }
+.preview-container .m-2  { margin: 0.5rem; }
+.preview-container .m-3  { margin: 1rem; }
+.preview-container .m-4  { margin: 1.5rem; }
+.preview-container .m-5  { margin: 3rem; }
+.preview-container .mt-1 { margin-top: 0.25rem; }
+.preview-container .mt-2 { margin-top: 0.5rem; }
+.preview-container .mt-3 { margin-top: 1rem; }
+.preview-container .mt-4 { margin-top: 1.5rem; }
+.preview-container .mb-1 { margin-bottom: 0.25rem; }
+.preview-container .mb-2 { margin-bottom: 0.5rem; }
+.preview-container .mb-3 { margin-bottom: 1rem; }
+.preview-container .mb-4 { margin-bottom: 1.5rem; }
+.preview-container .mb-5 { margin-bottom: 3rem; }
+.preview-container .ml-1, .preview-container .ms-1 { margin-left: 0.25rem; }
+.preview-container .ml-2, .preview-container .ms-2 { margin-left: 0.5rem; }
+.preview-container .mr-1, .preview-container .me-1 { margin-right: 0.25rem; }
+.preview-container .mr-2, .preview-container .me-2 { margin-right: 0.5rem; }
+.preview-container .mx-auto { margin-left: auto; margin-right: auto; }
+
+/* Spacing — padding */
+.preview-container .p-0  { padding: 0; }
+.preview-container .p-1  { padding: 0.25rem; }
+.preview-container .p-2  { padding: 0.5rem; }
+.preview-container .p-3  { padding: 1rem; }
+.preview-container .p-4  { padding: 1.5rem; }
+.preview-container .p-5  { padding: 3rem; }
+.preview-container .pt-1 { padding-top: 0.25rem; }
+.preview-container .pt-2 { padding-top: 0.5rem; }
+.preview-container .pt-3 { padding-top: 1rem; }
+.preview-container .pt-4 { padding-top: 1.5rem; }
+.preview-container .pb-1 { padding-bottom: 0.25rem; }
+.preview-container .pb-2 { padding-bottom: 0.5rem; }
+.preview-container .pb-3 { padding-bottom: 1rem; }
+.preview-container .pb-4 { padding-bottom: 1.5rem; }
+.preview-container .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.preview-container .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.preview-container .py-3 { padding-top: 1rem; padding-bottom: 1rem; }
+.preview-container .py-4 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+/* Border */
+.preview-container .border    { border: 1px solid #dee2e6; }
+.preview-container .border-0  { border: 0; }
+.preview-container .rounded   { border-radius: 0.25rem; }
+.preview-container .rounded-lg { border-radius: 0.3rem; }
+
+/* Shadow */
+.preview-container .shadow    { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15); }
+.preview-container .shadow-sm { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
+.preview-container .shadow-lg { box-shadow: 0 1rem 3rem rgba(0,0,0,0.175); }
+
+/* Flex utilities */
+.preview-container .flex-column    { flex-direction: column; }
+.preview-container .flex-row       { flex-direction: row; }
+.preview-container .align-items-center { align-items: center; }
+.preview-container .justify-content-center { justify-content: center; }
+
+/* Width */
+.preview-container .w-100 { width: 100%; }
+
+/* ═════════════════════════════════════════
+   Section / Header (Moodle page wrapper)
+   ═════════════════════════════════════════ */
+
+.preview-container section.header {
+  background-color: #eef2f9;
+}
+
+.preview-container section.py-1.header {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  background-color: #eef2f9;
+}

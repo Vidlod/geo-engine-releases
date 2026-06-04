@@ -121,7 +121,170 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Status Bar ── */
+/* ═══════════════════════════════════════════════════════════════
+   Block Toolbar — floats on the left of paragraphs on hover
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Paragraph hover highlight */
+.preview-container p:hover,
+.preview-container li:not(.nav-item):hover {
+  outline: 2px dashed rgba(59, 113, 202, 0.15);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.block-toolbar {
+  position: absolute;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--bg-elevated, #1e1e2e);
+  border: 1px solid var(--border, #333);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  animation: block-tb-in 0.15s ease-out;
+}
+
+@keyframes block-tb-in {
+  from { opacity: 0; transform: translateX(4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.block-toolbar__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-family: var(--font-sans, system-ui);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.block-toolbar__btn--merge {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+.block-toolbar__btn--merge:hover {
+  background: rgba(139, 92, 246, 0.3);
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.block-toolbar__btn--split {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border-color: rgba(234, 179, 8, 0.2);
+}
+.block-toolbar__btn--split:hover {
+  background: rgba(234, 179, 8, 0.3);
+  color: #fcd34d;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.block-toolbar__btn--clean {
+  background: rgba(20, 184, 166, 0.15);
+  color: #2dd4bf;
+  border-color: rgba(20, 184, 166, 0.2);
+}
+.block-toolbar__btn--clean:hover {
+  background: rgba(20, 184, 166, 0.3);
+  color: #5eead4;
+  border-color: rgba(20, 184, 166, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Split Editor — full-text textarea overlay for choosing split point
+   ═══════════════════════════════════════════════════════════════ */
+
+.split-editor {
+  position: absolute;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 2px solid #eab308;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: inline-editor-in 0.15s ease-out;
+}
+
+.split-editor__hint {
+  font-size: 0.75rem;
+  color: #92400e;
+  background: rgba(234, 179, 8, 0.1);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.split-editor__textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #212529;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  min-height: 60px;
+  max-height: 300px;
+  width: 100%;
+}
+
+.split-editor__textarea:focus {
+  border-color: #eab308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+}
+
+.split-editor__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.split-editor__btn {
+  padding: 5px 14px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.split-editor__btn--confirm {
+  background: #eab308;
+  color: #422006;
+}
+.split-editor__btn--confirm:hover {
+  background: #ca8a04;
+}
+
+.split-editor__btn--cancel {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.split-editor__btn--cancel:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Status Bar
+   ═══════════════════════════════════════════════════════════════ */
+
 .status-bar {
   display: flex;
   align-items: center;

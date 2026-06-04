@@ -142,21 +142,35 @@ python cli.py check "ruta/al/archivo.html" -v        # reporta lo que queda
 - Si **no** puedes ejecutar shell, aplica manualmente la lista de la sección 2.
 - El linter es la autoridad sobre las reglas mecánicas: no las repliques a mano si el linter corre.
 
-## 9. Insumo en HTML: respeta las negrillas del origen
+## 9. Trasplante 1:1 desde el AAA convertido a HTML
 
-El insumo llega **convertido a HTML** (no Word en texto plano). Por tanto:
+El insumo llega **convertido a HTML** por mammoth (no Word en texto plano).
+La regla es **trasplante 1:1**: cada `<p>` del origen = exactamente un `<p>` en la salida.
 
-- **Respeta los `<strong>` del origen**: lo que venga en negrita en el HTML de origen va
-  en negrita en el resultado (salvo las excepciones de las reglas: las citas
-  bibliográficas van en texto plano, sección 5).
-- **Respeta la puntuación y los párrafos `<p>` del origen**: no fusiones frases ni
-  elimines puntos. Cada `<p>` del origen es un párrafo aparte. Esta regla no tiene
-  excepciones — aplica a TODO el HTML, incluyendo Condiciones Particulares de Entrega.
+**Prohibido:**
+- Unir dos `<p>` del origen en uno solo.
+- Partir un `<p>` del origen en dos o más `<p>`.
+- Eliminar o añadir puntos (`.`) ni comas.
+- Reescribir, resumir o parafrasear el texto.
+- Inventar separaciones que el Word no tiene.
+
+**Permitido** (solo estas intervenciones sobre el texto del origen):
+- Añadir enlaces `<strong><a href="@@PLUGINFILE@@/...">...</a></strong>` sobre palabras clave.
+- Añadir `<strong>` donde el origen ya tiene negrita.
+- Añadir `<br><br>` internos que el HTML convertido ya traiga del Word.
+- Convertir atribuciones "Autor (Año). Título." de RED propios a formato viñeta (sección 12).
+
+**Flujo correcto:**
+```
+AAA.docx → mammoth → AAA.html  ← fuente autoritativa de párrafos
+    cada <p> del AAA.html      →  un <p> en el momento (solo añade enlaces/negrita)
+    cli.py check               →  reglas mecánicas
+    cli.py fidelity AAA.html momento.html  →  verifica que no se perdieron párrafos
+```
+
+**Respeta también:**
+- Los `<strong>` del origen (las citas bibliográficas son excepción: texto plano, §5).
 - No agregues negrita donde el origen no la tiene, ni la quites donde sí la tiene.
-- **No inventes separaciones**: si el Word tiene un solo párrafo que menciona varios
-  entregables (p. ej. Entregable 1 y Entregable 2 en el mismo `<p>`), genera un solo
-  `<p>`. Los saltos de línea internos (`<br><br>`) que el HTML convertido traiga del Word
-  se conservan, pero **no crees párrafos `<p>` extras ni bloques que el Word no tiene**.
 
 ## 10. Títulos de actividades
 

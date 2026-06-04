@@ -121,6 +121,53 @@ def cmd_fix(args) -> int:
     return 0
 
 
+def cmd_fidelity(args) -> int:
+    """Compara fidelidad AAA (origen) vs Momento HTML (salida)."""
+    from geo_engine.fidelity import compare
+
+    with open(args.source, encoding="utf-8") as f:
+        src_html = f.read()
+    with open(args.output, encoding="utf-8") as f:
+        out_html = f.read()
+
+    result = compare(
+        src_html, out_html,
+        source_file=args.source,
+        output_file=args.output,
+        min_len=getattr(args, "min_len", 60),
+    )
+
+    only_errors = getattr(args, "only_errors", False)
+    issues = result.errors if only_errors else result.issues
+
+    print("\n%s  %s  →  %s" % (
+        _c("FIDELIDAD", "1"),
+        _c(args.source.split("/")[-1], "2"),
+        _c(args.output.split("/")[-1], "2"),
+    ))
+    print("%s\n" % ("─" * 60))
+
+    for iss in issues:
+        label = _c(iss.emoji + " %-8s" % iss.kind.upper(), "31" if iss.kind != "ok" else "32")
+        print("%s  %.0f%%  %s" % (label, iss.score * 100, iss.source_text[:90]))
+        if iss.kind != "ok" and iss.output_text:
+            print("         ↳ salida: %s" % iss.output_text[:90])
+        if iss.detail:
+            print("         ℹ %s" % iss.detail)
+        print()
+
+    errors   = len(result.errors)
+    ok_count = len(result.ok)
+    total    = len(result.issues)
+    print("%s  %d párrafos analizados — %s OK, %s con problemas" % (
+        _c("RESULTADO:", "1"),
+        total,
+        _c(str(ok_count), "32"),
+        _c(str(errors), "31" if errors else "32"),
+    ))
+    return 1 if errors else 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         prog="geo-lint", description="Linter determinista de HTML para cursos Moodle (GEO).")
@@ -136,6 +183,15 @@ def main(argv=None) -> int:
     p_fix.add_argument("paths", nargs="+", help="Archivos o carpetas .html")
     p_fix.add_argument("--write", action="store_true", help="Guarda los cambios en disco.")
     p_fix.set_defaults(func=cmd_fix)
+
+    p_fid = sub.add_parser("fidelity", help="Compara fidelidad AAA.html vs Momento.html.")
+    p_fid.add_argument("source", help="AAA convertido a HTML (origen).")
+    p_fid.add_argument("output", help="Momento HTML generado (salida).")
+    p_fid.add_argument("--only-errors", dest="only_errors", action="store_true",
+                       help="Muestra solo párrafos con problemas.")
+    p_fid.add_argument("--min-len", dest="min_len", type=int, default=60,
+                       help="Longitud mínima de párrafo a comparar (default: 60).")
+    p_fid.set_defaults(func=cmd_fidelity)
 
     args = parser.parse_args(argv)
     return args.func(args)

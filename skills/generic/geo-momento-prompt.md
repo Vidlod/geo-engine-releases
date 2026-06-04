@@ -17,9 +17,12 @@ omitas nada.
 
 - El texto del HTML debe coincidir **exactamente** con el documento fuente (AAA).
   No parafrasees, no resumas, no reorganices párrafos.
-- **El insumo llega convertido a HTML** (no Word en texto plano): **respeta los
-  `<strong>` (negrillas) y los párrafos `<p>` y la puntuación del origen**. No agregues
-  ni quites negrita salvo lo que indiquen estas reglas. No fusiones frases ni pierdas puntos.
+- **TRASPLANTE 1:1 desde el AAA.html.** El insumo llega convertido a HTML (mammoth).
+  La regla es estricta: **cada `<p>` del AAA = un `<p>` en la salida**. Prohibido:
+  unir dos párrafos, partir uno, eliminar puntos, añadir puntos, reescribir o parafrasear.
+  Solo se permite añadir enlaces `@@PLUGINFILE@@` y `<strong>` sobre palabras clave del
+  texto ya existente. Si no estás seguro de si un bloque del AAA es un `<p>` o dos,
+  respeta la división del AAA.html byte a byte.
 - Los rangos de semanas, el número de avances y los cuestionarios los tomas
   **exclusivamente de la AAA del curso** adjunta. Nunca uses números de otro curso.
 - **No inventes nombres de archivo ni IDs de Moodle**: si no los conoces, emite FLAG
