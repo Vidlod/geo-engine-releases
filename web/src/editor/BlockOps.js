@@ -333,7 +333,7 @@ export function addSpaceAfter(html, textContent, tagName = 'p') {
 
   return {
     original: block.fullMatch,
-    replacement: `${block.fullMatch}\n${indent}<p></p>`,
+    replacement: `${block.fullMatch}\n${indent}<p>&nbsp;</p>`,
   };
 }
 
