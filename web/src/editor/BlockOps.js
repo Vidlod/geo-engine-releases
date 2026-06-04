@@ -307,9 +307,33 @@ export function addSpaceAfter(html, textContent, tagName = 'p') {
     ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
     : '';
 
+  if (tagName === 'li') {
+    let newAttrs = block.attrs;
+    if (newAttrs.includes('style=')) {
+      if (!/margin-bottom\s*:/i.test(newAttrs)) {
+        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (match, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style="${trimmed}${sep} margin-bottom: 10px;"`;
+        });
+        newAttrs = newAttrs.replace(/style='([^']*)'/i, (match, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style='${trimmed}${sep} margin-bottom: 10px;'`;
+        });
+      }
+    } else {
+      newAttrs = ` style="margin-bottom: 10px;"` + newAttrs;
+    }
+    return {
+      original: block.fullMatch,
+      replacement: `<li${newAttrs}>${block.innerHTML}</li>`,
+    };
+  }
+
   return {
     original: block.fullMatch,
-    replacement: `${block.fullMatch}\n${indent}<p><br></p>`,
+    replacement: `${block.fullMatch}\n${indent}<p></p>`,
   };
 }
 
