@@ -207,21 +207,36 @@
 
 .preview-container .tab-content {
   padding-top: 0;
+  background: #fff;
 }
 
+/* All inactive panes hidden — !important ensures no cascade override */
 .preview-container .tab-pane {
-  display: none;
+  display: none !important;
 }
 
-.preview-container .tab-pane.active,
-.preview-container .tab-pane.show.active {
-  display: block;
+/* Only the active+show pane is visible */
+.preview-container .tab-pane.active.show,
+.preview-container .tab-pane.active {
+  display: block !important;
 }
 
 /* Fade transition (Bootstrap) */
 .preview-container .fade {
   opacity: 1;
   transition: opacity 0.15s linear;
+}
+
+/* ── Moodle .nolink (prevents linking in content) ── */
+.preview-container .nolink {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Entregable h5 subtitle (bold description) ── */
+.preview-container h5 {
+  font-weight: 700;
+  color: #212529;
 }
 
 /* ═════════════════════════════════════════

@@ -1018,33 +1018,50 @@ export class Preview {
       navGroups.get(nav).push(/** @type {HTMLElement} */ (link));
     });
 
-    navGroups.forEach((links, _nav) => {
+    navGroups.forEach((links, nav) => {
+      // ── Find the sibling .tab-content for this nav ──────────
+      // Prefer a sibling or parent-sibling tab-content for scoped lookups
+      const tabContentScope =
+        nav.nextElementSibling?.classList.contains('tab-content')
+          ? nav.nextElementSibling
+          : nav.closest('div, section')?.querySelector('.tab-content') || root;
+
       /** @type {Map<string, HTMLElement>} */
       const paneMap = new Map();
 
       links.forEach((link) => {
         const href = link.getAttribute('href') || '';
-        if (href.startsWith('#') && href.length > 1) {
-          const pane = root.querySelector(href);
-          if (pane) paneMap.set(href, /** @type {HTMLElement} */ (pane));
-        }
+        const id = href.startsWith('#') ? href.slice(1) : '';
+        if (!id) return;
+
+        // First try scoped search within tab-content, then fall back to root
+        let pane = /** @type {HTMLElement|null} */ (
+          tabContentScope.querySelector(`#${CSS.escape(id)}`)
+          ?? root.querySelector(`#${CSS.escape(id)}`)
+        );
+
+        if (pane) paneMap.set(href, pane);
       });
 
-      // Ensure active state
-      const hasActive = links.some((l) => l.classList.contains('active'));
-      if (!hasActive && links.length > 0) {
-        links[0].classList.add('active');
-        const h = links[0].getAttribute('href') || '';
-        paneMap.get(h)?.classList.add('active', 'show');
-      }
-
-      links.forEach((link) => {
-        if (link.classList.contains('active')) {
-          const h = link.getAttribute('href') || '';
-          paneMap.get(h)?.classList.add('active', 'show');
-        }
+      // ── Strip all active/show from all panes first ───────────
+      paneMap.forEach((pane) => {
+        pane.classList.remove('active', 'show');
       });
 
+      // ── Determine which link should be active ────────────────
+      const activeLink = links.find((l) => l.classList.contains('active')) ?? links[0];
+      if (!activeLink) return;
+
+      // Ensure only this link is marked active
+      links.forEach((l) => l.classList.remove('active'));
+      activeLink.classList.add('active');
+
+      // Activate the corresponding pane
+      const activeHref = activeLink.getAttribute('href') || '';
+      const activePane = paneMap.get(activeHref);
+      if (activePane) activePane.classList.add('active', 'show');
+
+      // ── Wire click events ─────────────────────────────────────
       links.forEach((link) => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
