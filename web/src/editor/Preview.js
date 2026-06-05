@@ -337,30 +337,39 @@ export class Preview {
           const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : baseline;
           const isModified = hasInlineMargin && inlineMarginVal !== baseline;
 
-          // ── Measure REAL visual gap to the next visible sibling ──
-          let nextEl = block.nextElementSibling;
+          // ── Skip UI elements AND empty spacer elements to find real content ──
+          let nextContentEl = block.nextElementSibling;
           while (
-            nextEl &&
-            (nextEl === grip ||
-             nextEl === menu ||
-             nextEl === spacerGuide ||
-             getComputedStyle(nextEl).display === 'none')
+            nextContentEl &&
+            (nextContentEl === grip ||
+             nextContentEl === menu ||
+             nextContentEl === spacerGuide ||
+             getComputedStyle(nextContentEl).display === 'none' ||
+             this._isEmptySpacerEl(nextContentEl))
           ) {
-            nextEl = nextEl.nextElementSibling;
+            nextContentEl = nextContentEl.nextElementSibling;
           }
+
+          // Also scan to immediate next (may be an empty p/br) for intermediate detection
+          let immediateNext = block.nextElementSibling;
+          while (
+            immediateNext &&
+            (immediateNext === grip || immediateNext === menu || immediateNext === spacerGuide)
+          ) {
+            immediateNext = immediateNext.nextElementSibling;
+          }
+          const hasEmptyIntermediates = !!(immediateNext && this._isEmptySpacerEl(immediateNext));
 
           const cr = root.getBoundingClientRect();
           const br = block.getBoundingClientRect();
           let realGapPx = 0;
 
-          if (nextEl) {
-            const nextBr = nextEl.getBoundingClientRect();
+          if (nextContentEl) {
+            const nextBr = nextContentEl.getBoundingClientRect();
             realGapPx = Math.round(nextBr.top - br.bottom);
           }
 
-          // Use the bigger of real gap or inline value for display height
-          // (no next sibling = fall back to the inline or default margin)
-          const displayHeight = nextEl
+          const displayHeight = nextContentEl
             ? Math.max(realGapPx, 0)
             : inlineMarginVal;
 
@@ -370,13 +379,17 @@ export class Preview {
             spacerGuide.style.width = `${br.width}px`;
             spacerGuide.style.height = `${displayHeight}px`;
 
-            if (isModified) {
+            if (isModified || hasEmptyIntermediates) {
               spacerGuide.className = 'geo-spacer-guide';
-              const extra = inlineMarginVal - baseline;
-              if (extra > 0) {
-                spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Visual: ${displayHeight}px) ⤓`;
+              if (isModified) {
+                const extra = inlineMarginVal - baseline;
+                if (extra > 0) {
+                  spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Visual: ${displayHeight}px) ⤓`;
+                } else {
+                  spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${inlineMarginVal}px (Visual: ${displayHeight}px) ⤓`;
+                }
               } else {
-                spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${inlineMarginVal}px (Visual: ${displayHeight}px) ⤓`;
+                spacerGuide.textContent = `ESPACIO POR ELEMENTOS VACÍOS: ${displayHeight}px ⤓`;
               }
             } else {
               spacerGuide.className = 'geo-spacer-guide geo-spacer-guide--original';
@@ -570,13 +583,14 @@ export class Preview {
     // ── Spacing ──
     html += `<button class="block-menu__item" data-action="add-space"><span class="block-menu__icon">➕</span>Añadir espacio después</button>`;
 
-    // Show "remove space" only if the element has extra margin-bottom
+    // Show "remove space" when: has extra inline margin OR has empty spacer elements after
     const style = block.getAttribute('style') || '';
     const marginMatch = style.match(/margin-bottom\s*:\s*(\d+)px/i);
-    const hasExtraMargin = marginMatch && (
+    const hasExtraMargin = !!(marginMatch && (
       block.tagName === 'LI' ? parseInt(marginMatch[1], 10) > 10 : true
-    );
-    if (hasExtraMargin) {
+    ));
+    const hasEmptyAfter = this._hasEmptyFollowers(block);
+    if (hasExtraMargin || hasEmptyAfter) {
       html += `<button class="block-menu__item" data-action="remove-space"><span class="block-menu__icon">➖</span>Quitar espacio después</button>`;
     }
 
@@ -918,11 +932,12 @@ export class Preview {
     });
   }
 
-  /** Decrease margin-bottom on the current block. @private */
+  /** Decrease margin-bottom or remove empty spacer elements after a block. @private */
   _doRemoveSpace(blockEl) {
     const tagName = blockEl.tagName.toLowerCase();
     const blockText = this._norm(blockEl.textContent);
 
+    // ── Try reducing inline margin-bottom first ──────────────
     const html = this._engine.getResult();
     const blockIndex = this._getBlockIndex(blockEl);
     const patch = removeSpaceAfter(html, blockText, tagName, blockIndex);
@@ -932,12 +947,117 @@ export class Preview {
         this._engine.addPatch(patch.original, patch.replacement);
         this.render();
         this._onEdit();
+        return;
       } catch (err) {
-        console.error('[Preview] Remove space failed:', err);
+        console.error('[Preview] Remove space (margin) failed:', err);
       }
-    } else {
-      console.warn('[Preview] removeSpaceAfter returned null (already at baseline).');
     }
+
+    // ── Fallback: remove the first empty spacer element after this block ──
+    // Find the immediate next sibling in the DOM (skip UI elements)
+    let nextEl = blockEl.nextElementSibling;
+    while (
+      nextEl &&
+      (nextEl.classList?.contains('block-grip') ||
+       nextEl.classList?.contains('block-menu') ||
+       nextEl.classList?.contains('geo-spacer-guide'))
+    ) {
+      nextEl = nextEl.nextElementSibling;
+    }
+
+    if (nextEl && this._isEmptySpacerEl(nextEl)) {
+      // Find the element's outer HTML in the source and remove it
+      const outerHtml = nextEl.outerHTML;
+      // Normalize the outerHTML to match what's in the source HTML string
+      // (getAttribute-based reconstruction to avoid span wrappers from wrapTextNodes)
+      const sourceHtml = this._engine.getResult();
+
+      // Build a clean version of the element to find in source
+      // Use tag + attributes (but not the wrapped span children) from the original
+      const cleanEl = /** @type {HTMLElement} */ (nextEl.cloneNode(true));
+      // Remove any data-geo-* spans added by wrapTextNodes
+      cleanEl.querySelectorAll('[data-geo-editable]').forEach((span) => {
+        span.replaceWith(document.createTextNode(span.textContent || ''));
+      });
+      const cleanOuterHtml = cleanEl.outerHTML;
+
+      if (sourceHtml.includes(cleanOuterHtml)) {
+        try {
+          this._engine.addPatch(cleanOuterHtml, '');
+          this.render();
+          this._onEdit();
+        } catch (err) {
+          console.error('[Preview] Remove empty spacer element failed:', err);
+        }
+      } else {
+        // Try with just the raw outerHTML (no span wrapping expected for empty elements)
+        const tagLower = nextEl.tagName.toLowerCase();
+        const innerText = nextEl.innerHTML.trim();
+        // Match common patterns: <p><br></p>, <p>&nbsp;</p>, <p></p>
+        const candidates = [
+          `<${tagLower}>${innerText}</${tagLower}>`,
+          `<${tagLower}><br></${tagLower}>`,
+          `<${tagLower}><br/></${tagLower}>`,
+          `<${tagLower}>&nbsp;</${tagLower}>`,
+          `<${tagLower}></${tagLower}>`,
+        ];
+        for (const candidate of candidates) {
+          if (sourceHtml.includes(candidate)) {
+            try {
+              this._engine.addPatch(candidate, '');
+              this.render();
+              this._onEdit();
+              return;
+            } catch (_) {/* try next */}
+          }
+        }
+        console.warn('[Preview] Could not locate empty spacer element in source HTML.');
+      }
+    }
+  }
+
+  /**
+   * Returns true if an element is an "empty spacer" — a block element containing
+   * only whitespace, `<br>`, or `&nbsp;` with no meaningful content.
+   * @private
+   * @param {Element} el
+   * @returns {boolean}
+   */
+  _isEmptySpacerEl(el) {
+    const tag = el.tagName.toUpperCase();
+    // Only consider block elements that Moodle uses as spacers
+    if (!['P', 'DIV', 'SPAN'].includes(tag)) return false;
+    const text = (el.textContent || '').replace(/\u00a0/g, '').trim(); // strip &nbsp;
+    if (text.length > 0) return false;
+    // Allow only <br> children (or no children)
+    for (const child of el.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        if (child.textContent && child.textContent.replace(/\u00a0/g, '').trim()) return false;
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        if (/** @type {Element} */ (child).tagName.toUpperCase() !== 'BR') return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Returns true if there is at least one empty spacer element immediately
+   * after the given block (before the next element with real content).
+   * @private
+   * @param {HTMLElement} blockEl
+   * @returns {boolean}
+   */
+  _hasEmptyFollowers(blockEl) {
+    let el = blockEl.nextElementSibling;
+    while (
+      el &&
+      (el.classList?.contains('block-grip') ||
+       el.classList?.contains('block-menu') ||
+       el.classList?.contains('geo-spacer-guide'))
+    ) {
+      el = el.nextElementSibling;
+    }
+    return !!(el && this._isEmptySpacerEl(el));
   }
 
   /* ── Block helpers ──────────────────────────────────────── */
