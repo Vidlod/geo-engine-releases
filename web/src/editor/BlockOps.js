@@ -517,17 +517,22 @@ export function removeFollowerSpacer(html, textContent, tagName = 'p', blockInde
   const afterBlock = html.substring(block.end);
 
   // Match a leading empty spacer element (<br>, <p><br></p>, etc.)
-  // Group 1 matches <br>, Group 2 matches tag name, Group 3 matches attributes
-  const spacerRegex = /^\s*(?:(<br\s*\/?>)|<([a-z1-6]+)\b([^>]*)>\s*(?:<br\s*\/?>|&nbsp;|\s*)*<\/\2>)/i;
+  // We allow optional closing list/item tags and whitespace before the spacer.
+  // Group 1: captures any leading closing tags and whitespace.
+  // Group 2: matches <br>.
+  // Group 3: matches the tag name of other empty elements (like p, div, span).
+  // Group 4: matches the attributes of the empty element.
+  const spacerRegex = /^(\s*(?:<\/(?:ul|ol|li)>\s*)*)(?:(<br\s*\/?>)|<([a-z1-6]+)\b([^>]*)>\s*(?:<br\s*\/?>|&nbsp;|\s*)*<\/\3>)/i;
   const match = afterBlock.match(spacerRegex);
   if (!match) {
     return null;
   }
 
   const fullMatch = match[0];
+  const capturedClosingTags = match[1];
 
   return {
     original: block.fullMatch + fullMatch,
-    replacement: block.fullMatch,
+    replacement: block.fullMatch + capturedClosingTags,
   };
 }

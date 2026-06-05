@@ -338,7 +338,7 @@ export class Preview {
           const isModified = hasInlineMargin && inlineMarginVal !== baseline;
 
           // ── Skip UI elements AND empty spacer elements to find real content ──
-          let nextContentEl = block.nextElementSibling;
+          let nextContentEl = this._getNextContentElement(block);
           while (
             nextContentEl &&
             (nextContentEl === grip ||
@@ -347,17 +347,11 @@ export class Preview {
              getComputedStyle(nextContentEl).display === 'none' ||
              this._isEmptySpacerEl(nextContentEl))
           ) {
-            nextContentEl = nextContentEl.nextElementSibling;
+            nextContentEl = this._getNextContentElement(nextContentEl);
           }
 
           // Also scan to immediate next (may be an empty p/br) for intermediate detection
-          let immediateNext = block.nextElementSibling;
-          while (
-            immediateNext &&
-            (immediateNext === grip || immediateNext === menu || immediateNext === spacerGuide)
-          ) {
-            immediateNext = immediateNext.nextElementSibling;
-          }
+          let immediateNext = this._getNextContentElement(block);
           const hasEmptyIntermediates = !!(immediateNext && this._isEmptySpacerEl(immediateNext));
 
           const cr = root.getBoundingClientRect();
@@ -590,7 +584,7 @@ export class Preview {
     const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
     const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : blockBaseline;
 
-    let nextContentEl = block.nextElementSibling;
+    let nextContentEl = this._getNextContentElement(block);
     while (
       nextContentEl &&
       (nextContentEl === this._blockGrip ||
@@ -599,7 +593,7 @@ export class Preview {
        getComputedStyle(nextContentEl).display === 'none' ||
        this._isEmptySpacerEl(nextContentEl))
     ) {
-      nextContentEl = nextContentEl.nextElementSibling;
+      nextContentEl = this._getNextContentElement(nextContentEl);
     }
 
     const br = block.getBoundingClientRect();
@@ -974,16 +968,7 @@ export class Preview {
     }
 
     // ── Fallback 2: remove the first empty spacer element after this block ──
-    // Find the immediate next sibling in the DOM (skip UI elements)
-    let nextEl = blockEl.nextElementSibling;
-    while (
-      nextEl &&
-      (nextEl.classList?.contains('block-grip') ||
-       nextEl.classList?.contains('block-menu') ||
-       nextEl.classList?.contains('geo-spacer-guide'))
-    ) {
-      nextEl = nextEl.nextElementSibling;
-    }
+    let nextEl = this._getNextContentElement(blockEl);
 
     if (nextEl && this._isEmptySpacerEl(nextEl)) {
       const spacerPatch = removeFollowerSpacer(html, blockText, tagName, blockIndex);
@@ -1063,6 +1048,69 @@ export class Preview {
       el = el.nextElementSibling;
     }
     return !!(el && this._isEmptySpacerEl(el));
+  }
+
+  /**
+   * Find the next logical content element in the DOM, traversing up and down if needed
+   * (e.g. to cross list boundaries and skip UI elements).
+   * @private
+   * @param {Element} el
+   * @returns {Element|null}
+   */
+  _getNextContentElement(el) {
+    let curr = el;
+    while (curr && curr !== this._container) {
+      let sibling = curr.nextElementSibling;
+      while (sibling) {
+        if (
+          sibling === this._blockGrip ||
+          sibling === this._blockMenu ||
+          sibling.classList?.contains('geo-spacer-guide')
+        ) {
+          sibling = sibling.nextElementSibling;
+          continue;
+        }
+
+        const firstContent = this._findFirstContentInside(sibling);
+        if (firstContent) return firstContent;
+
+        sibling = sibling.nextElementSibling;
+      }
+      curr = curr.parentElement;
+    }
+    return null;
+  }
+
+  /**
+   * Find the first leaf content element inside a node.
+   * @private
+   * @param {Element} node
+   * @returns {Element|null}
+   */
+  _findFirstContentInside(node) {
+    if (!node) return null;
+    const tag = node.tagName?.toUpperCase();
+    if (!tag) return null;
+
+    if (
+      node === this._blockGrip ||
+      node === this._blockMenu ||
+      node.classList?.contains('geo-spacer-guide') ||
+      getComputedStyle(node).display === 'none'
+    ) {
+      return null;
+    }
+
+    if (['P', 'LI', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BR'].includes(tag)) {
+      return node;
+    }
+
+    for (const child of node.children) {
+      const found = this._findFirstContentInside(child);
+      if (found) return found;
+    }
+
+    return null;
   }
 
   /* ── Block helpers ──────────────────────────────────────── */
