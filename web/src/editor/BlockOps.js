@@ -495,3 +495,39 @@ export function splitAtBreaks(html, textContent, tagName = 'p', blockIndex = nul
     replacement: `<${tagName}${block.attrs}>${newInner}</${tagName}>`,
   };
 }
+
+/**
+ * Locate the block in the HTML, find the first empty spacer element (<br>, <p><br></p>, etc.)
+ * that immediately follows it in the HTML string, and remove it.
+ *
+ * @param {string} html          Full HTML string
+ * @param {string} textContent   Text content of the block
+ * @param {string} tagName       Tag name of the block
+ * @param {number|null} blockIndex Absolute index of the block
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function removeFollowerSpacer(html, textContent, tagName = 'p', blockIndex = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] removeFollowerSpacer: could not find block.');
+    return null;
+  }
+
+  // Look at what follows the block in the HTML string.
+  const afterBlock = html.substring(block.end);
+
+  // Match a leading empty spacer element (<br>, <p><br></p>, etc.)
+  // Group 1 matches <br>, Group 2 matches tag name, Group 3 matches attributes
+  const spacerRegex = /^\s*(?:(<br\s*\/?>)|<([a-z1-6]+)\b([^>]*)>\s*(?:<br\s*\/?>|&nbsp;|\s*)*<\/\2>)/i;
+  const match = afterBlock.match(spacerRegex);
+  if (!match) {
+    return null;
+  }
+
+  const fullMatch = match[0];
+
+  return {
+    original: block.fullMatch + fullMatch,
+    replacement: block.fullMatch,
+  };
+}

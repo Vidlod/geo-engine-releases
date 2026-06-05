@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter, removeFollowerSpacer } from './BlockOps.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -986,53 +986,16 @@ export class Preview {
     }
 
     if (nextEl && this._isEmptySpacerEl(nextEl)) {
-      // Find the element's outer HTML in the source and remove it
-      const outerHtml = nextEl.outerHTML;
-      // Normalize the outerHTML to match what's in the source HTML string
-      // (getAttribute-based reconstruction to avoid span wrappers from wrapTextNodes)
-      const sourceHtml = this._engine.getResult();
-
-      // Build a clean version of the element to find in source
-      // Use tag + attributes (but not the wrapped span children) from the original
-      const cleanEl = /** @type {HTMLElement} */ (nextEl.cloneNode(true));
-      // Remove any data-geo-* spans added by wrapTextNodes
-      cleanEl.querySelectorAll('[data-geo-editable]').forEach((span) => {
-        span.replaceWith(document.createTextNode(span.textContent || ''));
-      });
-      const cleanOuterHtml = cleanEl.outerHTML;
-
-      if (sourceHtml.includes(cleanOuterHtml)) {
+      const spacerPatch = removeFollowerSpacer(html, blockText, tagName, blockIndex);
+      if (spacerPatch) {
         try {
-          this._engine.addPatch(cleanOuterHtml, '');
+          this._engine.addPatch(spacerPatch.original, spacerPatch.replacement);
           this.render();
           this._onEdit();
           return;
         } catch (err) {
-          console.error('[Preview] Remove empty spacer element failed:', err);
+          console.error('[Preview] Remove follower spacer failed:', err);
         }
-      } else {
-        // Try with just the raw outerHTML (no span wrapping expected for empty elements)
-        const tagLower = nextEl.tagName.toLowerCase();
-        const innerText = nextEl.innerHTML.trim();
-        // Match common patterns: <p><br></p>, <p>&nbsp;</p>, <p></p>
-        const candidates = [
-          `<${tagLower}>${innerText}</${tagLower}>`,
-          `<${tagLower}><br></${tagLower}>`,
-          `<${tagLower}><br/></${tagLower}>`,
-          `<${tagLower}>&nbsp;</${tagLower}>`,
-          `<${tagLower}></${tagLower}>`,
-        ];
-        for (const candidate of candidates) {
-          if (sourceHtml.includes(candidate)) {
-            try {
-              this._engine.addPatch(candidate, '');
-              this.render();
-              this._onEdit();
-              return;
-            } catch (_) {/* try next */}
-          }
-        }
-        console.warn('[Preview] Could not locate empty spacer element in source HTML.');
       }
     }
 
@@ -1066,6 +1029,7 @@ export class Preview {
    */
   _isEmptySpacerEl(el) {
     const tag = el.tagName.toUpperCase();
+    if (tag === 'BR') return true;
     // Only consider block elements that Moodle uses as spacers
     if (!['P', 'DIV', 'SPAN'].includes(tag)) return false;
     const text = (el.textContent || '').replace(/\u00a0/g, '').trim(); // strip &nbsp;
