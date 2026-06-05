@@ -328,72 +328,65 @@ export class Preview {
 
           // ── Spacer guide visualization ──
           const tagName = block.tagName.toUpperCase();
-          const marginStr = block.style.marginBottom;
-          let marginPx = 0;
-          let isOriginal = false;
+          const baseline = tagName === 'LI' ? 10 : (tagName.startsWith('H') ? 8 : 16);
 
-          // 1. Calculate space using the physical distance to next element (if available)
+          // Determine if a custom margin-bottom has been applied inline
+          const styleAttr = block.getAttribute('style') || '';
+          const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
+          const hasInlineMargin = !!inlineMarginMatch;
+          const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : baseline;
+          const isModified = hasInlineMargin && inlineMarginVal !== baseline;
+
+          // ── Measure REAL visual gap to the next visible sibling ──
           let nextEl = block.nextElementSibling;
-          while (nextEl && (nextEl === grip || nextEl === menu || nextEl === spacerGuide || nextEl.style.display === 'none')) {
+          while (
+            nextEl &&
+            (nextEl === grip ||
+             nextEl === menu ||
+             nextEl === spacerGuide ||
+             getComputedStyle(nextEl).display === 'none')
+          ) {
             nextEl = nextEl.nextElementSibling;
           }
 
+          const cr = root.getBoundingClientRect();
+          const br = block.getBoundingClientRect();
+          let realGapPx = 0;
+
           if (nextEl) {
-            const br = block.getBoundingClientRect();
             const nextBr = nextEl.getBoundingClientRect();
-            const realGap = nextBr.top - br.bottom;
-            if (realGap > 0) {
-              marginPx = realGap;
-            }
+            realGapPx = Math.round(nextBr.top - br.bottom);
           }
 
-          // 2. Fallback to CSS inline / default value if gap measurement is not applicable
-          if (marginPx === 0) {
-            marginPx = marginStr ? parseInt(marginStr, 10) : 0;
-            if (!marginStr) {
-              if (tagName === 'LI') {
-                const styleAttr = block.getAttribute('style') || '';
-                const match = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
-                marginPx = match ? parseInt(match[1], 10) : 10;
-              } else if (tagName.startsWith('H')) {
-                marginPx = 8;
-              } else {
-                marginPx = 16;
-              }
-            }
-          }
+          // Use the bigger of real gap or inline value for display height
+          // (no next sibling = fall back to the inline or default margin)
+          const displayHeight = nextEl
+            ? Math.max(realGapPx, 0)
+            : inlineMarginVal;
 
-          // Determine original flag based on baselines
-          const baseline = tagName === 'LI' ? 10 : (tagName.startsWith('H') ? 8 : 16);
-          if (Math.abs(marginPx - baseline) <= 2) {
-            isOriginal = true;
-          }
-
-          if (marginPx > 0) {
-            const cr = root.getBoundingClientRect();
-            const br = block.getBoundingClientRect();
-
+          if (displayHeight > 0) {
             spacerGuide.style.top = `${br.bottom - cr.top + root.scrollTop}px`;
             spacerGuide.style.left = `${br.left - cr.left}px`;
             spacerGuide.style.width = `${br.width}px`;
-            spacerGuide.style.height = `${marginPx}px`;
+            spacerGuide.style.height = `${displayHeight}px`;
 
-            if (isOriginal) {
-              spacerGuide.className = 'geo-spacer-guide geo-spacer-guide--original';
-              spacerGuide.textContent = `ESPACIO ORIGINAL: ${baseline}px ⤓`;
-            } else {
+            if (isModified) {
               spacerGuide.className = 'geo-spacer-guide';
-              const extra = Math.round(marginPx - baseline);
+              const extra = inlineMarginVal - baseline;
               if (extra > 0) {
-                spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Total ${Math.round(marginPx)}px) ⤓`;
+                spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Visual: ${displayHeight}px) ⤓`;
               } else {
-                spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${Math.round(marginPx)}px ⤓`;
+                spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${inlineMarginVal}px (Visual: ${displayHeight}px) ⤓`;
               }
+            } else {
+              spacerGuide.className = 'geo-spacer-guide geo-spacer-guide--original';
+              spacerGuide.textContent = `ESPACIO ORIGINAL: ${displayHeight}px ⤓`;
             }
             spacerGuide.style.display = 'flex';
           } else {
             spacerGuide.style.display = 'none';
           }
+
         }
       } else {
         if (!menuOpen) {
