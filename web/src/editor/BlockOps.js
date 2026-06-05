@@ -322,9 +322,10 @@ export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = nul
 
   if (marginValue !== null) {
     const newVal = parseInt(marginValue, 10);
-    const baseline = tagName === 'li' ? 10 : 16;
+    const tagLower = tagName.toLowerCase();
+    const baseline = tagLower === 'li' ? 10 : (tagLower.startsWith('h') ? 8 : 16);
 
-    if (newVal <= baseline) {
+    if (newVal === baseline) {
       // Revert to baseline: remove margin-bottom entirely to keep HTML clean
       if (existingMatch) {
         newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
@@ -341,7 +342,7 @@ export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = nul
         });
       }
     } else {
-      // Set specified custom value
+      // Set specified custom value (could be larger or smaller than baseline)
       if (existingMatch) {
         newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
       } else if (newAttrs.includes('style=')) {
@@ -420,32 +421,32 @@ export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = 
   }
 
   const currentVal = parseInt(existingMatch[1], 10);
+  const tagLower = tagName.toLowerCase();
+  const baseline = tagLower === 'li' ? 10 : (tagLower.startsWith('h') ? 8 : 16);
 
-  if (tagName === 'li') {
-    // Template default for <li> is 10px — don't go below that
-    if (currentVal <= 10) return null;
-    const newVal = currentVal - 10;
-    newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
+  if (currentVal === 0) {
+    return null; // already at minimum
+  }
+
+  // Calculate new value (decrease by 10px, clamped to 0)
+  const newVal = Math.max(0, currentVal - 10);
+
+  if (newVal === baseline) {
+    // Revert to baseline: remove margin-bottom entirely to keep HTML clean
+    newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
+      let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+      cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+      if (!cleaned) return '';
+      return `style="${cleaned}"`;
+    });
+    newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
+      let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
+      cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
+      if (!cleaned) return '';
+      return `style='${cleaned}'`;
+    });
   } else {
-    // For <p>: Moodle CSS default is ~16px. If we'd drop to ≤16, remove the property.
-    const newVal = currentVal - 10;
-    if (newVal <= 16) {
-      // Remove margin-bottom from the style value
-      newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
-        let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-        cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-        if (!cleaned) return '';
-        return `style="${cleaned}"`;
-      });
-      newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
-        let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-        cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-        if (!cleaned) return '';
-        return `style='${cleaned}'`;
-      });
-    } else {
-      newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
-    }
+    newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
   }
 
   return {

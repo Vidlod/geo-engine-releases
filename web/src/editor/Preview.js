@@ -583,14 +583,34 @@ export class Preview {
     // ── Spacing ──
     html += `<button class="block-menu__item" data-action="add-space"><span class="block-menu__icon">➕</span>Añadir espacio después</button>`;
 
-    // Show "remove space" when: has extra inline margin OR has empty spacer elements after
-    const style = block.getAttribute('style') || '';
-    const marginMatch = style.match(/margin-bottom\s*:\s*(\d+)px/i);
-    const hasExtraMargin = !!(marginMatch && (
-      block.tagName === 'LI' ? parseInt(marginMatch[1], 10) > 10 : true
-    ));
-    const hasEmptyAfter = this._hasEmptyFollowers(block);
-    if (hasExtraMargin || hasEmptyAfter) {
+    // Show "remove space" when there is any visible space after the block.
+    const blockTagName = block.tagName.toUpperCase();
+    const blockBaseline = blockTagName === 'LI' ? 10 : (blockTagName.startsWith('H') ? 8 : 16);
+    const styleAttr = block.getAttribute('style') || '';
+    const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
+    const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : blockBaseline;
+
+    let nextContentEl = block.nextElementSibling;
+    while (
+      nextContentEl &&
+      (nextContentEl === this._blockGrip ||
+       nextContentEl === this._blockMenu ||
+       nextContentEl.classList?.contains('geo-spacer-guide') ||
+       getComputedStyle(nextContentEl).display === 'none' ||
+       this._isEmptySpacerEl(nextContentEl))
+    ) {
+      nextContentEl = nextContentEl.nextElementSibling;
+    }
+
+    const br = block.getBoundingClientRect();
+    let realGapPx = 0;
+    if (nextContentEl) {
+      const nextBr = nextContentEl.getBoundingClientRect();
+      realGapPx = Math.round(nextBr.top - br.bottom);
+    }
+
+    const displayHeight = nextContentEl ? Math.max(realGapPx, 0) : inlineMarginVal;
+    if (displayHeight > 0) {
       html += `<button class="block-menu__item" data-action="remove-space"><span class="block-menu__icon">➖</span>Quitar espacio después</button>`;
     }
 
@@ -936,10 +956,10 @@ export class Preview {
   _doRemoveSpace(blockEl) {
     const tagName = blockEl.tagName.toLowerCase();
     const blockText = this._norm(blockEl.textContent);
+    const blockIndex = this._getBlockIndex(blockEl);
 
     // ── Try reducing inline margin-bottom first ──────────────
     const html = this._engine.getResult();
-    const blockIndex = this._getBlockIndex(blockEl);
     const patch = removeSpaceAfter(html, blockText, tagName, blockIndex);
 
     if (patch) {
@@ -953,7 +973,7 @@ export class Preview {
       }
     }
 
-    // ── Fallback: remove the first empty spacer element after this block ──
+    // ── Fallback 2: remove the first empty spacer element after this block ──
     // Find the immediate next sibling in the DOM (skip UI elements)
     let nextEl = blockEl.nextElementSibling;
     while (
@@ -986,6 +1006,7 @@ export class Preview {
           this._engine.addPatch(cleanOuterHtml, '');
           this.render();
           this._onEdit();
+          return;
         } catch (err) {
           console.error('[Preview] Remove empty spacer element failed:', err);
         }
@@ -1012,6 +1033,26 @@ export class Preview {
           }
         }
         console.warn('[Preview] Could not locate empty spacer element in source HTML.');
+      }
+    }
+
+    // ── Fallback 3: Reduce below baseline ──────────────────────
+    // If we are at the baseline (no custom inline margin is set) and there are no empty spacer elements,
+    // explicitly set it below baseline (baseline - 10, clamped to 0) to override browser/Moodle CSS defaults.
+    const baseline = tagName === 'li' ? 10 : (tagName.startsWith('h') ? 8 : 16);
+    const styleAttr = blockEl.getAttribute('style') || '';
+    const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
+    if (!inlineMarginMatch) {
+      const newVal = Math.max(0, baseline - 10);
+      const patchBelow = addSpaceAfter(html, blockText, tagName, blockIndex, newVal);
+      if (patchBelow) {
+        try {
+          this._engine.addPatch(patchBelow.original, patchBelow.replacement);
+          this.render();
+          this._onEdit();
+        } catch (err) {
+          console.error('[Preview] Reduce below baseline failed:', err);
+        }
       }
     }
   }
