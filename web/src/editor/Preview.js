@@ -359,8 +359,8 @@ export class Preview {
           let realGapPx = 0;
 
           if (nextContentEl) {
-            const nextBr = nextContentEl.getBoundingClientRect();
-            realGapPx = Math.round(nextBr.top - br.bottom);
+            const nextBrTop = this._getVisualTop(nextContentEl);
+            realGapPx = Math.round(nextBrTop - br.bottom);
           }
 
           const displayHeight = nextContentEl
@@ -599,8 +599,8 @@ export class Preview {
     const br = block.getBoundingClientRect();
     let realGapPx = 0;
     if (nextContentEl) {
-      const nextBr = nextContentEl.getBoundingClientRect();
-      realGapPx = Math.round(nextBr.top - br.bottom);
+      const nextBrTop = this._getVisualTop(nextContentEl);
+      realGapPx = Math.round(nextBrTop - br.bottom);
     }
 
     const displayHeight = nextContentEl ? Math.max(realGapPx, 0) : inlineMarginVal;
@@ -1111,6 +1111,41 @@ export class Preview {
     }
 
     return null;
+  }
+
+  /**
+   * Get the actual visual top client coordinate of an element's first real content
+   * (skipping leading <br> tags by measuring the first text node or non-br child).
+   * @private
+   * @param {Element} el
+   * @returns {number}
+   */
+  _getVisualTop(el) {
+    if (el.tagName === 'BR') {
+      return el.getBoundingClientRect().top;
+    }
+
+    for (const child of el.childNodes) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const childEl = /** @type {Element} */ (child);
+        if (childEl.tagName === 'BR') {
+          continue; // skip leading BR
+        }
+        return this._getVisualTop(childEl);
+      } else if (child.nodeType === Node.TEXT_NODE) {
+        const text = (child.textContent || '').trim();
+        if (text.length > 0) {
+          const range = document.createRange();
+          range.selectNode(child);
+          const rects = range.getClientRects();
+          if (rects.length > 0) {
+            return rects[0].top;
+          }
+        }
+      }
+    }
+
+    return el.getBoundingClientRect().top;
   }
 
   /* ── Block helpers ──────────────────────────────────────── */

@@ -199,7 +199,8 @@ intermedias de un mismo avance **no llevan botón**.
 
 Toma la última semana de cada avance de la AAA del curso:
 - Ejemplo (Estadística): Avance 1 → sem 3, Avance 2 → sem 5, Avance 3 → sem 7,
-  Avance 4 → sem 9, Producto Final → sem 12.
+  Avance 4 → sem 9, Producto Final → última semana del curso.
+- **Los números reales los tomas siempre de la AAA del curso**, no de este ejemplo.
 
 ### 7.2 Formato del botón (siempre con punto final en el texto)
 
@@ -314,7 +315,8 @@ Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo:
 - **Nunca** `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
 - **Nunca** `<br>` entre `</p>` y `<ul>`, ni entre `</ul>` y `<p>`.
   Deben ir **consecutivos**: `</p><ul>`, `</ul><p>`.
-  *(Excepción: el `<br><br>` antes del `<div>` del botón de envío sí va.)*
+- **Nunca** `<br>` o `<br><br>` antes del `<div>` del botón de envío.
+  El `<div>` va directo tras el último `<p>` (margen nativo del bloque).
 
 ### Punto final
 Todo `<li>` de texto termina con `.` (o `:`, `?`, `!` según corresponda).
@@ -356,22 +358,52 @@ Moodle convierte `(y)` en 👍 y `(x)` en ❌. Para evitarlo:
 
 ---
 
-## ═══ PARTE 15 — CHECKLIST FINAL ═══
+## ═══ PARTE 15 — REGLAS DE PARADA ═══
+
+Estas situaciones requieren **detener el procesamiento e informar al usuario**
+antes de continuar. No tomes la decisión de forma autónoma.
+
+### 15.1 Inconsistencia entre insumos
+Si detectas contradicciones entre PDF y Word (créditos, ponderaciones, semanas,
+estructura de actividades): la **autoridad es el Syllabus y la AAA**.
+Informa al usuario de la discrepancia concreta y espera instrucciones.
+
+### 15.2 Foros
+Cada vez que el texto mencione un **foro** (social, punto de encuentro, de
+presentación, etc.): inserta FLAG y notifica:
+```html
+<!-- FLAG: dato-faltante Enlace Moodle del "[nombre del foro]" (mod/forum/view.php?id=...) -->
+```
+No avances sin el enlace.
+
+### 15.3 Verificación de enlaces externos
+Antes de entregar el HTML final, verifica que los enlaces bibliográficos externos
+(eLibro, RAE, Dialnet, etc.) no estén caídos. Si un enlace falla:
+- eLibro: prueba quitando el prefijo del proxy (`elibro-net.ezproxy.udes.edu.co` → `elibro.net`).
+- Reporta al usuario con FLAG `enlace-roto` y busca un reemplazo equivalente.
+
+---
+
+## ═══ PARTE 16 — CHECKLIST FINAL ═══
 
 Antes de entregar el HTML verifica:
 
 - [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
 - [ ] Primera columna del Momento con `rowspan` total correcto.
 - [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
-- [ ] Una pestaña por SEMANA individual (no fusionada), con subtítulo del Avance.
+- [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
+- [ ] Primera columna del Momento con `rowspan` total correcto.
+- [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
+- [ ] **Una pestaña por SEMANA individual** (nunca fusionada por rango), con subtítulo del Avance.
 - [ ] Actividades tituladas `Actividad N: Nombre` (numeración continua por avance, sin "Título de la actividad").
 - [ ] Recursos listados una sola vez debajo de su actividad (sin duplicar al final).
 - [ ] Botón de envío al final de la última semana de cada avance; texto con punto final.
+- [ ] Sin `<br>` ni `<p></p>` vacío antes del `<div>` del botón (margen nativo del bloque).
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] "Producto Final" aplicado en TODO el HTML (tabla, pestaña, botón, textos).
 - [ ] REDs en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
 - [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
-- [ ] Condiciones Particulares: misma estructura de párrafos que el Word (un `<p>` si el Word tiene uno), con los entregables enlazados con `@@PLUGINFILE@@`.
+- [ ] Condiciones Particulares: mismo nº de `<p>` que el Word, entregables enlazados con `@@PLUGINFILE@@`.
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
@@ -380,11 +412,14 @@ Antes de entregar el HTML verifica:
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
+- [ ] Foros: FLAG `dato-faltante` con enlace pendiente (no avanzar sin él).
+- [ ] Inconsistencias PDF/Word: reportadas al usuario, no corregidas de forma autónoma.
+- [ ] Enlace proxy eLibro con guion (`elibro-net.ezproxy`); enlaces externos verificados.
 - [ ] Lista de FLAGS entregada al final.
 
 ---
 
-## ═══ PARTE 16 — ESQUELETO HTML REAL (NO MODIFICAR LA ESTRUCTURA) ═══
+## ═══ PARTE 17 — ESQUELETO HTML REAL (NO MODIFICAR LA ESTRUCTURA) ═══
 
 El HTML que generes **debe respetar exactamente** este esqueleto de clases Bootstrap y
 jerarquía de etiquetas. Solo reemplaza los placeholders `[EN MAYÚSCULAS]` con el

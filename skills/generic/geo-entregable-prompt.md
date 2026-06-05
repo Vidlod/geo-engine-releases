@@ -213,7 +213,8 @@ abriendo en pestaña nueva:
 - **Nunca** `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
 - **Nunca** `<br>` entre `</p>` y `<ul>`, ni entre `</ul>` y `<p>`. Deben ir
   consecutivos: `</p><ul>`, `</ul><p>`. Moodle ya aplica margen a los bloques.
-  *(Excepción: el `<br><br>` antes del `<div>` del botón de envío sí va.)*
+- **Nunca** `<br>` o `<br><br>` antes del `<div>` del botón de envío.
+  El `<div>` va directo tras el último `<p>` (margen nativo del bloque).
 
 ### 9.2 Punto final
 Todo `<li>` de texto debe terminar con `.` (o `:`, `?`, `!` según corresponda).
@@ -263,7 +264,21 @@ Moodle convierte `(y)` en 👍 y `(x)` en ❌. Para evitarlo sin cambiar el text
 
 ---
 
-## ═══ PARTE 12 — CHECKLIST FINAL ═══
+## ═══ PARTE 12 — REGLAS DE PARADA ═══
+
+Estas situaciones requieren **detener el procesamiento e informar al usuario**.
+
+- **Inconsistencia entre insumos** (PDF vs Word): la autoridad es el Syllabus y la AAA.
+  Reporta la discrepancia; no la corrijas de forma autónoma.
+- **Foros**: si el texto menciona un foro → FLAG `dato-faltante` con el nombre del foro;
+  el usuario debe proporcionar el enlace `mod/forum/view.php?id=...`.
+- **Enlace externo caído** (eLibro, RAE, Dialnet, etc.): emite FLAG `enlace-roto`
+  y reporta al usuario. Para eLibro, prueba quitando el prefijo del proxy antes de marcar
+  como roto: `elibro-net.ezproxy.udes.edu.co` → `elibro.net`.
+
+---
+
+## ═══ PARTE 13 — CHECKLIST FINAL ═══
 
 Antes de entregar el HTML verifica:
 
@@ -273,7 +288,7 @@ Antes de entregar el HTML verifica:
 - [ ] Pestañas: "Forma de entrega" (no "Formato") y "Tenga en cuenta".
 - [ ] Actividades tituladas `Actividad N: Nombre` (sin "Título de la actividad").
 - [ ] Párrafo de envío como último párrafo, encima del botón.
-- [ ] Botón de envío con punto final en el texto.
+- [ ] Botón de envío con punto final en el texto; sin `<br>` antes del `<div>`.
 - [ ] Todos los RED en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
 - [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
@@ -284,11 +299,14 @@ Antes de entregar el HTML verifica:
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
+- [ ] Foros: FLAG `dato-faltante` con nombre del foro; esperar enlace del usuario.
+- [ ] Inconsistencias PDF/Word: reportadas, no corregidas de forma autónoma.
+- [ ] Enlace proxy eLibro con guion; enlaces externos verificados.
 - [ ] Lista de FLAGS entregada al final.
 
 ---
 
-## ═══ PARTE 13 — ESQUELETO HTML REAL (NO MODIFICAR LA ESTRUCTURA) ═══
+## ═══ PARTE 14 — ESQUELETO HTML REAL (NO MODIFICAR LA ESTRUCTURA) ═══
 
 El HTML que generes **debe respetar exactamente** este esqueleto. Solo reemplaza los
 placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria-*` ni

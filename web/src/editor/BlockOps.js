@@ -557,23 +557,30 @@ export function removeFollowerSpacer(html, textContent, tagName = 'p', blockInde
   // Look at what follows the block in the HTML string.
   const afterBlock = html.substring(block.end);
 
-  // Match a leading empty spacer element (<br>, <p><br></p>, etc.)
-  // We allow optional closing list/item tags and whitespace before the spacer.
-  // Group 1: captures any leading closing tags and whitespace.
-  // Group 2: matches <br>.
-  // Group 3: matches the tag name of other empty elements (like p, div, span).
-  // Group 4: matches the attributes of the empty element.
-  const spacerRegex = /^(\s*(?:<\/(?:ul|ol|li)>\s*)*)(?:(<br\s*\/?>)|<([a-z1-6]+)\b([^>]*)>\s*(?:<br\s*\/?>|&nbsp;|\s*)*<\/\3>)/i;
-  const match = afterBlock.match(spacerRegex);
-  if (!match) {
-    return null;
+  // Pattern A: Match a leading empty spacer element (<br>, <p><br></p>, etc.) after the block,
+  // potentially past closing list tags (</ul>, </li>).
+  const siblingSpacerRegex = /^(\s*(?:<\/(?:ul|ol|li)>\s*)*)(?:(<br\s*\/?>)|<([a-z1-6]+)\b([^>]*)>\s*(?:<br\s*\/?>|&nbsp;|\s*)*<\/\3>)/i;
+  const matchA = afterBlock.match(siblingSpacerRegex);
+  if (matchA) {
+    const fullMatch = matchA[0];
+    const capturedClosingTags = matchA[1];
+    return {
+      original: block.fullMatch + fullMatch,
+      replacement: block.fullMatch + capturedClosingTags,
+    };
   }
 
-  const fullMatch = match[0];
-  const capturedClosingTags = match[1];
+  // Pattern B: Match a leading <br> inside the next block element (e.g. <h4 class="mb-4"><br>Text</h4>).
+  const leadingBrRegex = /^(\s*<([a-z1-6]+)\b([^>]*)>)\s*<br\s*\/?>/i;
+  const matchB = afterBlock.match(leadingBrRegex);
+  if (matchB) {
+    const fullMatch = matchB[0];
+    const openingTag = matchB[1];
+    return {
+      original: block.fullMatch + fullMatch,
+      replacement: block.fullMatch + openingTag,
+    };
+  }
 
-  return {
-    original: block.fullMatch + fullMatch,
-    replacement: block.fullMatch + capturedClosingTags,
-  };
+  return null;
 }

@@ -208,6 +208,7 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
 
 ## 12. Recursos: distinguir RED del experto vs cita bibliográfica
 
+
 Hay **dos tipos** de recurso y se formatean distinto. No los confundas.
 
 ### A) RED (recursos del curso / del experto disciplinar)
@@ -233,3 +234,38 @@ Libros/artículos de terceros (Posada 2016, Martínez 2013, etc.) con su URL ext
 ### Reglas comunes
 - Las viñetas de RED y de citas pueden convivir en la misma `<ul>` (como en la referencia).
 - **No dupliques** un recurso ya listado en su actividad (primer uso).
+
+## 13. Verificación de enlaces externos caídos
+
+Antes de dar por terminado cualquier HTML, verifica los enlaces externos (eLibro, RAE,
+Dialnet, etc.) para descartar URLs caídas.
+
+- **Proxy eLibro**: para probar externamente quita el prefijo del proxy
+  (`elibro-net.ezproxy.udes.edu.co` → `elibro.net`). El dominio institucional siempre
+  lleva guion: `elibro-net.ezproxy.udes.edu.co` (sin guion → enlace roto para estudiantes).
+- Si un enlace está caído → emite FLAG `enlace-roto` y busca reemplazo o reporta al usuario.
+  **No dejes un enlace roto en el HTML final.**
+
+## 14. Créditos académicos y Rúbrica 1 (Introducción al Curso)
+
+- Los **créditos académicos, horas con acompañamiento docente y total de horas** del
+  apartado "Detalles del Curso" se extraen **obligatoriamente de la Rúbrica 1** del curso.
+- En la página de Información del Curso, el botón de **Rúbricas** enlaza siempre y
+  exclusivamente la **Rúbrica 1** (`RUBRICA1_NombreCurso.pdf`), que es la rúbrica inicial
+  de proceso.
+
+## 15. Consistencia de insumos: PDF vs Word
+
+- En caso de **discrepancias o contradicciones** entre archivos PDF y documentos Word
+  (créditos, ponderaciones, estructura de actividades, etc.): la **autoridad es el
+  Syllabus y la AAA**.
+- Ante cualquier inconsistencia: **detén el procesamiento e informa al usuario** de
+  inmediato para que decida. **No corrijas de forma autónoma** en el HTML.
+
+## 16. Foros
+
+- Siempre que el texto haga referencia a cualquier tipo de **foro** (social, punto de
+  encuentro, presentación, etc.): **detente e informa al usuario** para que proporcione
+  el enlace de Moodle (`mod/forum/view.php?id=...`).
+- No avances sin el enlace: emite FLAG `dato-faltante` con la descripción del foro y
+  continúa con el resto del contenido.

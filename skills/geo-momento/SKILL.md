@@ -3,8 +3,8 @@ name: geo-momento
 description: >-
   Usar al crear o corregir una página HTML de un Momento Evaluativo para un curso
   en Moodle (proyecto GEO / UDES) a partir de la AAA y los PDF del curso. Cubre la
-  tabla de Resumen de Entregas con fusión rowspan, las pestañas de contenido por
-  rango de semanas, los botones de envío, la pestaña "Instrumento para Enviar
+  tabla de Resumen de Entregas con fusión rowspan, las pestañas de contenido (una
+  por semana individual), los botones de envío, la pestaña "Instrumento para Enviar
   Entregable" y la nomenclatura "Producto Final".
 ---
 
@@ -74,16 +74,27 @@ citas, "Producto Final" y uso del linter).
 
 ## Flags típicos
 
-- `dato-faltante`: faltan enlaces `mod/assign` de los botones, o la lista de videos.
+- `dato-faltante`: faltan enlaces `mod/assign` de los botones, la lista de videos,
+  o el enlace de un foro mencionado en el texto.
 - `red-sin-archivo`: un RED mencionado no tiene archivo/enlace.
 - `podcast-titulo`: hay un podcast → verificar título por escucha.
+- `enlace-roto`: un enlace externo (eLibro, RAE…) parece caído.
+
+## Reglas de parada (detener e informar al usuario)
+
+- **Foro** mencionado en el texto → solicitar enlace `mod/forum/view.php?id=...`.
+- **Inconsistencia entre insumos** (PDF vs Word) → reportar; la autoridad es Syllabus/AAA.
+- **Enlace externo caído** → FLAG `enlace-roto`; buscar reemplazo o reportar.
 
 ## Hecho cuando
 
 - [ ] Tabla de Resumen con fusión `rowspan` correcta (avance + cuestionario).
-- [ ] Una pestaña por semana individual, con nombre `Semana N` y subtítulo `Avance N`.
-- [ ] Botón de envío en la última semana de cada avance; texto con punto final.
+- [ ] **Una pestaña por semana individual** (nunca fusionada), con `Semana N` y subtítulo `Avance N`.
+- [ ] Botón de envío en la última semana de cada avance; texto con punto final; sin `<br>` antes del `<div>`.
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] Producto Final aplicado globalmente; recursos sin duplicar.
 - [ ] Videos/diapositivas tratados como RED (o FLAG si faltan).
+- [ ] Foros: FLAG `dato-faltante` emitido con descripción del foro.
+- [ ] Inconsistencias PDF/Word: reportadas al usuario, no corregidas autónomamente.
+- [ ] Enlace proxy eLibro con guion; enlaces verificados (FLAG si rotos).
 - [ ] `python cli.py check` sin errores; FLAGS entregados.
