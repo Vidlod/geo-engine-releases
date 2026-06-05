@@ -40,6 +40,7 @@ import { TableroAnotacionesRule } from './rules/phrases.js';
 import { NoItalicsRule } from './rules/citations.js';
 import { EmoticonRule } from './rules/emoticons.js';
 import { ProductoFinalRule } from './rules/naming.js';
+import { StrongHeadingRule } from './rules/headings.js';
 
 // ── ALL_RULES ───────────────────────────────────────────────────────────────
 
@@ -71,6 +72,8 @@ export const ALL_RULES = [
   EmoticonRule,
   // naming
   ProductoFinalRule,
+  // headings
+  StrongHeadingRule,
 ];
 
 // ── Linter class ────────────────────────────────────────────────────────────

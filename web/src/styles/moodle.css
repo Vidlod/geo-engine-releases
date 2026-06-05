@@ -28,6 +28,8 @@
 .preview-container h6 { font-size: 1rem;    font-weight: 500; margin-bottom: 0.5rem; }
 
 .preview-container p {
+  /* Bootstrap 4 / Moodle Boost: los <p> SÍ llevan margin-bottom: 1rem.
+     (Por eso dos párrafos seguidos se ven separados en Moodle.) */
   margin-top: 0;
   margin-bottom: 1rem;
 }

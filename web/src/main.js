@@ -26,7 +26,7 @@ import { Linter } from './linter/index.js';
 /* ── Default linter configuration ───────────────────────── */
 const DEFAULT_LINTER_CONFIG = {
   rules: {
-    'max-br':              { enabled: true, max: 2 },
+    'max-br':              { enabled: true, max: 1 },
     'br-before-close':     { enabled: true },
     'br-between-blocks':   { enabled: true },
     'br-before-button':    { enabled: true },
@@ -40,6 +40,7 @@ const DEFAULT_LINTER_CONFIG = {
     'li-paragraph':        { enabled: true },
     'li-period':           { enabled: true },
     'producto-final':      { enabled: true },
+    'strong-heading':      { enabled: true },
   },
   course: { last_avance: 5 },
 };

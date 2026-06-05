@@ -11,7 +11,7 @@ from .utils import deep_merge
 
 DEFAULT_CONFIG = {
     "rules": {
-        "max-br": {"enabled": True, "max": 2},
+        "max-br": {"enabled": True, "max": 1},
         "br-before-close": {"enabled": True, "tags": ["li", "ul", "ol", "div"]},
         "br-between-blocks": {"enabled": True, "blocks": ["p", "ul", "ol"]},
         "br-before-button": {"enabled": True},

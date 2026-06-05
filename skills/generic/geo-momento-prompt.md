@@ -181,11 +181,11 @@ Cada actividad se titula **`Actividad N: Nombre`** en negrita:
 
 ### 6.4 Listas numeradas dentro de una actividad
 
-En listas de texto `1)`, `2)` o `a.`, `b.` separa cada ítem con `<br><br>`. El marcador
-va **dentro** del `<strong>` de forma consistente en todos los ítems:
+En listas de texto `1)`, `2)` o `a.`, `b.` separa cada ítem con **un** `<br>` (nunca
+`<br><br>`). El marcador va **dentro** del `<strong>` de forma consistente:
 
 ```html
-<strong>a. Enunciado del ítem.</strong><br><br>
+<strong>a. Enunciado del ítem.</strong><br>
 <strong>b. Enunciado del siguiente ítem.</strong>
 ```
 
@@ -202,13 +202,13 @@ Toma la última semana de cada avance de la AAA del curso:
   Avance 4 → sem 9, Producto Final → última semana del curso.
 - **Los números reales los tomas siempre de la AAA del curso**, no de este ejemplo.
 
-### 7.2 Formato del botón (siempre con punto final en el texto)
+### 7.2 Formato del botón (texto SIN punto final)
 
 ```html
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1.
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1
         </button>
     </a>
 </div>
@@ -216,9 +216,9 @@ Toma la última semana de cada avance de la AAA del curso:
 
 - Reemplaza `XXXX` por el ID de la tarea de Moodle.
 - Si no tienes el ID → `<!-- FLAG: dato-faltante Falta el enlace mod/assign para Avance N -->`.
-- Último avance: `Enviar Producto Final.` (con punto).
-- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (margen
-  nativo). Nunca `<br>`/`<br><br>` ni `<p></p>` vacío antes del botón.
+- Último avance: `Enviar Producto Final` (sin punto, como todos).
+- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (el `<p>`
+  ya aporta el espacio). Nunca `<br>` ni `<p></p>` vacío antes del botón.
 
 ---
 
@@ -237,7 +237,7 @@ El **último avance del último momento** del curso se llama **"Producto Final"*
 **TODAS** las partes del HTML:
 - Tabla de resumen de entregas.
 - Nombre y subtítulo de la pestaña de contenido.
-- Texto visible del botón de envío: `Enviar Producto Final.`.
+- Texto visible del botón de envío: `Enviar Producto Final` (sin punto).
 - Pestaña "Instrumento para Enviar Entregable".
 - Cualquier mención en textos descriptivos.
 
@@ -257,9 +257,9 @@ Si el usuario no indica cuál es el último avance → pregunta antes de generar
 >   `red-sin-archivo` si no hay archivo.
 > - Ejemplo correcto (semana de bienvenida):
 >   ```html
->   <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
->   <li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/SYLLABUS_Estadística_Descriptiva.pdf" target="_blank" rel="noopener">Syllabus del curso Estadística Descriptiva</a></strong>.</li>
->   <li style="margin-bottom: 10px;"><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+>   <li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+>   <li><strong><a href="@@PLUGINFILE@@/SYLLABUS_Estadística_Descriptiva.pdf" target="_blank" rel="noopener">Syllabus del curso Estadística Descriptiva</a></strong>.</li>
+>   <li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
 >   ```
 > - **Incorrecto:** `<li>Torres, L. (2025). Mapa mental Estadística Descriptiva.</li>` (es cita, sin negrita, sin enlace).
 > Solo las fuentes **externas** (Posada, Martínez, Suárez...) con URL propia conservan el
@@ -276,10 +276,20 @@ Si el usuario no indica cuál es el último avance → pregunta antes de generar
   ```
   + `<!-- FLAG: red-sin-archivo No hay archivo para "Título del RED" -->`
 - Videos y diapositivas en video = RED, van en viñeta. Si no tienes URL:
-  `<!-- FLAG: dato-faltante Falta video "Título" para la actividad X de la semana Y -->`
-- Podcasts: reproductor `<audio>` dentro del `<li>`:
+  `<!-- FLAG: dato-faltante Falta video "Título" para la actividad X de la semana Y -->`.
+  Cuando tengas la URL de YouTube, usa la **caja responsiva** (un solo `<br>` antes):
   ```html
-  <li style="margin-bottom: 10px;"><strong>Podcast: Título.</strong><br><br>
+  <li><strong>Diapositivas en vídeo:</strong> objeto de la criminología.<br>
+      <div style="max-width: 360px; margin: 0 auto;">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+              <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/VIDEO_ID?si=XXXX&amp;start=1" frameborder="0" allowfullscreen=""></iframe>
+          </div>
+      </div>
+  </li>
+  ```
+- Podcasts: reproductor `<audio>` dentro del `<li>`, con **un solo `<br>`** antes:
+  ```html
+  <li><strong>Podcast: Título.</strong><br>
       <audio controls="true" title="Podcast: Título">
           <source src="@@PLUGINFILE@@/Nombre.mp3">@@PLUGINFILE@@/Nombre.mp3
       </audio>
@@ -308,23 +318,24 @@ Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo:
 
 ## ═══ PARTE 12 — VIÑETAS Y ESPACIADO ═══
 
+### Modelo de espaciado (cómo se separan los elementos)
+- **Los `<p>` ya traen su propio espacio**: NO les pongas `<br>` ni margen alrededor.
+- **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / entre elementos que NO
+  sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
+- **`margin-bottom` NUNCA** (ni `10px` en `<li>` ni en ningún lado).
+- El botón de envío va directo tras el `<p>` (sin `<br>` ni `<p></p>`).
+- Entre dos botones (pestaña "Instrumento"): un `<p></p>` vacío.
+
 ### Prohibiciones absolutas
 - **Nunca** `<p>` dentro de `<li>`. Texto directo: `<li>Texto.</li>`.
 - **Nunca** cursiva: sin `<em>`, sin `font-style:italic`.
-- **Nunca** más de `<br><br>` consecutivos.
+- **Nunca** `<br><br>` (máximo un `<br>`).
+- **Nunca** `margin-bottom`.
 - **Nunca** `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
-- **Nunca** `<br>` entre `</p>` y `<ul>`, ni entre `</ul>` y `<p>`.
-  Deben ir **consecutivos**: `</p><ul>`, `</ul><p>`.
-- **Nunca** `<br>` o `<br><br>` antes del `<div>` del botón de envío.
-  El `<div>` va directo tras el último `<p>` (margen nativo del bloque).
 
 ### Punto final
 Todo `<li>` de texto termina con `.` (o `:`, `?`, `!` según corresponda).
-
-### Espaciado entre viñetas
-- Una viñeta con más de 3 renglones, o dos con 2 renglones →
-  `style="margin-bottom: 10px;"` en **todos** los `<li>` del grupo.
-- Viñetas de un renglón → sin margen.
+Los **botones** NO llevan punto final.
 
 ---
 
@@ -391,14 +402,12 @@ Antes de entregar el HTML verifica:
 - [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
 - [ ] Primera columna del Momento con `rowspan` total correcto.
 - [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
-- [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
-- [ ] Primera columna del Momento con `rowspan` total correcto.
-- [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
 - [ ] **Una pestaña por SEMANA individual** (nunca fusionada por rango), con subtítulo del Avance.
 - [ ] Actividades tituladas `Actividad N: Nombre` (numeración continua por avance, sin "Título de la actividad").
 - [ ] Recursos listados una sola vez debajo de su actividad (sin duplicar al final).
-- [ ] Botón de envío al final de la última semana de cada avance; texto con punto final.
-- [ ] Sin `<br>` ni `<p></p>` vacío antes del `<div>` del botón (margen nativo del bloque).
+- [ ] Botón de envío al final de la última semana de cada avance; **texto SIN punto final**.
+- [ ] Sin `<br>` ni `<p></p>` vacío antes del `<div>` del botón (el `<p>` ya separa).
+- [ ] Sin `margin-bottom` en ningún lado; máximo un `<br>` (nunca `<br><br>`).
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] "Producto Final" aplicado en TODO el HTML (tabla, pestaña, botón, textos).
 - [ ] REDs en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
@@ -407,8 +416,8 @@ Antes de entregar el HTML verifica:
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
-- [ ] Sin `<p>` en `<li>`. Sin cursiva. Sin `<br>` entre bloques `p`/`ul`/`ol`.
-- [ ] Máximo `<br><br>` consecutivos.
+- [ ] Sin `<p>` en `<li>`. Sin cursiva. Sin `<br>` adyacente a un `<p>` (se auto-espacia).
+- [ ] Máximo un `<br>` (nunca `<br><br>`); `<br>` solo entre viñetas / elementos no-`<p>`.
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
@@ -530,8 +539,8 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                         <p style="text-align: justify;">[Párrafo introductorio del momento.]</p>
                         <p style="text-align: justify;"><strong>[Título condiciones formales.]</strong></p>
                         <ul>
-                            <li style="margin-bottom: 10px;">[Condición 1.]</li>
-                            <li style="margin-bottom: 10px;">[Condición 2.]</li>
+                            <li>[Condición 1.]</li>
+                            <li>[Condición 2.]</li>
                         </ul>
                         <p style="text-align: justify;">[Párrafo contextualización / problemática.]</p>
                         <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
@@ -607,7 +616,7 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                     <div class="card-body">
                                         <p style="text-align: justify;">[Texto de la semana 1.]</p>
                                         <ul>
-                                            <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
+                                            <li>[Recurso / cita.]</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -618,7 +627,7 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                     <div class="card-body">
                                         <p style="text-align: justify;">[Texto de la semana 2.]</p>
                                         <ul>
-                                            <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
+                                            <li>[Recurso / cita.]</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -629,13 +638,13 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                     <div class="card-body">
                                         <p style="text-align: justify;">[Texto de la semana 3.]</p>
                                         <ul>
-                                            <li style="margin-bottom: 10px;">[Recurso / cita.]</li>
+                                            <li>[Recurso / cita.]</li>
                                         </ul>
                                         <p style="text-align: justify;">[Párrafo de envío.]</p>
                                         <div style="text-align: center;">
                                             <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
                                                 <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N]
                                                 </button>
                                             </a>
                                         </div>

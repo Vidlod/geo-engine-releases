@@ -33,13 +33,12 @@ Las reglas de formato mecánico **NO debes aplicarlas a mano**: las verifica y c
 el linter determinista (sección 8). Esta lista es solo un **respaldo** por si trabajas
 en un agente sin acceso a shell:
 
-- Máximo `<br><br>` consecutivos (nunca 3+).
+- **Máximo UN `<br>`** en cualquier lugar (nunca `<br><br>`).
+- **`margin-bottom` NUNCA**: no se usa para separar (ni en `<li>`, ni en `<p>`, ni en nada).
+- **Los `<p>` ya traen su propio espacio**: no se les pone `<br>` ni margen alrededor.
+- **El `<br>` solo separa viñetas (`<li>`) o elementos que NO sean `<p>`** (ver §6).
 - Máximo 2 espacios consecutivos.
 - Sin `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
-- Sin `<br>` **entre bloques** `</p>`↔`<ul>`/`<ol>`: van consecutivos (`</p><ul>`).
-  (Moodle ya aplica margen; el `<br>` duplica el espacio.)
-- **Botón de envío sin `<br>` antes**: va directo tras el último párrafo (margen nativo).
-  Nunca `<br>`/`<br><br>` ni `<p></p>` vacío antes del `<div>` del botón (ver sección 11).
 - Sin cursiva: nada de `<em>` ni `font-style:italic`. (`<i>` puede ser ícono → revisar.)
 - `(y)` / `(x)` → `(<span>y</span>)` / `(<span>x</span>)` (filtro emoticonos Moodle).
 - "módulo/Módulo/módulos" → "curso/cursos".
@@ -48,6 +47,7 @@ en un agente sin acceso a shell:
 - Proxy eLibro con guion: `elibro-net.ezproxy.udes.edu.co`.
 - Eliminar "a través del / en el tablero de anotaciones".
 - Punto final en cada `<li>` de texto.
+- **Botones de envío SIN punto final** (`Enviar Avance 1`, no `Enviar Avance 1.`).
 - Nunca `<p>` dentro de `<li>`.
 
 ## 3. Enlaces a archivos locales: método portable @@PLUGINFILE@@
@@ -82,13 +82,26 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 - **Videos y diapositivas en video** = RED: van en viñeta como cualquier otro recurso.
   Varían por curso y **casi siempre son los últimos en colocarse**. Si aún no los tienes,
   NO los inventes: emite FLAG `dato-faltante` indicando al usuario **cuáles son y dónde
-  van**, para que los suministre luego y se actualice el HTML. Cuando existan, se incrustan
-  con caja responsiva de YouTube (o `@@PLUGINFILE@@` si son locales).
-- **Podcasts** = RED: reproductor `<audio>` HTML5 dentro del `<li>`, y emite FLAG
-  `podcast-titulo` para recordar verificar el título escuchando el audio:
+  van**. Cuando existan, se incrustan con la **caja responsiva de YouTube** (plantilla abajo)
+  o con `@@PLUGINFILE@@` si son locales.
+
+**Plantilla de video YouTube** (dentro del `<li>` del RED; un solo `<br>` antes de la caja):
 
 ```html
-<li style="margin-bottom: 10px;"><strong>Podcast: Título.</strong><br><br>
+<li><strong>Diapositivas en vídeo:</strong> objeto de la criminología.<br>
+    <div style="max-width: 360px; margin: 0 auto;">
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/VIDEO_ID?si=XXXX&amp;start=1" frameborder="0" allowfullscreen=""></iframe>
+        </div>
+    </div>
+</li>
+```
+
+- **Podcasts** = RED: reproductor `<audio>` HTML5 dentro del `<li>`, con **un solo `<br>`**
+  antes del `<audio>`. Emite FLAG `podcast-titulo` para verificar el título escuchando:
+
+```html
+<li><strong>Podcast: Título.</strong><br>
     <audio controls="true" title="Podcast: Título">
         <source src="@@PLUGINFILE@@/Nombre.mp3">@@PLUGINFILE@@/Nombre.mp3
     </audio>
@@ -107,14 +120,24 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 
 - Quitar textos pegados como "Lectura requerida." o "Lectura de ampliación temática.".
 
-## 6. Viñetas y espaciado de grupos
+## 6. Modelo de espaciado (cómo se separan los elementos)
 
-- **Sin saltos entre bloques**: NO pongas `<br>`/`<br><br>` entre `</p>` y `<ul>`, ni entre
-  `</ul>` y `<p>`. Deben ir **consecutivos** (`</p><ul>`, `</ul><p>`). Moodle aplica margen a
-  los bloques; un `<br>` intermedio produce doble espacio. Esto **incluye** el `<div>` del
-  botón de envío: va directo tras el último párrafo, sin `<br>` (ver sección 11).
-- Si una viñeta supera 3 renglones, o dos viñetas tienen 2 renglones → `style="margin-bottom: 10px;"`
-  en cada `<li>` del grupo. (Es visual: si dudas, emite FLAG en vez de adivinar.)
+Este es el sistema real que usa Moodle. **No uses `margin-bottom` nunca.**
+
+| Situación | Mecanismo |
+|---|---|
+| Entre dos `<p>` | nada — el `<p>` ya trae su espacio |
+| `<p>` → `<ul>` / `<ul>` → `<p>` | nada — el `<p>` ya trae su espacio; van consecutivos |
+| Entre viñetas (`<li>`) que necesiten aire | **un** `<br>` entre ellas (`</li><br><li>`) |
+| Dentro de una viñeta, antes de un iframe/audio | **un** `<br>` |
+| Antes del `<div>` del botón de envío | nada — el `<p>` anterior ya separa |
+| Entre dos botones (pestaña "Instrumento") | un `<p></p>` vacío |
+| Encima de un `<h4>` secundario | un `<br>` al inicio del `<h4>` (`<h4><br>Título</h4>`) |
+
+- **Regla de oro del espaciado:** el `<br>` solo aparece **entre viñetas o dentro de
+  ellas / entre elementos que no sean `<p>`**. Los `<p>` se auto-espacian.
+- **Nunca `margin-bottom`** (ni `10px` en `<li>` ni en ningún lado).
+- **Nunca `<br><br>`**: máximo un `<br>`.
 
 ## 7. Nomenclatura "Producto Final"
 
@@ -187,24 +210,25 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
 - Corrige mayúscula inicial y tildes del nombre (p. ej. "grafico" → "gráfico",
   "contexto" → "Contexto").
 
-## 11. Espaciado de los botones de envío
+## 11. Botones de envío
 
-- El botón va **directo tras el último párrafo**, separado solo por el margen nativo.
-- **Prohibido** `<br>`/`<br><br>` o `<p></p>` vacío entre el contenido y el botón:
+- El botón va **directo tras el último párrafo** (el `<p>` ya aporta su espacio).
+- **Sin `<br>`** ni `<p></p>` vacío entre el contenido y el botón.
+- **Texto del botón SIN punto final**: `Enviar Avance 1` (no `Enviar Avance 1.`).
 
 ```html
 <p style="text-align: justify;">...último párrafo / párrafo de envío.</p>
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance N.
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1
         </button>
     </a>
 </div>
 ```
 
-- **Único caso permitido de separador**: un `<p></p>` vacío **entre dos botones
-  consecutivos** en la pestaña "Instrumento para Enviar Entregable".
+- **Entre dos botones** consecutivos (pestaña "Instrumento para Enviar Entregable"):
+  un `<p></p>` vacío como separador.
 
 ## 12. Recursos: distinguir RED del experto vs cita bibliográfica
 
@@ -222,8 +246,8 @@ podcasts, etc. **Aunque el AAA los escriba con formato autor-año** (p. ej.
   FLAG `red-sin-archivo` si no hay archivo.
 
 ```html
-<li style="margin-bottom: 10px;"><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
-<li style="margin-bottom: 10px;"><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+<li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+<li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
 ```
 
 ### B) Cita bibliográfica externa

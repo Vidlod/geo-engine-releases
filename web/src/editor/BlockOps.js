@@ -43,7 +43,7 @@ function htmlToText(html) {
  * @param {string} tagName  e.g. 'p'
  * @returns {Array<{tag: string, attrs: string, innerHTML: string, start: number, end: number, fullMatch: string, text: string}>}
  */
-function parseAllBlocks(html, tagName) {
+export function parseAllBlocks(html, tagName) {
   const blocks = [];
   const tagLower = tagName.toLowerCase();
 
@@ -121,15 +121,29 @@ export function findBlock(html, textContent, tagName = 'p', blockIndex = null) {
   const target = norm(textContent);
   if (!target) return null;
 
-  // 1. Exact match
-  for (const b of blocks) {
-    if (b.text === target) return b;
+  // Find all matches (exact or prefix) and sort by proximity to blockIndex
+  const exactMatches = [];
+  const prefixMatches = [];
+  const prefix = target.substring(0, 80);
+
+  blocks.forEach((b, idx) => {
+    if (b.text === target) {
+      exactMatches.push({ block: b, index: idx });
+    } else if (b.text.startsWith(prefix)) {
+      prefixMatches.push({ block: b, index: idx });
+    }
+  });
+
+  const targetIndex = (blockIndex !== null) ? blockIndex : 0;
+
+  if (exactMatches.length > 0) {
+    exactMatches.sort((a, b) => Math.abs(a.index - targetIndex) - Math.abs(b.index - targetIndex));
+    return exactMatches[0].block;
   }
 
-  // 2. Prefix match (first 80 chars) as fallback
-  const prefix = target.substring(0, 80);
-  for (const b of blocks) {
-    if (b.text.startsWith(prefix)) return b;
+  if (prefixMatches.length > 0) {
+    prefixMatches.sort((a, b) => Math.abs(a.index - targetIndex) - Math.abs(b.index - targetIndex));
+    return prefixMatches[0].block;
   }
 
   return null;
@@ -334,6 +348,42 @@ export function splitBlock(html, textContent, displayOffset, tagName = 'p', bloc
   };
 }
 
+/* ── Baseline helper ──────────────────────────────────────── */
+
+/**
+ * Calculate the baseline margin-bottom for a block based on its tag name and attributes/classes (like mb-*).
+ *
+ * Supports both attributes strings (e.g. ' class="mb-4"') and pure class strings (e.g. "mb-4 text-white").
+ *
+ * @param {string} tagName
+ * @param {string} [attrsOrClasses='']
+ * @returns {number}
+ */
+export function getBaseline(tagName, attrsOrClasses = '') {
+  const tag = tagName.toLowerCase();
+
+  let classesStr = attrsOrClasses;
+  const classMatch = attrsOrClasses.match(/class=["']([^"']+)["']/i);
+  if (classMatch) {
+    classesStr = classMatch[1];
+  }
+
+  const classes = classesStr.split(/\s+/);
+  for (const cls of classes) {
+    const m = cls.match(/^mb-(\d+)$/);
+    if (m) {
+      const val = parseInt(m[1], 10);
+      if (val === 0) return 0;
+      if (val === 1) return 4;
+      if (val === 2) return 8;
+      if (val === 3) return 16;
+      if (val === 4) return 24;
+      if (val === 5) return 48;
+    }
+  }
+  return tag === 'li' ? 10 : (tag.startsWith('h') ? 8 : 16);
+}
+
 /* ── Add space ────────────────────────────────────────────── */
 
 /**
@@ -360,11 +410,10 @@ export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = nul
   let newAttrs = block.attrs;
   const marginRegex = /margin-bottom\s*:\s*(\d+)px/i;
   const existingMatch = newAttrs.match(marginRegex);
+  const baseline = getBaseline(tagName, block.attrs);
 
   if (marginValue !== null) {
     const newVal = parseInt(marginValue, 10);
-    const tagLower = tagName.toLowerCase();
-    const baseline = tagLower === 'li' ? 10 : (tagLower.startsWith('h') ? 8 : 16);
 
     if (newVal === baseline) {
       // Revert to baseline: remove margin-bottom entirely to keep HTML clean
@@ -407,21 +456,22 @@ export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = nul
       const currentVal = parseInt(existingMatch[1], 10);
       const newVal = currentVal + 10;
       newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
-    } else if (newAttrs.includes('style=')) {
-      const initialMargin = tagName === 'li' ? 20 : 26;
-      newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
-        const trimmed = p1.trim();
-        const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-        return `style="${trimmed}${sep} margin-bottom: ${initialMargin}px;"`;
-      });
-      newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
-        const trimmed = p1.trim();
-        const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-        return `style='${trimmed}${sep} margin-bottom: ${initialMargin}px;'`;
-      });
     } else {
-      const initialMargin = tagName === 'li' ? 20 : 26;
-      newAttrs = ` style="margin-bottom: ${initialMargin}px;"` + newAttrs;
+      const initialMargin = baseline + 10;
+      if (newAttrs.includes('style=')) {
+        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style="${trimmed}${sep} margin-bottom: ${initialMargin}px;"`;
+        });
+        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
+          const trimmed = p1.trim();
+          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
+          return `style='${trimmed}${sep} margin-bottom: ${initialMargin}px;'`;
+        });
+      } else {
+        newAttrs = ` style="margin-bottom: ${initialMargin}px;"` + newAttrs;
+      }
     }
   }
 
@@ -436,13 +486,13 @@ export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = nul
 /**
  * Remove spacing added by `addSpaceAfter` by decreasing `margin-bottom`.
  *
- * - `<li>` with `margin-bottom: 20px` → 10px (template default). At 10px → null (nothing to remove).
- * - `<p>` with inline `margin-bottom` → decreases by 10px. At ≤ 16px → removes the property
- *   entirely (letting Moodle CSS default take over).
+ * - Decreases inline `margin-bottom` by 10px. At baseline value, the inline
+ *   property is removed entirely (letting default CSS take over).
  *
  * @param {string} html          Full HTML string
  * @param {string} textContent   Normalised text (for findBlock)
  * @param {string} [tagName='p']
+ * @param {number|null} [blockIndex=null]
  * @returns {{ original: string, replacement: string } | null}
  */
 export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = null) {
@@ -462,8 +512,7 @@ export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = 
   }
 
   const currentVal = parseInt(existingMatch[1], 10);
-  const tagLower = tagName.toLowerCase();
-  const baseline = tagLower === 'li' ? 10 : (tagLower.startsWith('h') ? 8 : 16);
+  const baseline = getBaseline(tagName, block.attrs);
 
   if (currentVal === 0) {
     return null; // already at minimum
@@ -494,6 +543,43 @@ export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = 
     original: block.fullMatch,
     replacement: `<${tagName}${newAttrs}>${block.innerHTML}</${tagName}>`,
   };
+}
+
+/* ── Wrap standalone <strong> in <p> ─────────────────────── */
+
+/**
+ * Wrap a standalone `<strong>heading</strong>` (used as a block-level heading
+ * but not inside any `<p>`) in a proper `<p>` block, consuming the trailing
+ * `<br>` tags that were being used as spacers.
+ *
+ * Converts:  `<strong>Unidad 1: Texto</strong><br><br>`
+ * Into:      `<p><strong>Unidad 1: Texto</strong></p>`
+ *
+ * @param {string} html          Full HTML string
+ * @param {string} textContent   Plain text of the <strong> element
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function wrapStrongInParagraph(html, textContent) {
+  const target = norm(textContent);
+  if (!target) return null;
+
+  // Match <strong (attrs)>inner</strong> followed by optional whitespace + <br> tags
+  const re = /<strong(\b[^>]*)>([\s\S]*?)<\/strong>((?:\s*<br\s*\/?>)*)/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const innerText = norm(htmlToText(m[2]));
+    if (innerText !== target && !innerText.startsWith(target.substring(0, 40))) continue;
+
+    // The strong heading + its trailing <br> tags.
+    const original = m[0];
+
+    // Wrap the <strong> in a <p>. In Moodle the <p> already carries its own
+    // natural margin (no inline styles needed), and the trailing <br> tags are
+    // dropped because the paragraph spacing replaces them.
+    const replacement = `<p><strong${m[1]}>${m[2]}</strong></p>`;
+    return { original, replacement };
+  }
+  return null;
 }
 
 /* ── Split at BR ──────────────────────────────────────────── */

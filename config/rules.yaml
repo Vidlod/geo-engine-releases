@@ -5,7 +5,7 @@
 rules:
   max-br:
     enabled: true
-    max: 2                      # máximo de <br> consecutivos
+    max: 1                      # máximo de <br> consecutivos (nunca <br><br>)
 
   br-before-close:
     enabled: true

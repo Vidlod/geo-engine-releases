@@ -25,11 +25,11 @@ export class MaxBrRule {
 
   /**
    * @param {object} [options]
-   * @param {number} [options.max=2] - Maximum allowed consecutive `<br>` tags.
+   * @param {number} [options.max=1] - Maximum allowed consecutive `<br>` tags.
    */
   constructor(options = {}) {
     this.options = options;
-    this.max = options.max ?? 2;
+    this.max = options.max ?? 1;
   }
 
   /**

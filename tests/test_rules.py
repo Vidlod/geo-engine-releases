@@ -15,10 +15,11 @@ def _linter():
 
 def test_max_br():
     # Saltos DENTRO de un bloque (no entre bloques) para aislar max-br.
+    # Máximo permitido = 1 (nunca <br><br>).
     html = "<p>uno<br><br><br><br>dos</p>"
     fixed = _linter().fix(html)
-    assert "<br><br><br>" not in fixed.html
-    assert "<br><br>" in fixed.html
+    assert "<br><br>" not in fixed.html
+    assert "<br>" in fixed.html
     assert fixed.changed
 
 

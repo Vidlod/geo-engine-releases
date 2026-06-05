@@ -55,8 +55,8 @@ citas, "Producto Final" y uso del linter).
 1. **Producto Final**: el último avance del último momento pasa a "Producto Final" de
    forma global (tabla, pestañas, botones, textos, `title`). Donde diga "Avance N" (el
    último, según `config/course.yaml` → `last_avance`) se reemplaza por "Producto Final".
-2. **Botones de envío — texto con punto final SIEMPRE**: `Enviar Avance 1.`,
-   `Enviar Producto Final.` (todos terminan en punto).
+2. **Botones de envío — texto SIN punto final**: `Enviar Avance 1`,
+   `Enviar Producto Final` (ninguno lleva punto).
 3. **Botones de envío — ubicación**: uno al final de la **última semana de cada avance**,
    según los rangos de la AAA del curso. Ejemplo (Estadística): semanas 3 / 5 / 7 / 9 / 12
    (Avance 1: 1-3, Avance 2: 4-5, Avance 3: 6-7, Avance 4: 8-9, Producto Final: 10-12).
@@ -64,7 +64,7 @@ citas, "Producto Final" y uso del linter).
 4. **No duplicar recursos**: cada recurso bibliográfico/RED se lista UNA vez, debajo de
    la actividad que lo usa. Prohibido repetir una lista general al final de la semana.
 5. **Listas de texto numeradas** (ejercicios, preguntas `1) 2)` o `a. b.`): separa cada
-   ítem con `<br><br>` (sin superar 2 saltos). Si llevan negrita, el marcador va DENTRO
+   ítem con **un** `<br>` (nunca `<br><br>`). Si llevan negrita, el marcador va DENTRO
    del `<strong>` de forma consistente en todos los ítems (`<strong>a. Título.</strong>`).
 6. **Párrafo de envío** al final de la pestaña, encima del botón.
 7. **Videos y diapositivas en video = RED** (ver reglas transversales §4). Varían por curso
@@ -90,7 +90,7 @@ citas, "Producto Final" y uso del linter).
 
 - [ ] Tabla de Resumen con fusión `rowspan` correcta (avance + cuestionario).
 - [ ] **Una pestaña por semana individual** (nunca fusionada), con `Semana N` y subtítulo `Avance N`.
-- [ ] Botón de envío en la última semana de cada avance; texto con punto final; sin `<br>` antes del `<div>`.
+- [ ] Botón de envío en la última semana de cada avance; **texto SIN punto final**; sin `<br>` antes del `<div>`.
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] Producto Final aplicado globalmente; recursos sin duplicar.
 - [ ] Videos/diapositivas tratados como RED (o FLAG si faltan).

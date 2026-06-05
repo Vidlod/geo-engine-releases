@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter, removeFollowerSpacer } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter, removeFollowerSpacer, getBaseline, wrapStrongInParagraph } from './BlockOps.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -317,7 +317,8 @@ export class Preview {
       const target = /** @type {HTMLElement} */ (e.target);
       if (target === grip || menu.contains(target)) return;
 
-      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6');
+      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6') ||
+                    this._getStandaloneStrong(target);
       const isValidBlock = block && !block.closest('.nav, .nav-tabs, .nav-pills');
 
       if (isValidBlock) {
@@ -328,7 +329,7 @@ export class Preview {
 
           // ── Spacer guide visualization ──
           const tagName = block.tagName.toUpperCase();
-          const baseline = tagName === 'LI' ? 10 : (tagName.startsWith('H') ? 8 : 16);
+          const baseline = getBaseline(tagName, block.className);
 
           // Determine if a custom margin-bottom has been applied inline
           const styleAttr = block.getAttribute('style') || '';
@@ -459,7 +460,8 @@ export class Preview {
       if (this._inlineEditor?.isOpen) return;
 
       const target = /** @type {HTMLElement} */ (e.target);
-      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6');
+      const block = target.closest('p, li, h1, h2, h3, h4, h5, h6') ||
+                    this._getStandaloneStrong(target);
       if (!block || block.closest('.nav, .nav-tabs, .nav-pills')) return;
 
       e.preventDefault();
@@ -506,6 +508,7 @@ export class Preview {
       else if (action === 'split-lines') this._doSplitLines(blockEl);
       else if (action === 'add-space')   this._showSpaceEditor(blockEl);
       else if (action === 'remove-space') this._doRemoveSpace(blockEl);
+      else if (action === 'wrap-in-p')   this._doWrapInParagraph(blockEl);
     });
 
     // ── Click outside → close menu ──
@@ -550,6 +553,16 @@ export class Preview {
 
   /** Build menu items based on the selected block's context. @private */
   _buildMenu(menu, block) {
+    // ── Standalone <strong> heading: show only wrap-in-p action ──
+    if (block.tagName === 'STRONG') {
+      menu.innerHTML = `
+        <div class="block-menu__hint">⚠ Título suelto — debe ir dentro de un &lt;p&gt;</div>
+        <button class="block-menu__item block-menu__item--warn" data-action="wrap-in-p">
+          <span class="block-menu__icon">⬚</span>Envolver en &lt;p&gt;
+        </button>`;
+      return;
+    }
+
     const hasPrev = !!this._findAdjacentBlock(block, 'prev');
     const hasNext = !!this._findAdjacentBlock(block, 'next');
     const hasBr = !!block.querySelector('br');
@@ -579,7 +592,7 @@ export class Preview {
 
     // Show "remove space" when there is any visible space after the block.
     const blockTagName = block.tagName.toUpperCase();
-    const blockBaseline = blockTagName === 'LI' ? 10 : (blockTagName.startsWith('H') ? 8 : 16);
+    const blockBaseline = getBaseline(blockTagName, block.className);
     const styleAttr = block.getAttribute('style') || '';
     const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
     const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : blockBaseline;
@@ -967,10 +980,10 @@ export class Preview {
       }
     }
 
-    // ── Fallback 2: remove the first empty spacer element after this block ──
+    // ── Fallback 2: remove the first empty spacer element after this block, or a leading <br> inside the next block ──
     let nextEl = this._getNextContentElement(blockEl);
 
-    if (nextEl && this._isEmptySpacerEl(nextEl)) {
+    if (nextEl && (this._isEmptySpacerEl(nextEl) || this._hasLeadingBr(nextEl))) {
       const spacerPatch = removeFollowerSpacer(html, blockText, tagName, blockIndex);
       if (spacerPatch) {
         try {
@@ -986,12 +999,34 @@ export class Preview {
 
     // ── Fallback 3: Reduce below baseline ──────────────────────
     // If we are at the baseline (no custom inline margin is set) and there are no empty spacer elements,
-    // explicitly set it below baseline (baseline - 10, clamped to 0) to override browser/Moodle CSS defaults.
-    const baseline = tagName === 'li' ? 10 : (tagName.startsWith('h') ? 8 : 16);
+    // explicitly set it below baseline (visual space - 10, clamped to 0) to override browser/Moodle CSS defaults.
     const styleAttr = blockEl.getAttribute('style') || '';
     const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
     if (!inlineMarginMatch) {
-      const newVal = Math.max(0, baseline - 10);
+      const baseline = getBaseline(tagName, blockEl.className);
+
+      // Calculate the actual visual gap
+      let nextContentEl = this._getNextContentElement(blockEl);
+      while (
+        nextContentEl &&
+        (nextContentEl === this._blockGrip ||
+         nextContentEl === this._blockMenu ||
+         nextContentEl.classList?.contains('geo-spacer-guide') ||
+         getComputedStyle(nextContentEl).display === 'none' ||
+         this._isEmptySpacerEl(nextContentEl))
+      ) {
+        nextContentEl = this._getNextContentElement(nextContentEl);
+      }
+
+      const br = blockEl.getBoundingClientRect();
+      let realGapPx = null;
+      if (nextContentEl) {
+        const nextBrTop = this._getVisualTop(nextContentEl);
+        realGapPx = Math.round(nextBrTop - br.bottom);
+      }
+
+      const currentVal = (realGapPx !== null && realGapPx > 0) ? realGapPx : baseline;
+      const newVal = Math.max(0, currentVal - 10);
       const patchBelow = addSpaceAfter(html, blockText, tagName, blockIndex, newVal);
       if (patchBelow) {
         try {
@@ -1003,6 +1038,27 @@ export class Preview {
         }
       }
     }
+  }
+
+  /**
+   * Returns true if an element has a leading `<br>` (with no meaningful text before it).
+   * @private
+   * @param {Element} el
+   * @returns {boolean}
+   */
+  _hasLeadingBr(el) {
+    if (!el) return false;
+    const firstEl = el.firstElementChild;
+    if (!firstEl || firstEl.tagName !== 'BR') return false;
+
+    let child = el.firstChild;
+    while (child && child !== firstEl) {
+      if (child.nodeType === Node.TEXT_NODE && child.textContent.trim().length > 0) {
+        return false;
+      }
+      child = child.nextSibling;
+    }
+    return true;
   }
 
   /**
@@ -1183,6 +1239,43 @@ export class Preview {
         : sibling.nextElementSibling;
     }
     return null;
+  }
+
+  /**
+   * Wrap a standalone `<strong>` heading element in a `<p>` block.
+   * Removes the trailing `<br>` tags that were acting as spacers.
+   * @private
+   */
+  _doWrapInParagraph(blockEl) {
+    const text = this._norm(blockEl.textContent);
+    const html = this._engine.getResult();
+    const patch = wrapStrongInParagraph(html, text);
+    if (patch) {
+      try {
+        this._engine.addPatch(patch.original, patch.replacement);
+        this.render();
+        this._onEdit();
+      } catch (err) {
+        console.error('[Preview] Wrap in paragraph failed:', err);
+      }
+    } else {
+      console.warn('[Preview] wrapStrongInParagraph returned null for:', text);
+    }
+  }
+
+  /**
+   * Returns the `<strong>` element if `target` is inside one that is NOT
+   * already inside a block element (`p`, `li`, `h*`). Returns null otherwise.
+   * @private
+   * @param {HTMLElement} target
+   * @returns {HTMLElement|null}
+   */
+  _getStandaloneStrong(target) {
+    const strong = /** @type {HTMLElement|null} */ (target.closest('strong'));
+    if (!strong) return null;
+    // If it's inside a block, treat it as normal inline bold — don't intercept
+    if (strong.closest('p, li, h1, h2, h3, h4, h5, h6')) return null;
+    return strong;
   }
 
   /** @private */

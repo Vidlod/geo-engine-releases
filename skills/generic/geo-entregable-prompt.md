@@ -119,13 +119,13 @@ en las fechas establecidas.") va como **último párrafo del cuerpo de texto** d
 pestaña, justo encima del botón. Cualquier otro párrafo descriptivo va arriba de este.
 
 ### 5.2 Botón de envío
-Formato estándar centrado, siempre con **punto final** en el texto del botón:
+Formato estándar centrado, con el texto del botón **SIN punto final**:
 
 ```html
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1.
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1
         </button>
     </a>
 </div>
@@ -133,9 +133,9 @@ Formato estándar centrado, siempre con **punto final** en el texto del botón:
 
 - Reemplaza `XXXX` por el ID de la tarea de Moodle del avance correspondiente.
 - Si no tienes el ID → emite `<!-- FLAG: dato-faltante Falta el enlace mod/assign para Avance N -->`.
-- El último avance dice `Enviar Producto Final.` (con punto).
-- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (margen
-  nativo). Nunca `<br>`/`<br><br>` ni `<p></p>` vacío entre el contenido y el botón.
+- El último avance dice `Enviar Producto Final` (sin punto, como todos).
+- **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (el `<p>`
+  ya aporta el espacio). Nunca `<br>` ni `<p></p>` vacío entre el contenido y el botón.
 
 ---
 
@@ -160,10 +160,21 @@ Formato estándar centrado, siempre con **punto final** en el texto del botón:
   Y emite `<!-- FLAG: red-sin-archivo No hay archivo para "Título del RED" -->`.
 - Recursos compuestos (Parte I / Parte II) → una viñeta por parte, con su enlace individual.
 - **Videos y diapositivas en video = RED**: van en viñeta. Si no tienes la URL, emite
-  `<!-- FLAG: dato-faltante Falta video "Título" para la actividad X -->`.
-- **Podcasts**: reproductor `<audio>` HTML5 dentro del `<li>`, y emite FLAG `podcast-titulo`:
+  `<!-- FLAG: dato-faltante Falta video "Título" para la actividad X -->`. Con URL de
+  YouTube, usa la **caja responsiva** (un solo `<br>` antes de la caja):
   ```html
-  <li style="margin-bottom: 10px;"><strong>Podcast: Título del Podcast.</strong><br><br>
+  <li><strong>Video corto:</strong> factores criminológicos.<br>
+      <div style="max-width: 360px; margin: 0 auto;">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+              <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/VIDEO_ID?si=XXXX&amp;start=1" frameborder="0" allowfullscreen=""></iframe>
+          </div>
+      </div>
+  </li>
+  ```
+- **Podcasts**: reproductor `<audio>` HTML5 dentro del `<li>`, con **un solo `<br>`**
+  antes del `<audio>`, y emite FLAG `podcast-titulo`:
+  ```html
+  <li><strong>Podcast: Título del Podcast.</strong><br>
       <audio controls="true" title="Podcast: Título del Podcast">
           <source src="@@PLUGINFILE@@/Nombre.mp3">@@PLUGINFILE@@/Nombre.mp3
       </audio>
@@ -205,31 +216,30 @@ abriendo en pestaña nueva:
 
 ## ═══ PARTE 9 — VIÑETAS Y ESPACIADO ═══
 
-### 9.1 Prohibiciones
+### 9.1 Modelo de espaciado
+- **Los `<p>` ya traen su propio espacio**: NO les pongas `<br>` ni margen alrededor.
+- **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / entre elementos que NO
+  sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
+- **`margin-bottom` NUNCA** (ni `10px` en `<li>` ni en ningún lado).
+- El botón va directo tras el `<p>` (sin `<br>` ni `<p></p>`).
+
+### 9.2 Prohibiciones
 - **Nunca** `<p>` dentro de `<li>`. El texto va directo: `<li>Texto.</li>`.
-- **Nunca** cursiva: elimina `<em>`, `<i>` de texto (puede haber `<i>` de íconos,
-  revisa el contexto antes de borrar), `font-style:italic`.
-- **Nunca** más de 2 `<br>` consecutivos.
+- **Nunca** cursiva: elimina `<em>`, `font-style:italic` (puede haber `<i>` de íconos,
+  revisa el contexto antes de borrar).
+- **Nunca** `<br><br>` (máximo un `<br>`).
+- **Nunca** `margin-bottom`.
 - **Nunca** `<br>` justo antes de `</li>`, `</ul>`, `</ol>`, `</div>`.
-- **Nunca** `<br>` entre `</p>` y `<ul>`, ni entre `</ul>` y `<p>`. Deben ir
-  consecutivos: `</p><ul>`, `</ul><p>`. Moodle ya aplica margen a los bloques.
-- **Nunca** `<br>` o `<br><br>` antes del `<div>` del botón de envío.
-  El `<div>` va directo tras el último `<p>` (margen nativo del bloque).
 
-### 9.2 Punto final
+### 9.3 Punto final
 Todo `<li>` de texto debe terminar con `.` (o `:`, `?`, `!` según corresponda).
-
-### 9.3 Espaciado entre viñetas
-- Si **una viñeta tiene más de 3 renglones**, o **dos viñetas tienen 2 renglones** →
-  agrega `style="margin-bottom: 10px;"` a **todos** los `<li>` de ese grupo.
-- Viñetas de un renglón → sin margen (pegadas).
+Los **botones** NO llevan punto final.
 
 ### 9.4 Separación de listas numeradas
 En listas de texto plano numeradas (ej. `1)`, `2)` o `a.`, `b.`) separa cada ítem
-con `<br><br>` para que quede una línea en blanco entre ellos. Si llevan negrita, el
-marcador va **dentro** del `<strong>`:
+con **un** `<br>`. Si llevan negrita, el marcador va **dentro** del `<strong>`:
 ```html
-<strong>a. Título del ítem.</strong><br><br>
+<strong>a. Título del ítem.</strong><br>
 <strong>b. Título del siguiente ítem.</strong>
 ```
 
@@ -288,14 +298,14 @@ Antes de entregar el HTML verifica:
 - [ ] Pestañas: "Forma de entrega" (no "Formato") y "Tenga en cuenta".
 - [ ] Actividades tituladas `Actividad N: Nombre` (sin "Título de la actividad").
 - [ ] Párrafo de envío como último párrafo, encima del botón.
-- [ ] Botón de envío con punto final en el texto; sin `<br>` antes del `<div>`.
+- [ ] Botón de envío **SIN punto final** en el texto; sin `<br>` antes del `<div>`.
 - [ ] Todos los RED en viñetas `<li>`, con `@@PLUGINFILE@@` o FLAG si falta archivo.
 - [ ] RED del experto SIN "Autor (Año).", en negrita + enlace (no como cita bibliográfica).
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
 - [ ] Negrillas del origen respetadas; puntuación y párrafos sin fusionar.
-- [ ] Sin `<p>` dentro de `<li>`. Sin cursiva. Sin `<br>` entre bloques `p`/`ul`/`ol`.
-- [ ] Máximo `<br><br>` consecutivos.
+- [ ] Sin `<p>` dentro de `<li>`. Sin cursiva. Sin `<br>` adyacente a un `<p>`.
+- [ ] Máximo un `<br>` (nunca `<br><br>`); sin `margin-bottom` en ningún lado.
 - [ ] Punto final en cada `<li>` de texto.
 - [ ] "módulo" → "curso". Sin "tablero de anotaciones".
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
@@ -345,16 +355,16 @@ placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria
             <div class="card-body">
                 <p style="text-align: justify;">[Instrucciones del entregable, exactas del PDF.]</p>
                 <ul>
-                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
-                    <li style="margin-bottom: 10px;"><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
+                    <li><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
+                    <li><strong>Actividad [N]. [Nombre]:</strong> [Descripción.]</li>
                 </ul>
                 <!-- PÁRRAFO DE ENVÍO: siempre el último párrafo antes del botón -->
                 <p style="text-align: justify;">[Párrafo de envío: "Envíe el documento en formato PDF..."]</p>
-                <!-- BOTÓN: centrado, con punto final -->
+                <!-- BOTÓN: centrado, SIN punto final -->
                 <div style="text-align: center;">
                     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
                         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N].
+                            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N]
                         </button>
                     </a>
                 </div>
@@ -365,9 +375,9 @@ placeholders `[EN MAYÚSCULAS]`. No cambies ningún `class`, `id`, `role`, `aria
         <div class="tab-pane fade" id="tengaencuenta" role="tabpanel" aria-labelledby="tengaencuenta-tab">
             <div class="card-body">
                 <ul>
-                    <li style="margin-bottom: 10px;">[Condición formal 1.]</li>
-                    <li style="margin-bottom: 10px;">[Condición formal 2.]</li>
-                    <li style="margin-bottom: 10px;">[Condición formal 3.]</li>
+                    <li>[Condición formal 1.]</li>
+                    <li>[Condición formal 2.]</li>
+                    <li>[Condición formal 3.]</li>
                 </ul>
             </div>
         </div>

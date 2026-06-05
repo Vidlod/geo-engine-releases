@@ -16,7 +16,7 @@ class MaxBrRule(Rule):
     auto_fixable = True
 
     def _regex(self):
-        mx = int(self.options.get("max", 2))
+        mx = int(self.options.get("max", 1))
         return re.compile(r"(?:<br\s*/?>\s*){%d,}" % (mx + 1), re.IGNORECASE), mx
 
     def check(self, html: str, ctx: Dict[str, Any]) -> List[Finding]:
