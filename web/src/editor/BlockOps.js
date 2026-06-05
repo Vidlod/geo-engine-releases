@@ -45,19 +45,60 @@ function htmlToText(html) {
  */
 function parseAllBlocks(html, tagName) {
   const blocks = [];
-  const re = new RegExp(`<${tagName}\\b([^>]*)>([\\s\\S]*?)</${tagName}>`, 'gi');
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    blocks.push({
-      tag: tagName,
-      attrs: m[1],
-      innerHTML: m[2],
-      start: m.index,
-      end: m.index + m[0].length,
-      fullMatch: m[0],
-      text: norm(htmlToText(m[2])),
-    });
+  const tagLower = tagName.toLowerCase();
+
+  // If the tag name is not 'li', we can use the simple regex because nesting is impossible
+  if (tagLower !== 'li') {
+    const re = new RegExp(`<${tagName}\\b([^>]*)>([\\s\\S]*?)</${tagName}>`, 'gi');
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      blocks.push({
+        tag: tagName,
+        attrs: m[1],
+        innerHTML: m[2],
+        start: m.index,
+        end: m.index + m[0].length,
+        fullMatch: m[0],
+        text: norm(htmlToText(m[2])),
+      });
+    }
+    return blocks;
   }
+
+  // For 'li', we use a stack-based parser to correctly resolve nested tags
+  const tokenRegex = /(<li\b[^>]*>)|(<\/li>)/gi;
+  let m;
+  const stack = [];
+
+  while ((m = tokenRegex.exec(html)) !== null) {
+    if (m[1]) {
+      // Opening tag: push to stack
+      stack.push({
+        start: m.index,
+        attrs: m[1].substring(3, m[1].length - 1), // extract attributes after "<li"
+        tagHeadLength: m[1].length,
+      });
+    } else if (m[2] && stack.length > 0) {
+      // Closing tag: pop matching opening tag from stack
+      const openToken = stack.pop();
+      const end = m.index + m[2].length;
+      const fullMatch = html.substring(openToken.start, end);
+      const innerHTML = html.substring(openToken.start + openToken.tagHeadLength, m.index);
+
+      blocks.push({
+        tag: 'li',
+        attrs: openToken.attrs,
+        innerHTML: innerHTML,
+        start: openToken.start,
+        end: end,
+        fullMatch: fullMatch,
+        text: norm(htmlToText(innerHTML)),
+      });
+    }
+  }
+
+  // Sort blocks by start index to keep them in document order
+  blocks.sort((a, b) => a.start - b.start);
   return blocks;
 }
 
