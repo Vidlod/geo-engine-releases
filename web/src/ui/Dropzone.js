@@ -2,7 +2,8 @@
  * @fileoverview GEO Engine — Drag & drop file upload component.
  *
  * Renders a full-screen dropzone with upload icon, title, subtitle,
- * and a hidden file input.  Accepts `.html` files only.
+ * a hidden file input, and a "Pegar código HTML" button that opens
+ * a modal allowing the user to paste raw HTML directly.
  *
  * @module ui/Dropzone
  */
@@ -72,17 +73,45 @@ export class Dropzone {
     badge.className = 'dropzone__badge';
     badge.textContent = '.html';
 
-    zone.append(iconWrap, title, subtitle, badge);
+    // Divider
+    const divider = document.createElement('div');
+    divider.className = 'dropzone__divider';
+    divider.innerHTML = '<span>o</span>';
+
+    // Paste button
+    const pasteBtn = document.createElement('button');
+    pasteBtn.type = 'button';
+    pasteBtn.className = 'btn btn--ghost dropzone__paste-btn';
+    pasteBtn.id = 'geo-paste-btn';
+    pasteBtn.innerHTML = /* html */ `
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      Pegar código HTML`;
+
+    zone.append(iconWrap, title, subtitle, badge, divider, pasteBtn);
     this._container.append(input, zone);
     this._dropzone = zone;
 
     // ── Event wiring ─────────────────────────────────────────
-    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('click', (e) => {
+      // Prevent file-input from opening when paste button is clicked
+      if (pasteBtn.contains(/** @type {Node} */ (e.target))) return;
+      input.click();
+    });
     zone.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         input.click();
       }
+    });
+
+    pasteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._openPasteModal();
     });
 
     input.addEventListener('change', () => {
@@ -96,6 +125,176 @@ export class Dropzone {
     zone.addEventListener('dragover', (e) => this._onDragOver(e));
     zone.addEventListener('dragleave', (e) => this._onDragLeave(e));
     zone.addEventListener('drop', (e) => this._onDrop(e));
+  }
+
+  /* ── Paste modal ─────────────────────────────────────────── */
+
+  /** Open the paste-HTML modal. @private */
+  _openPasteModal() {
+    // Backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'paste-modal-backdrop';
+    backdrop.id = 'geo-paste-modal-backdrop';
+
+    // Modal
+    const modal = document.createElement('div');
+    modal.className = 'paste-modal';
+    modal.id = 'geo-paste-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'geo-paste-modal-title');
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'paste-modal__header';
+
+    const modalTitle = document.createElement('h2');
+    modalTitle.className = 'paste-modal__title';
+    modalTitle.id = 'geo-paste-modal-title';
+    modalTitle.innerHTML = /* html */ `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      Pegar código HTML`;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'paste-modal__close';
+    closeBtn.id = 'geo-paste-modal-close';
+    closeBtn.setAttribute('aria-label', 'Cerrar');
+    closeBtn.innerHTML = /* html */ `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>`;
+
+    header.append(modalTitle, closeBtn);
+
+    // Filename row
+    const filenameRow = document.createElement('div');
+    filenameRow.className = 'paste-modal__filename-row';
+
+    const filenameLabel = document.createElement('label');
+    filenameLabel.className = 'paste-modal__label';
+    filenameLabel.htmlFor = 'geo-paste-filename';
+    filenameLabel.textContent = 'Nombre del archivo (opcional)';
+
+    const filenameInput = document.createElement('input');
+    filenameInput.type = 'text';
+    filenameInput.className = 'paste-modal__filename-input';
+    filenameInput.id = 'geo-paste-filename';
+    filenameInput.placeholder = 'Ej: Momento Evaluativo 1.html';
+    filenameInput.spellcheck = false;
+
+    filenameRow.append(filenameLabel, filenameInput);
+
+    // Textarea section
+    const textareaLabel = document.createElement('label');
+    textareaLabel.className = 'paste-modal__label';
+    textareaLabel.htmlFor = 'geo-paste-textarea';
+    textareaLabel.textContent = 'Código HTML';
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'paste-modal__textarea';
+    textarea.id = 'geo-paste-textarea';
+    textarea.placeholder = 'Pega aquí el código HTML de la página de Moodle…';
+    textarea.spellcheck = false;
+    textarea.autocomplete = 'off';
+
+    // Character count
+    const charCount = document.createElement('div');
+    charCount.className = 'paste-modal__charcount';
+    charCount.id = 'geo-paste-charcount';
+    charCount.textContent = '0 caracteres';
+
+    textarea.addEventListener('input', () => {
+      const len = textarea.value.length;
+      charCount.textContent = len.toLocaleString('es-CO') + ' caracteres';
+      btnLoad.disabled = len === 0;
+    });
+
+    // Footer actions
+    const footer = document.createElement('div');
+    footer.className = 'paste-modal__footer';
+
+    const btnClear = document.createElement('button');
+    btnClear.type = 'button';
+    btnClear.className = 'btn btn--ghost paste-modal__btn-clear';
+    btnClear.id = 'geo-paste-clear';
+    btnClear.textContent = 'Limpiar';
+    btnClear.addEventListener('click', () => {
+      textarea.value = '';
+      charCount.textContent = '0 caracteres';
+      btnLoad.disabled = true;
+      textarea.focus();
+    });
+
+    const btnCancel = document.createElement('button');
+    btnCancel.type = 'button';
+    btnCancel.className = 'btn btn--ghost';
+    btnCancel.id = 'geo-paste-cancel';
+    btnCancel.textContent = 'Cancelar';
+    btnCancel.addEventListener('click', () => close());
+
+    const btnLoad = document.createElement('button');
+    btnLoad.type = 'button';
+    btnLoad.className = 'btn btn--primary';
+    btnLoad.id = 'geo-paste-load';
+    btnLoad.disabled = true;
+    btnLoad.innerHTML = /* html */ `
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Cargar HTML`;
+
+    footer.append(btnClear, btnCancel, btnLoad);
+
+    modal.append(header, filenameRow, textareaLabel, textarea, charCount, footer);
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+
+    // ── Animate in ───────────────────────────────────────────
+    requestAnimationFrame(() => backdrop.classList.add('paste-modal-backdrop--open'));
+
+    // Focus textarea after animation
+    setTimeout(() => textarea.focus(), 80);
+
+    // ── Close helpers ─────────────────────────────────────────
+    const close = () => {
+      backdrop.classList.remove('paste-modal-backdrop--open');
+      backdrop.addEventListener('transitionend', () => backdrop.remove(), { once: true });
+    };
+
+    closeBtn.addEventListener('click', () => close());
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) close();
+    });
+    document.addEventListener('keydown', function onKey(e) {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', onKey);
+        close();
+      }
+    });
+
+    // ── Load handler ──────────────────────────────────────────
+    btnLoad.addEventListener('click', () => {
+      const html = textarea.value.trim();
+      if (!html) return;
+
+      let name = filenameInput.value.trim();
+      if (!name) name = 'codigo-pegado.html';
+      if (!name.endsWith('.html') && !name.endsWith('.htm')) name += '.html';
+
+      close();
+      this._onFileLoad(name, html);
+    });
   }
 
   /* ── Private helpers ─────────────────────────────────────── */

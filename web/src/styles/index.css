@@ -611,6 +611,208 @@ body {
   to   { opacity: 0; transform: translateY(-8px) scale(0.95); }
 }
 
+/* ── Dropzone extras ── */
+.dropzone__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 80%;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dropzone__divider::before,
+.dropzone__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.dropzone__paste-btn {
+  font-size: 0.8125rem;
+  padding: 8px 20px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.dropzone__paste-btn:hover {
+  color: var(--accent-light);
+  border-color: var(--border-accent);
+  background: var(--accent-glow);
+}
+
+/* ── Paste HTML Modal ── */
+.paste-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity var(--duration-mid) var(--ease-out);
+}
+
+.paste-modal-backdrop--open {
+  opacity: 1;
+}
+
+.paste-modal {
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 48px);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  overflow: hidden;
+  transform: translateY(0);
+  transition: transform var(--duration-mid) var(--ease-out);
+}
+
+.paste-modal-backdrop:not(.paste-modal-backdrop--open) .paste-modal {
+  transform: translateY(16px);
+}
+
+.paste-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.paste-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.paste-modal__title svg {
+  color: var(--accent-light);
+  flex-shrink: 0;
+}
+
+.paste-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.paste-modal__close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.paste-modal__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.paste-modal__filename-row {
+  flex-shrink: 0;
+}
+
+.paste-modal__filename-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.paste-modal__filename-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.paste-modal__filename-input::placeholder {
+  color: var(--text-muted);
+}
+
+.paste-modal__textarea {
+  display: block;
+  width: 100%;
+  height: 280px;
+  padding: 12px 14px;
+  background: var(--bg-root);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.paste-modal__textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.paste-modal__textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.paste-modal__charcount {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-align: right;
+  margin-top: -8px;
+  flex-shrink: 0;
+}
+
+.paste-modal__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.paste-modal__btn-clear {
+  margin-right: auto;
+  font-size: 0.8125rem;
+}
+
 /* ── Utility ── */
 .hidden { display: none !important; }
 
