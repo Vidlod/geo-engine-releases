@@ -112,10 +112,16 @@ se enlaza con el marcador de Moodle y el **nombre exacto** del archivo:
 
 - Texto de la cita en **plano** (sin negrita ni cursiva), una cita por `<li>`.
 - Enlace debajo, separado por `<br>`, visible y en negrita.
-- **Punto final obligatorio DESPUÉS del enlace** (tras `</strong>`):
+- **Punto final obligatorio DESPUÉS del enlace** (tras `</strong>`).
+- **Entre citas consecutivas va un `<br>` de separación** (`</li><br><li>`): son viñetas
+  multilínea (texto + enlace) y, sin ese `<br>`, se ven pegadas en Moodle (ver §6).
 
 ```html
-<li>Autor (Año). Título...<br><strong><a href="URL" target="_blank" rel="noopener">URL</a></strong>.</li>
+<ul>
+    <li>Autor (Año). Título...<br><strong><a href="URL" target="_blank" rel="noopener">URL</a></strong>.</li>
+    <br>
+    <li>Otro Autor (Año). Otro título...<br><strong><a href="URL2" target="_blank" rel="noopener">URL2</a></strong>.</li>
+</ul>
 ```
 
 - Quitar textos pegados como "Lectura requerida." o "Lectura de ampliación temática.".
@@ -128,7 +134,9 @@ Este es el sistema real que usa Moodle. **No uses `margin-bottom` nunca.**
 |---|---|
 | Entre dos `<p>` | nada — el `<p>` ya trae su espacio |
 | `<p>` → `<ul>` / `<ul>` → `<p>` | nada — el `<p>` ya trae su espacio; van consecutivos |
-| Entre viñetas (`<li>`) que necesiten aire | **un** `<br>` entre ellas (`</li><br><li>`) |
+| Entre viñetas **con mucho texto** (multilínea: citas, descripciones largas) | **un** `<br>` entre ellas (`</li><br><li>`) |
+| Entre viñetas de un **grupo de RED** (mapas, videos, podcasts…) | **siempre un** `<br>` entre ellas (`</li><br><li>`) |
+| Entre viñetas **cortas** (Portada, Introducción, Conclusiones, enumeraciones de una línea) | nada — van consecutivas |
 | Dentro de una viñeta, antes de un iframe/audio | **un** `<br>` |
 | Antes del `<div>` del botón de envío | nada — el `<p>` anterior ya separa |
 | Entre dos botones (pestaña "Instrumento") | un `<p></p>` vacío |
@@ -136,6 +144,12 @@ Este es el sistema real que usa Moodle. **No uses `margin-bottom` nunca.**
 
 - **Regla de oro del espaciado:** el `<br>` solo aparece **entre viñetas o dentro de
   ellas / entre elementos que no sean `<p>`**. Los `<p>` se auto-espacian.
+- **¿Cuándo va `<br>` entre viñetas?** Cuando la viñeta lleva **mucho texto** (multilínea)
+  o pertenece a un **grupo de RED** (estos van **siempre** separados con `<br>`). Las
+  viñetas **cortas de una línea** (Portada/Introducción/Conclusiones, enumeraciones
+  breves) van **consecutivas, sin `<br>`**.
+- El `<br>` de separación va **entre** dos viñetas (`</li><br><li>`), **nunca** justo
+  antes de `</ul>`/`</ol>` (el `<ul>` ya cierra su propio espacio; el linter lo borra).
 - **Nunca `margin-bottom`** (ni `10px` en `<li>` ni en ningún lado).
 - **Nunca `<br><br>`**: máximo un `<br>`.
 
@@ -246,9 +260,15 @@ podcasts, etc. **Aunque el AAA los escriba con formato autor-año** (p. ej.
   FLAG `red-sin-archivo` si no hay archivo.
 
 ```html
-<li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
-<li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+<ul>
+    <li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+    <br>
+    <li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+</ul>
 ```
+
+> Un **grupo de RED en viñetas** lleva **siempre** un `<br>` entre cada viñeta para
+> separar los recursos (son independientes); ver §6. Sin ese `<br>` se ven pegados en Moodle.
 
 ### B) Cita bibliográfica externa
 Libros/artículos de terceros (Posada 2016, Martínez 2013, etc.) con su URL externa propia:

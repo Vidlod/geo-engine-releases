@@ -255,17 +255,24 @@ Si el usuario no indica cuál es el último avance → pregunta antes de generar
 > - **Quita la atribución autor-año** y deja solo el **título** del recurso.
 > - Va en **negrita** con `@@PLUGINFILE@@` si hay archivo, o **solo negrita** + FLAG
 >   `red-sin-archivo` si no hay archivo.
-> - Ejemplo correcto (semana de bienvenida):
+> - Ejemplo correcto (semana de bienvenida) — **un `<br>` entre cada viñeta de RED**:
 >   ```html
->   <li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
->   <li><strong><a href="@@PLUGINFILE@@/SYLLABUS_Estadística_Descriptiva.pdf" target="_blank" rel="noopener">Syllabus del curso Estadística Descriptiva</a></strong>.</li>
->   <li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+>   <ul>
+>       <li><strong><a href="@@PLUGINFILE@@/Mapa_Curso_Estadística.pdf" target="_blank" rel="noopener">Mapa mental Estadística Descriptiva</a></strong>.</li>
+>       <br>
+>       <li><strong><a href="@@PLUGINFILE@@/SYLLABUS_Estadística_Descriptiva.pdf" target="_blank" rel="noopener">Syllabus del curso Estadística Descriptiva</a></strong>.</li>
+>       <br>
+>       <li><strong>Video de presentación y bienvenida del curso Estadística Descriptiva</strong>.</li>
+>   </ul>
 >   ```
 > - **Incorrecto:** `<li>Torres, L. (2025). Mapa mental Estadística Descriptiva.</li>` (es cita, sin negrita, sin enlace).
 > Solo las fuentes **externas** (Posada, Martínez, Suárez...) con URL propia conservan el
 > formato de cita (autor-año + enlace externo, ver Parte 11).
 
 - Cada RED en su propia viñeta `<li>`. Nunca como párrafo suelto.
+- **Grupo de RED (varias viñetas): un `<br>` entre cada `<li>`** (`</li><br><li>`),
+  **siempre**, para separar los recursos. Sin ese `<br>` se ven pegados en Moodle
+  (ver reglas transversales §6). El `<br>` va **entre** viñetas, nunca antes de `</ul>`.
 - Con archivo local:
   ```html
   <li><strong><a href="@@PLUGINFILE@@/Nombre_Exacto.ext" target="_blank" rel="noopener">Título del RED.</a></strong></li>
@@ -301,14 +308,21 @@ Si el usuario no indica cuál es el último avance → pregunta antes de generar
 
 ## ═══ PARTE 11 — CITAS BIBLIOGRÁFICAS ═══
 
-Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo:
+Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo. Cada cita es
+una viñeta multilínea, así que **entre citas consecutivas va un `<br>`** (`</li><br><li>`):
 
 ```html
-<li>Autor (Año). Título del recurso. Editorial o fuente.<br>
-<strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
+<ul>
+    <li>Autor (Año). Título del recurso. Editorial o fuente.<br>
+        <strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
+    <br>
+    <li>Otro Autor (Año). Otro título. Editorial.<br>
+        <strong><a href="https://enlace2.com" target="_blank" rel="noopener">https://enlace2.com</a></strong>.</li>
+</ul>
 ```
 
 - **Punto final obligatorio después del enlace** (tras `</strong>`), como en el ejemplo.
+- **Un `<br>` entre cada cita** (viñetas con mucho texto); nunca antes de `</ul>`.
 - eLibro y RAE: `rel="noreferrer noopener"`.
 - Proxy eLibro con guion: `elibro-net.ezproxy.udes.edu.co`.
 - Elimina "Lectura requerida." o "Lectura de ampliación temática." pegados a la cita.
@@ -322,6 +336,12 @@ Texto plano (sin negrita ni cursiva) + enlace visible en negrita debajo:
 - **Los `<p>` ya traen su propio espacio**: NO les pongas `<br>` ni margen alrededor.
 - **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / entre elementos que NO
   sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
+- **¿Cuándo va `<br>` entre viñetas?** Cuando la viñeta lleva **mucho texto** (multilínea:
+  citas, descripciones largas) o es parte de un **grupo de RED** (estos van **siempre**
+  separados con `<br>`). Las viñetas **cortas de una línea** (Portada, Introducción,
+  Conclusiones, enumeraciones breves) van **consecutivas, sin `<br>`**.
+- El `<br>` de separación va **entre** dos viñetas (`</li><br><li>`), **nunca** antes de
+  `</ul>`/`</ol>` (el linter lo borra ahí).
 - **`margin-bottom` NUNCA** (ni `10px` en `<li>` ni en ningún lado).
 - El botón de envío va directo tras el `<p>` (sin `<br>` ni `<p></p>`).
 - Entre dos botones (pestaña "Instrumento"): un `<p></p>` vacío.

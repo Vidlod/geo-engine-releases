@@ -149,6 +149,9 @@ Formato estándar centrado, con el texto del botón **SIN punto final**:
 > con URL propia conservan el formato de cita (Parte 8).
 
 - **Cada RED va en su propia viñeta `<li>`**; nunca como párrafo suelto.
+- **Grupo de RED (varias viñetas): un `<br>` entre cada `<li>`** (`</li><br><li>`),
+  **siempre**, para separar los recursos. Sin ese `<br>` se ven pegados en Moodle
+  (ver reglas transversales §6). El `<br>` va **entre** viñetas, nunca antes de `</ul>`.
 - Con archivo local:
   ```html
   <li><strong><a href="@@PLUGINFILE@@/Nombre_Exacto.ext" target="_blank" rel="noopener">Título del RED.</a></strong></li>
@@ -202,10 +205,16 @@ abriendo en pestaña nueva:
 
 - Texto de la cita: **plano**, sin negrita ni cursiva, una cita por viñeta `<li>`.
 - Enlace: debajo, separado por `<br>`, visible y **en negrita**, con **punto final
-  después** del enlace (tras `</strong>`):
+  después** del enlace (tras `</strong>`). **Entre citas consecutivas va un `<br>`**
+  (son viñetas multilínea):
   ```html
-  <li>Autor (Año). Título del libro o artículo. Editorial.<br>
-  <strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
+  <ul>
+      <li>Autor (Año). Título del libro o artículo. Editorial.<br>
+          <strong><a href="https://enlace.com" target="_blank" rel="noopener">https://enlace.com</a></strong>.</li>
+      <br>
+      <li>Otro Autor (Año). Otro título. Editorial.<br>
+          <strong><a href="https://enlace2.com" target="_blank" rel="noopener">https://enlace2.com</a></strong>.</li>
+  </ul>
   ```
 - Para enlaces de eLibro (proxy UDES), usar `rel="noreferrer noopener"`.
 - Para RAE: `rel="noreferrer noopener"`.
@@ -220,6 +229,11 @@ abriendo en pestaña nueva:
 - **Los `<p>` ya traen su propio espacio**: NO les pongas `<br>` ni margen alrededor.
 - **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / entre elementos que NO
   sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
+- **¿Cuándo va `<br>` entre viñetas?** Cuando la viñeta lleva **mucho texto** (multilínea:
+  citas, actividades con descripción) o es parte de un **grupo de RED** (estos van
+  **siempre** separados con `<br>`). Las viñetas **cortas de una línea** (Portada,
+  Introducción, Conclusiones) van **consecutivas, sin `<br>`**. El `<br>` va **entre**
+  viñetas (`</li><br><li>`), **nunca** antes de `</ul>`/`</ol>`.
 - **`margin-bottom` NUNCA** (ni `10px` en `<li>` ni en ningún lado).
 - El botón va directo tras el `<p>` (sin `<br>` ni `<p></p>`).
 

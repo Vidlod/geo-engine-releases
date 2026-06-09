@@ -52,6 +52,9 @@ Si falta alguno, emite un FLAG `dato-faltante` y continúa con lo disponible.
    documento en formato PDF...") va como **último** párrafo de la pestaña, justo
    encima del botón de envío. Otros párrafos descriptivos van arriba.
 4. **Anexos / RED / citas:** formatéalos según `references/reglas-transversales.md`.
+   Recuerda la **separación entre viñetas**: un `<br>` entre cada cita o RED (viñetas con
+   mucho texto; los RED **siempre** separados), pero **sin** `<br>` en listas cortas de
+   una línea ni antes de `</ul>`/`</ol>` (reglas §6).
 5. **Frase de la plantilla** "Desarrolle el entregable siguiendo las indicaciones del
    formato suministrado..." solo se incluye si está en el PDF de ESE entregable.
 6. **Producto Final:** si es el último avance, aplica la nomenclatura global

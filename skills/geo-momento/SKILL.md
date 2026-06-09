@@ -63,9 +63,14 @@ citas, "Producto Final" y uso del linter).
    Los rangos varían por curso → tómalos de `config/course.yaml` o de la AAA.
 4. **No duplicar recursos**: cada recurso bibliográfico/RED se lista UNA vez, debajo de
    la actividad que lo usa. Prohibido repetir una lista general al final de la semana.
-5. **Listas de texto numeradas** (ejercicios, preguntas `1) 2)` o `a. b.`): separa cada
-   ítem con **un** `<br>` (nunca `<br><br>`). Si llevan negrita, el marcador va DENTRO
-   del `<strong>` de forma consistente en todos los ítems (`<strong>a. Título.</strong>`).
+5. **Separación entre viñetas** (`</li><br><li>`, un solo `<br>`, nunca `<br><br>`):
+   - **Listas de texto numeradas** (ejercicios, preguntas `1) 2)` o `a. b.`): un `<br>`
+     entre cada ítem. Si llevan negrita, el marcador va DENTRO del `<strong>` de forma
+     consistente (`<strong>a. Título.</strong>`).
+   - **Citas bibliográficas** y **grupos de RED** (viñetas con mucho texto / enlace):
+     un `<br>` entre cada viñeta (los RED **siempre** separados).
+   - **Listas cortas de una línea** (Portada/Introducción/Conclusiones): **sin** `<br>`.
+   - El `<br>` va **entre** viñetas, nunca antes de `</ul>`/`</ol>` (ver reglas §6).
 6. **Párrafo de envío** al final de la pestaña, encima del botón.
 7. **Videos y diapositivas en video = RED** (ver reglas transversales §4). Varían por curso
    y suelen ser lo último en colocarse. Si no tienes las URLs, emite FLAG `dato-faltante`
