@@ -107,14 +107,31 @@ export class BrBeforeCloseRule {
 /**
  * Detects `<br>` tags placed between closing and opening block elements
  * (`</p>`, `</ul>`, `</ol>` → `<p>`, `<ul>`, `<ol>`).
+ *
+ * EXCEPCIÓN: la transición lista→párrafo (`</ul><br><p>` / `</ol><br><p>`) SÍ lleva
+ * un `<br>`: al salir de una lista, el `<p>` siguiente no tiene margen superior y
+ * queda pegado a la última viñeta. Ese `<br>` se permite (no se marca).
  */
 export class BrBetweenBlocksRule {
   static id = 'br-between-blocks';
-  static description = '<br> between block-level elements';
+  static description = '<br> between block-level elements (except list→paragraph)';
   static severity = SEVERITY_WARNING;
 
   constructor(options = {}) {
     this.options = options;
+  }
+
+  /**
+   * Transición permitida lista→párrafo: `</ul>`|`</ol>` … `<p>`.
+   * @param {RegExpExecArray} m
+   * @returns {boolean}
+   */
+  static isListToP(m) {
+    const close = m[1].toLowerCase();
+    return (
+      (close === '</ul>' || close === '</ol>') &&
+      m[3].toLowerCase().startsWith('<p')
+    );
   }
 
   /**
@@ -127,6 +144,7 @@ export class BrBetweenBlocksRule {
       /(<\/(?:p|ul|ol)>)(\s*(?:<br\s*\/?>\s*)+)(<(?:p|ul|ol)\b)/gi;
     let m;
     while ((m = pattern.exec(html)) !== null) {
+      if (BrBetweenBlocksRule.isListToP(m)) continue; // lista→párrafo: <br> válido
       findings.push(
         new Finding({
           ruleId: BrBetweenBlocksRule.id,

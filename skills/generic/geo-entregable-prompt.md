@@ -227,8 +227,12 @@ abriendo en pestaña nueva:
 
 ### 9.1 Modelo de espaciado
 - **Los `<p>` ya traen su propio espacio**: NO les pongas `<br>` ni margen alrededor.
-- **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / entre elementos que NO
-  sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
+- **Saliendo de una lista hacia un `<p>`**: va **un** `<br>` (`</ul><br><p>` o
+  `</ol><br><p>`). Al salir de la lista el `<p>` no tiene margen superior y queda pegado
+  a la última viñeta. Es la **única** transición entre bloques con `<br>`; `<p>→<p>`,
+  `<p>→<ul>` y `<p>→botón` van **sin** `<br>`.
+- **`<br>` solo entre viñetas** (`<li>`) o dentro de ellas / saliendo de una lista hacia
+  un `<p>` / entre elementos que NO sean `<p>`. Máximo **un** `<br>` (nunca `<br><br>`).
 - **¿Cuándo va `<br>` entre viñetas?** Cuando la viñeta lleva **mucho texto** (multilínea:
   citas, actividades con descripción) o es parte de un **grupo de RED** (estos van
   **siempre** separados con `<br>`). Las viñetas **cortas de una línea** (Portada,

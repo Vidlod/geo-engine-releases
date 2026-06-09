@@ -133,7 +133,8 @@ Este es el sistema real que usa Moodle. **No uses `margin-bottom` nunca.**
 | Situación | Mecanismo |
 |---|---|
 | Entre dos `<p>` | nada — el `<p>` ya trae su espacio |
-| `<p>` → `<ul>` / `<ul>` → `<p>` | nada — el `<p>` ya trae su espacio; van consecutivos |
+| `<p>` → `<ul>` (entrando a una lista) | nada — el `<p>` ya trae su espacio; van consecutivos |
+| `<ul>` / `<ol>` → `<p>` (**saliendo** de una lista) | **un** `<br>` (`</ul><br><p>`) — al salir de la lista el `<p>` no tiene margen superior y queda pegado a la última viñeta |
 | Entre viñetas **con mucho texto** (multilínea: citas, descripciones largas) | **un** `<br>` entre ellas (`</li><br><li>`) |
 | Entre viñetas de un **grupo de RED** (mapas, videos, podcasts…) | **siempre un** `<br>` entre ellas (`</li><br><li>`) |
 | Entre viñetas **cortas** (Portada, Introducción, Conclusiones, enumeraciones de una línea) | nada — van consecutivas |
@@ -150,6 +151,9 @@ Este es el sistema real que usa Moodle. **No uses `margin-bottom` nunca.**
   breves) van **consecutivas, sin `<br>`**.
 - El `<br>` de separación va **entre** dos viñetas (`</li><br><li>`), **nunca** justo
   antes de `</ul>`/`</ol>` (el `<ul>` ya cierra su propio espacio; el linter lo borra).
+- **Saliendo de una lista hacia un `<p>`** (`</ul><br><p>` o `</ol><br><p>`) va **un**
+  `<br>`. Es la **única** transición entre bloques que lleva `<br>`; las demás
+  (`<p>→<p>`, `<p>→<ul>`, `<p>→botón`) van **sin** `<br>`. (El linter respeta este `<br>`.)
 - **Nunca `margin-bottom`** (ni `10px` en `<li>` ni en ningún lado).
 - **Nunca `<br><br>`**: máximo un `<br>`.
 

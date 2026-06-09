@@ -32,9 +32,18 @@ def test_br_before_close():
 def test_br_between_blocks():
     html = "<p>intro.</p><br><br><ul><li>a.</li></ul><br><p>fin.</p>"
     fixed = _linter().fix(html)
-    assert "</p><ul>" in fixed.html      # br eliminado entre p y ul
-    assert "</ul><p>" in fixed.html      # br eliminado entre ul y p
-    assert "<br>" not in fixed.html
+    assert "</p><ul>" in fixed.html       # br eliminado entre p y ul
+    # lista→párrafo: el <br> SÍ se conserva (el <p> no tiene margen superior)
+    assert "</ul><br><p>" in fixed.html
+
+
+def test_br_list_to_p_preserved():
+    # </ul><br><p> se conserva; </p><br><p> y </p><br><ul> se eliminan.
+    html = "<ul><li>a.</li></ul><br><p>x.</p><br><p>y.</p><br><ul><li>b.</li></ul>"
+    fixed = _linter().fix(html)
+    assert "</ul><br><p>x." in fixed.html   # lista→párrafo: conservado
+    assert "</p><p>y." in fixed.html        # párrafo→párrafo: eliminado
+    assert "</p><ul>" in fixed.html         # párrafo→lista: eliminado
 
 
 def test_br_before_button():

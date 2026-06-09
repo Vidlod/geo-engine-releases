@@ -91,10 +91,14 @@ class BrBetweenBlocksRule(Rule):
     Moodle aplica margen CSS a los bloques; un <br> intermedio duplica el espacio.
     Acotada a p/ul/ol para NO afectar el <br><br> intencional que precede al <div>
     centrado del botón de envío.
+
+    EXCEPCIÓN: la transición lista→párrafo (`</ul><br><p>` o `</ol><br><p>`) SÍ lleva
+    un <br>: al salir de una lista, el <p> siguiente no tiene margen superior y queda
+    pegado a la última viñeta. Ese <br> se permite (no se marca ni se elimina).
     """
 
     id = "br-between-blocks"
-    description = "Sin <br> entre bloques p/ul/ol (deben ir consecutivos)."
+    description = "Sin <br> entre bloques p/ul/ol (excepto lista→párrafo)."
     severity = SEVERITY_ERROR
     auto_fixable = True
 
@@ -106,10 +110,20 @@ class BrBetweenBlocksRule(Rule):
             re.IGNORECASE,
         )
 
+    @staticmethod
+    def _is_list_to_p(m: "re.Match[str]") -> bool:
+        """True si es la transición permitida lista→párrafo (</ul>|</ol> … <p>)."""
+        return (
+            m.group(1).lower() in ("</ul>", "</ol>")
+            and m.group(3).lower().startswith("<p")
+        )
+
     def check(self, html: str, ctx: Dict[str, Any]) -> List[Finding]:
         rx = self._regex()
         out: List[Finding] = []
         for m in rx.finditer(html):
+            if self._is_list_to_p(m):
+                continue  # lista→párrafo: el <br> es válido
             out.append(Finding(
                 self.id, self.severity,
                 "Salto(s) <br> entre bloques (%s … %s); deben ir consecutivos."
@@ -123,6 +137,8 @@ class BrBetweenBlocksRule(Rule):
         fixed: List[Finding] = []
 
         def _sub(m: "re.Match[str]") -> str:
+            if self._is_list_to_p(m):
+                return m.group(0)  # conservar el <br> de lista→párrafo
             fixed.append(Finding(
                 self.id, self.severity,
                 "Eliminado <br> entre %s y %s." % (m.group(1), m.group(3) + ">"),

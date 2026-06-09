@@ -13,7 +13,9 @@ rules:
 
   br-between-blocks:
     enabled: true
-    blocks: [p, ul, ol]         # sin <br> entre estos bloques
+    blocks: [p, ul, ol]         # sin <br> entre estos bloques…
+                                # …EXCEPTO lista→párrafo (</ul><br><p>, </ol><br><p>),
+                                # que SÍ lleva un <br> y el linter respeta (ver spacing.py)
 
   br-before-button:
     enabled: true               # sin <br> antes del <div> centrado del botón de envío
