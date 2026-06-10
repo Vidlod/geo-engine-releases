@@ -12,6 +12,7 @@
 import './styles/index.css';
 import './styles/editor.css';
 import './styles/moodle.css';
+import './styles/wizard.css';
 
 /* ── Core modules ───────────────────────────────────────── */
 import { Engine } from './editor/Engine.js';
@@ -19,6 +20,7 @@ import { Preview } from './editor/Preview.js';
 import { Dropzone } from './ui/Dropzone.js';
 import { Toolbar } from './ui/Toolbar.js';
 import { LinterPanel } from './ui/LinterPanel.js';
+import { Wizard } from './ui/Wizard.js';
 import { showToast } from './ui/Toast.js';
 
 import { Linter } from './linter/index.js';
@@ -66,7 +68,12 @@ class App {
     /** @type {Preview} */    this.preview = /** @type {any} */ (null);
     /** @type {LinterPanel} */this.linterPanel = /** @type {any} */ (null);
 
+    /** @type {Wizard|null} Lazy — keeps its state while navigating */
+    this.wizard = null;
+
     // DOM references
+    /** @type {HTMLElement} */ this._homeScreen = /** @type {any} */ (null);
+    /** @type {HTMLElement} */ this._wizardScreen = /** @type {any} */ (null);
     /** @type {HTMLElement} */ this._dropzoneScreen = /** @type {any} */ (null);
     /** @type {HTMLElement} */ this._editorLayout = /** @type {any} */ (null);
 
@@ -85,7 +92,9 @@ class App {
     // ── Build the app shell ──────────────────────────────────
     //  <header.toolbar>
     //  <main.main>
-    //    <section.dropzone-screen> (visible at start)
+    //    <section.home> (visible at start: elegir Asistente / Editor)
+    //    <section.wizard-screen> (asistente de 4 pasos)
+    //    <section.dropzone-screen> (editor directo)
     //    <section.editor-layout.editor-layout--hidden>
     //      <div.preview-panel>
     //      <aside.linter-sidebar>
@@ -101,9 +110,22 @@ class App {
     const main = document.createElement('main');
     main.className = 'main';
 
+    // Home screen (mode chooser)
+    const homeScreen = document.createElement('section');
+    homeScreen.className = 'home';
+    homeScreen.id = 'geo-home-screen';
+    this._homeScreen = homeScreen;
+
+    // Wizard screen
+    const wizardScreen = document.createElement('section');
+    wizardScreen.className = 'wizard-screen hidden';
+    wizardScreen.id = 'geo-wizard-screen';
+    wizardScreen.style.cssText = 'display:flex;flex:1;overflow:hidden';
+    this._wizardScreen = wizardScreen;
+
     // Dropzone screen
     const dropzoneScreen = document.createElement('section');
-    dropzoneScreen.className = 'dropzone-screen';
+    dropzoneScreen.className = 'dropzone-screen dropzone-view hidden';
     dropzoneScreen.id = 'geo-dropzone-screen';
     this._dropzoneScreen = dropzoneScreen;
 
@@ -121,7 +143,7 @@ class App {
     linterSidebar.id = 'geo-linter-sidebar-root';
 
     editorLayout.append(previewPanel, linterSidebar);
-    main.append(dropzoneScreen, editorLayout);
+    main.append(homeScreen, wizardScreen, dropzoneScreen, editorLayout);
 
     // Status bar
     const statusBar = document.createElement('footer');
@@ -148,7 +170,19 @@ class App {
     });
     this.toolbar.render();
 
-    this.dropzone = new Dropzone(dropzoneScreen, (name, html) => this._loadFile(name, html));
+    // Dropzone (editor directo) con botón de volver al inicio
+    const backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.className = 'btn btn--ghost dropzone-view__back';
+    backBtn.innerHTML = '← Inicio';
+    backBtn.addEventListener('click', () => this._showView('home'));
+
+    const dropzoneInner = document.createElement('div');
+    dropzoneInner.className = 'dropzone-screen';
+    dropzoneInner.style.cssText = 'display:flex;flex:1;align-items:center;justify-content:center';
+    dropzoneScreen.append(backBtn, dropzoneInner);
+
+    this.dropzone = new Dropzone(dropzoneInner, (name, html) => this._loadFile(name, html));
     this.dropzone.render();
 
     this.preview = new Preview(previewPanel, this.engine, () => this._onEdit());
@@ -156,6 +190,65 @@ class App {
     this.linterPanel = new LinterPanel(linterSidebar);
     this.linterPanel.init();
     this.linterPanel.hide(); // start collapsed
+
+    this._renderHome();
+  }
+
+  /* ── Vistas ──────────────────────────────────────────────── */
+
+  /**
+   * Show one of the main views, hiding the rest.
+   * @private
+   * @param {'home'|'wizard'|'dropzone'|'editor'} view
+   */
+  _showView(view) {
+    this._homeScreen.classList.toggle('hidden', view !== 'home');
+    this._wizardScreen.classList.toggle('hidden', view !== 'wizard');
+    this._dropzoneScreen.classList.toggle('hidden', view !== 'dropzone');
+    this._editorLayout.classList.toggle('editor-layout--hidden', view !== 'editor');
+
+    if (view === 'wizard' && !this.wizard) {
+      this.wizard = new Wizard(this._wizardScreen, {
+        onLoadHtml: (name, html) => this._loadFile(name, html),
+        onBack: () => this._showView('home'),
+      });
+      this.wizard.render();
+    }
+  }
+
+  /**
+   * Render the home mode-chooser screen.
+   * @private
+   */
+  _renderHome() {
+    this._homeScreen.innerHTML = `
+      <div class="home__hero">
+        <h1 class="home__title">GEO Engine</h1>
+        <p class="home__subtitle">Maquetación y control de calidad para Moodle UDES</p>
+      </div>
+      <div class="home__cards">
+        <button type="button" class="home__card" id="geo-home-wizard">
+          <span class="home__card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>
+          </span>
+          <span class="home__card-title">Asistente de curso</span>
+          <span class="home__card-desc">Convierte la AAA y los PDF a Markdown, registra los RED, arma el prompt para la IA y revisa el resultado.</span>
+          <span class="dropzone__badge home__card-badge">docx · pdf → prompt → editor</span>
+        </button>
+        <button type="button" class="home__card" id="geo-home-editor">
+          <span class="home__card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </span>
+          <span class="home__card-title">Editor directo</span>
+          <span class="home__card-desc">Carga o pega un HTML existente para revisarlo con el linter y corregirlo en la vista previa.</span>
+          <span class="dropzone__badge home__card-badge">.html → linter</span>
+        </button>
+      </div>`;
+
+    this._homeScreen.querySelector('#geo-home-wizard')
+      .addEventListener('click', () => this._showView('wizard'));
+    this._homeScreen.querySelector('#geo-home-editor')
+      .addEventListener('click', () => this._showView('dropzone'));
   }
 
   /* ── File lifecycle ──────────────────────────────────────── */
@@ -171,8 +264,7 @@ class App {
     this.engine.load(html);
 
     // Swap views
-    this._dropzoneScreen.classList.add('hidden');
-    this._editorLayout.classList.remove('editor-layout--hidden');
+    this._showView('editor');
 
     // Update toolbar
     this.toolbar.setFilename(filename);
@@ -204,8 +296,7 @@ class App {
     this.engine.load('');
     this.filename = '';
 
-    this._editorLayout.classList.add('editor-layout--hidden');
-    this._dropzoneScreen.classList.remove('hidden');
+    this._showView('home');
 
     this.toolbar.setFilename('—');
     this.toolbar.setPatchCount(0);

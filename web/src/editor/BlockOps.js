@@ -348,196 +348,165 @@ export function splitBlock(html, textContent, displayOffset, tagName = 'p', bloc
   };
 }
 
-/* ── Baseline helper ──────────────────────────────────────── */
+/* ── Espaciado por reglas GEO ─────────────────────────────── */
+/*
+ * El espaciado NUNCA se hace con margin inline: en Moodle el <p> ya se
+ * auto-espacia (Bootstrap). Las únicas operaciones permitidas son:
+ *   • </li><br><li>   — separar viñetas con mucho texto (citas, RED)
+ *   • </ul><br><p>    — un <br> al salir de una lista hacia un párrafo
+ *   • limpiar         — quitar margin inline y espaciadores vacíos heredados
+ */
 
 /**
- * Calculate the baseline margin-bottom for a block based on its tag name and attributes/classes (like mb-*).
+ * Inspect the spacing situation around a block, to drive a rule-aware menu.
  *
- * Supports both attributes strings (e.g. ' class="mb-4"') and pure class strings (e.g. "mb-4 text-white").
- *
+ * @param {string} html
+ * @param {string} textContent
  * @param {string} tagName
- * @param {string} [attrsOrClasses='']
- * @returns {number}
+ * @param {number|null} blockIndex
+ * @returns {{
+ *   hasInlineMargin: boolean,
+ *   nextIsLi: boolean, brBetweenLis: boolean,
+ *   isLastInList: boolean, afterListIsP: boolean, brAfterList: boolean,
+ * } | null}
  */
-export function getBaseline(tagName, attrsOrClasses = '') {
-  const tag = tagName.toLowerCase();
-
-  let classesStr = attrsOrClasses;
-  const classMatch = attrsOrClasses.match(/class=["']([^"']+)["']/i);
-  if (classMatch) {
-    classesStr = classMatch[1];
-  }
-
-  const classes = classesStr.split(/\s+/);
-  for (const cls of classes) {
-    const m = cls.match(/^mb-(\d+)$/);
-    if (m) {
-      const val = parseInt(m[1], 10);
-      if (val === 0) return 0;
-      if (val === 1) return 4;
-      if (val === 2) return 8;
-      if (val === 3) return 16;
-      if (val === 4) return 24;
-      if (val === 5) return 48;
-    }
-  }
-  return tag === 'li' ? 10 : (tag.startsWith('h') ? 8 : 16);
-}
-
-/* ── Add space ────────────────────────────────────────────── */
-
-/**
- * Add or adjust spacing after a block element by updating its `margin-bottom` inline style.
- *
- * Strategy: modify the element's own style. If a custom `marginValue` is specified,
- * set it directly. If the value drops to baseline (10px for li, 16px for p), the inline
- * property is cleaned up and removed entirely.
- *
- * @param {string} html          Full HTML string
- * @param {string} textContent   Normalised text (for findBlock)
- * @param {string} [tagName='p']
- * @param {number|null} [blockIndex=null]
- * @param {number|null} [marginValue=null]
- * @returns {{ original: string, replacement: string } | null}
- */
-export function addSpaceAfter(html, textContent, tagName = 'p', blockIndex = null, marginValue = null) {
+export function getSpacingContext(html, textContent, tagName = 'p', blockIndex = null) {
   const block = findBlock(html, textContent, tagName, blockIndex);
-  if (!block) {
-    console.warn('[BlockOps] addSpaceAfter: could not find block.');
-    return null;
-  }
+  if (!block) return null;
 
-  let newAttrs = block.attrs;
-  const marginRegex = /margin-bottom\s*:\s*(\d+)px/i;
-  const existingMatch = newAttrs.match(marginRegex);
-  const baseline = getBaseline(tagName, block.attrs);
-
-  if (marginValue !== null) {
-    const newVal = parseInt(marginValue, 10);
-
-    if (newVal === baseline) {
-      // Revert to baseline: remove margin-bottom entirely to keep HTML clean
-      if (existingMatch) {
-        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
-          let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-          cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-          if (!cleaned) return '';
-          return `style="${cleaned}"`;
-        });
-        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
-          let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-          cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-          if (!cleaned) return '';
-          return `style='${cleaned}'`;
-        });
-      }
-    } else {
-      // Set specified custom value (could be larger or smaller than baseline)
-      if (existingMatch) {
-        newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
-      } else if (newAttrs.includes('style=')) {
-        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style="${trimmed}${sep} margin-bottom: ${newVal}px;"`;
-        });
-        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style='${trimmed}${sep} margin-bottom: ${newVal}px;'`;
-        });
-      } else {
-        newAttrs = ` style="margin-bottom: ${newVal}px;"` + newAttrs;
-      }
-    }
-  } else {
-    // Default incremental logic (+10px) if no custom value is specified
-    if (existingMatch) {
-      const currentVal = parseInt(existingMatch[1], 10);
-      const newVal = currentVal + 10;
-      newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
-    } else {
-      const initialMargin = baseline + 10;
-      if (newAttrs.includes('style=')) {
-        newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style="${trimmed}${sep} margin-bottom: ${initialMargin}px;"`;
-        });
-        newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, p1) => {
-          const trimmed = p1.trim();
-          const sep = (trimmed && !trimmed.endsWith(';')) ? ';' : '';
-          return `style='${trimmed}${sep} margin-bottom: ${initialMargin}px;'`;
-        });
-      } else {
-        newAttrs = ` style="margin-bottom: ${initialMargin}px;"` + newAttrs;
-      }
-    }
-  }
-
-  return {
-    original: block.fullMatch,
-    replacement: `<${tagName}${newAttrs}>${block.innerHTML}</${tagName}>`,
+  const ctx = {
+    hasInlineMargin: /margin-(?:bottom|top)\s*:/i.test(block.attrs),
+    nextIsLi: false, brBetweenLis: false,
+    isLastInList: false, afterListIsP: false, brAfterList: false,
   };
+
+  if (tagName.toLowerCase() === 'li') {
+    const after = html.substring(block.end);
+
+    // ¿viñeta seguida de otra viñeta?
+    const mNext = after.match(/^\s*((?:<br\s*\/?>\s*)*)<li\b/i);
+    if (mNext) {
+      ctx.nextIsLi = true;
+      ctx.brBetweenLis = mNext[1] !== '';
+    }
+
+    // ¿última viñeta de la lista, y la lista va seguida de un <p>?
+    const mClose = after.match(/^\s*<\/(ul|ol)>/i);
+    if (mClose) {
+      ctx.isLastInList = true;
+      const afterList = after.substring(mClose[0].length);
+      const mBr = afterList.match(/^((?:\s*<br\s*\/?>)*)\s*/i);
+      ctx.brAfterList = /<br/i.test(mBr[1]);
+      ctx.afterListIsP = /^<p\b/i.test(afterList.substring(mBr[0].length));
+    }
+  }
+
+  return ctx;
 }
 
-/* ── Remove space ─────────────────────────────────────────── */
+/**
+ * Insert or remove the single `<br>` between two `<li>` (regla:
+ * viñetas con mucho texto / grupos de RED llevan `</li><br><li>`).
+ *
+ * @param {string} html
+ * @param {string} textContent   Text of the FIRST li
+ * @param {number|null} blockIndex
+ * @param {boolean} add          true = insertar, false = quitar
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function toggleBrBetweenLis(html, textContent, blockIndex = null, add = true) {
+  const block = findBlock(html, textContent, 'li', blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] toggleBrBetweenLis: could not find block.');
+    return null;
+  }
+
+  const after = html.substring(block.end);
+  const m = after.match(/^(\s*)((?:<br\s*\/?>\s*)*)(<li\b)/i);
+  if (!m) return null;
+
+  const hasBr = m[2] !== '';
+  if (add === hasBr) return null;  // ya está en el estado pedido
+
+  const original = block.fullMatch + m[0];
+  const replacement = add
+    ? block.fullMatch + '<br>' + m[1] + m[3]                    // </li><br> … <li>
+    : block.fullMatch + m[0].replace(/<br\s*\/?>/gi, '');       // quitar solo los <br>,
+                                                                // conservando la indentación
+
+  return { original, replacement };
+}
 
 /**
- * Remove spacing added by `addSpaceAfter` by decreasing `margin-bottom`.
+ * Insert or remove the single `<br>` between `</ul>`/`</ol>` and the
+ * following `<p>` (regla: al salir de una lista hacia un párrafo va un <br>;
+ * es la ÚNICA transición entre bloques que lo lleva).
  *
- * - Decreases inline `margin-bottom` by 10px. At baseline value, the inline
- *   property is removed entirely (letting default CSS take over).
+ * Se invoca desde la última viñeta de la lista.
  *
- * @param {string} html          Full HTML string
- * @param {string} textContent   Normalised text (for findBlock)
+ * @param {string} html
+ * @param {string} textContent   Text of the LAST li in the list
+ * @param {number|null} blockIndex
+ * @param {boolean} add
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function toggleBrAfterList(html, textContent, blockIndex = null, add = true) {
+  const block = findBlock(html, textContent, 'li', blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] toggleBrAfterList: could not find block.');
+    return null;
+  }
+
+  const after = html.substring(block.end);
+  const m = after.match(/^(\s*<\/(?:ul|ol)>)((?:\s*<br\s*\/?>)*)(\s*)(<p\b)/i);
+  if (!m) return null;
+
+  const hasBr = m[2] !== '';
+  if (add === hasBr) return null;
+
+  const original = block.fullMatch + m[0];
+  const replacement = add
+    ? block.fullMatch + m[1] + m[3] + '<br>' + m[3] + m[4]  // </ul>\n<br>\n<p>
+    : block.fullMatch + m[1] + m[3] + m[4];                 // </ul>\n<p>
+
+  return { original, replacement };
+}
+
+/**
+ * Strip inline `margin-bottom` / `margin-top` from a block (código basura
+ * heredado de cursos viejos: el espaciado correcto es estructural).
+ * Drops the whole `style` attribute if it ends up empty.
+ *
+ * @param {string} html
+ * @param {string} textContent
  * @param {string} [tagName='p']
  * @param {number|null} [blockIndex=null]
  * @returns {{ original: string, replacement: string } | null}
  */
-export function removeSpaceAfter(html, textContent, tagName = 'p', blockIndex = null) {
+export function removeInlineMargin(html, textContent, tagName = 'p', blockIndex = null) {
   const block = findBlock(html, textContent, tagName, blockIndex);
   if (!block) {
-    console.warn('[BlockOps] removeSpaceAfter: could not find block.');
+    console.warn('[BlockOps] removeInlineMargin: could not find block.');
     return null;
   }
+  if (!/margin-(?:bottom|top)\s*:/i.test(block.attrs)) return null;
 
-  let newAttrs = block.attrs;
-  const marginRegex = /margin-bottom\s*:\s*(\d+)px/i;
-  const existingMatch = newAttrs.match(marginRegex);
+  const cleanStyle = (styleVal) => styleVal
+    .replace(/\s*margin-(?:bottom|top)\s*:\s*[^;"']+;?\s*/gi, '')
+    .replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';')
+    .trim();
 
-  if (!existingMatch) {
-    // No inline margin-bottom → nothing to remove
-    return null;
-  }
-
-  const currentVal = parseInt(existingMatch[1], 10);
-  const baseline = getBaseline(tagName, block.attrs);
-
-  if (currentVal === 0) {
-    return null; // already at minimum
-  }
-
-  // Calculate new value (decrease by 10px, clamped to 0)
-  const newVal = Math.max(0, currentVal - 10);
-
-  if (newVal === baseline) {
-    // Revert to baseline: remove margin-bottom entirely to keep HTML clean
-    newAttrs = newAttrs.replace(/style="([^"]*)"/i, (_m, styleVal) => {
-      let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-      cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-      if (!cleaned) return '';
-      return `style="${cleaned}"`;
+  let newAttrs = block.attrs
+    .replace(/\s*style="([^"]*)"/i, (_m, v) => {
+      const cleaned = cleanStyle(v);
+      return cleaned ? ` style="${cleaned}"` : '';
+    })
+    .replace(/\s*style='([^']*)'/i, (_m, v) => {
+      const cleaned = cleanStyle(v);
+      return cleaned ? ` style='${cleaned}'` : '';
     });
-    newAttrs = newAttrs.replace(/style='([^']*)'/i, (_m, styleVal) => {
-      let cleaned = styleVal.replace(/\s*margin-bottom\s*:\s*[^;]+;?\s*/i, '');
-      cleaned = cleaned.replace(/^\s*;\s*/, '').replace(/\s*;\s*$/, '').replace(/;\s*;/g, ';').trim();
-      if (!cleaned) return '';
-      return `style='${cleaned}'`;
-    });
-  } else {
-    newAttrs = newAttrs.replace(marginRegex, `margin-bottom: ${newVal}px`);
-  }
+
+  if (newAttrs === block.attrs) return null;
 
   return {
     original: block.fullMatch,

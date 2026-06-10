@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, addSpaceAfter, removeSpaceAfter, removeFollowerSpacer, getBaseline, wrapStrongInParagraph } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph } from './BlockOps.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -328,15 +328,12 @@ export class Preview {
           grip.style.display = '';
 
           // ── Spacer guide visualization ──
-          const tagName = block.tagName.toUpperCase();
-          const baseline = getBaseline(tagName, block.className);
-
-          // Determine if a custom margin-bottom has been applied inline
+          // Cualquier margin inline es código basura según las reglas GEO:
+          // el espaciado correcto es estructural (auto-espaciado de <p> o <br>
+          // permitido). El semáforo distingue ambos casos.
           const styleAttr = block.getAttribute('style') || '';
-          const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
-          const hasInlineMargin = !!inlineMarginMatch;
-          const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : baseline;
-          const isModified = hasInlineMargin && inlineMarginVal !== baseline;
+          const inlineMarginMatch = styleAttr.match(/margin-(?:bottom|top)\s*:\s*([\d.]+)/i);
+          const isModified = !!inlineMarginMatch;
 
           // ── Skip UI elements AND empty spacer elements to find real content ──
           let nextContentEl = this._getNextContentElement(block);
@@ -364,9 +361,7 @@ export class Preview {
             realGapPx = Math.round(nextBrTop - br.bottom);
           }
 
-          const displayHeight = nextContentEl
-            ? Math.max(realGapPx, 0)
-            : inlineMarginVal;
+          const displayHeight = nextContentEl ? Math.max(realGapPx, 0) : 0;
 
           if (displayHeight > 0) {
             spacerGuide.style.top = `${br.bottom - cr.top + root.scrollTop}px`;
@@ -374,21 +369,17 @@ export class Preview {
             spacerGuide.style.width = `${br.width}px`;
             spacerGuide.style.height = `${displayHeight}px`;
 
-            if (isModified || hasEmptyIntermediates) {
+            if (isModified) {
               spacerGuide.className = 'geo-spacer-guide';
-              if (isModified) {
-                const extra = inlineMarginVal - baseline;
-                if (extra > 0) {
-                  spacerGuide.textContent = `ESPACIO EXTRA: +${extra}px (Visual: ${displayHeight}px) ⤓`;
-                } else {
-                  spacerGuide.textContent = `ESPACIO PERSONALIZADO: ${inlineMarginVal}px (Visual: ${displayHeight}px) ⤓`;
-                }
-              } else {
-                spacerGuide.textContent = `ESPACIO POR ELEMENTOS VACÍOS: ${displayHeight}px ⤓`;
-              }
+              spacerGuide.textContent =
+                `MARGIN INLINE (no permitido) — límpialo desde el menú ⋮⋮`;
+            } else if (hasEmptyIntermediates) {
+              spacerGuide.className = 'geo-spacer-guide';
+              spacerGuide.textContent =
+                `ESPACIADOR VACÍO (no permitido) — quítalo desde el menú ⋮⋮`;
             } else {
               spacerGuide.className = 'geo-spacer-guide geo-spacer-guide--original';
-              spacerGuide.textContent = `ESPACIO ORIGINAL: ${displayHeight}px ⤓`;
+              spacerGuide.textContent = `ESPACIO: ${displayHeight}px (estructural — correcto)`;
             }
             spacerGuide.style.display = 'flex';
           } else {
@@ -506,8 +497,12 @@ export class Preview {
       else if (action === 'split')       this._doSplit(blockEl);
       else if (action === 'clean-br')    this._doCleanBr(blockEl);
       else if (action === 'split-lines') this._doSplitLines(blockEl);
-      else if (action === 'add-space')   this._showSpaceEditor(blockEl);
-      else if (action === 'remove-space') this._doRemoveSpace(blockEl);
+      else if (action === 'br-li-add')    this._doToggleBrLi(blockEl, true);
+      else if (action === 'br-li-remove') this._doToggleBrLi(blockEl, false);
+      else if (action === 'br-ul-add')    this._doToggleBrUl(blockEl, true);
+      else if (action === 'br-ul-remove') this._doToggleBrUl(blockEl, false);
+      else if (action === 'clean-margin')  this._doCleanMargin(blockEl);
+      else if (action === 'remove-spacer') this._doRemoveSpacer(blockEl);
       else if (action === 'wrap-in-p')   this._doWrapInParagraph(blockEl);
     });
 
@@ -587,38 +582,48 @@ export class Preview {
     html += `<button class="block-menu__item" data-action="split"><span class="block-menu__icon">✂</span>Separar en un punto</button>`;
     html += '<div class="block-menu__sep"></div>';
 
-    // ── Spacing ──
-    html += `<button class="block-menu__item" data-action="add-space"><span class="block-menu__icon">➕</span>Añadir espacio después</button>`;
+    // ── Spacing (consciente de las reglas GEO) ──────────────
+    // Nada de margin inline: solo las operaciones estructurales permitidas.
+    const tagName = block.tagName.toLowerCase();
+    const ctx = getSpacingContext(
+      this._engine.getResult(),
+      this._norm(block.textContent),
+      tagName,
+      this._getBlockIndex(block)
+    );
 
-    // Show "remove space" when there is any visible space after the block.
-    const blockTagName = block.tagName.toUpperCase();
-    const blockBaseline = getBaseline(blockTagName, block.className);
-    const styleAttr = block.getAttribute('style') || '';
-    const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
-    const inlineMarginVal = inlineMarginMatch ? parseInt(inlineMarginMatch[1], 10) : blockBaseline;
+    let spacing = '';
 
-    let nextContentEl = this._getNextContentElement(block);
-    while (
-      nextContentEl &&
-      (nextContentEl === this._blockGrip ||
-       nextContentEl === this._blockMenu ||
-       nextContentEl.classList?.contains('geo-spacer-guide') ||
-       getComputedStyle(nextContentEl).display === 'none' ||
-       this._isEmptySpacerEl(nextContentEl))
-    ) {
-      nextContentEl = this._getNextContentElement(nextContentEl);
+    if (ctx) {
+      // </li><br><li> — separar viñetas pesadas / grupos de RED
+      if (ctx.nextIsLi) {
+        spacing += ctx.brBetweenLis
+          ? `<button class="block-menu__item" data-action="br-li-remove"><span class="block-menu__icon">➖</span>Quitar &lt;br&gt; entre viñetas</button>`
+          : `<button class="block-menu__item" data-action="br-li-add"><span class="block-menu__icon">➕</span>Separar viñetas con &lt;br&gt;</button>`;
+      }
+
+      // </ul><br><p> — la única transición entre bloques que lleva <br>
+      if (ctx.isLastInList && ctx.afterListIsP) {
+        spacing += ctx.brAfterList
+          ? `<button class="block-menu__item" data-action="br-ul-remove"><span class="block-menu__icon">➖</span>Quitar &lt;br&gt; de salida de lista</button>`
+          : `<button class="block-menu__item" data-action="br-ul-add"><span class="block-menu__icon">➕</span>Añadir &lt;br&gt; al salir de la lista</button>`;
+      }
+
+      // Limpieza de código basura heredado
+      if (ctx.hasInlineMargin) {
+        spacing += `<button class="block-menu__item block-menu__item--warn" data-action="clean-margin"><span class="block-menu__icon">🧹</span>Quitar margin inline (no permitido)</button>`;
+      }
+      if (this._hasEmptyFollowers(block)) {
+        spacing += `<button class="block-menu__item block-menu__item--warn" data-action="remove-spacer"><span class="block-menu__icon">🧹</span>Quitar espaciador vacío</button>`;
+      }
     }
 
-    const br = block.getBoundingClientRect();
-    let realGapPx = 0;
-    if (nextContentEl) {
-      const nextBrTop = this._getVisualTop(nextContentEl);
-      realGapPx = Math.round(nextBrTop - br.bottom);
-    }
-
-    const displayHeight = nextContentEl ? Math.max(realGapPx, 0) : inlineMarginVal;
-    if (displayHeight > 0) {
-      html += `<button class="block-menu__item" data-action="remove-space"><span class="block-menu__icon">➖</span>Quitar espacio después</button>`;
+    if (spacing) {
+      html += spacing;
+    } else {
+      // No hay operación de espaciado aplicable: el auto-espaciado de Moodle
+      // ya hace el trabajo. Decirlo evita que se busque un workaround sucio.
+      html += `<div class="block-menu__hint">Espaciado automático correcto (reglas GEO)</div>`;
     }
 
     menu.innerHTML = html;
@@ -829,236 +834,73 @@ export class Preview {
     });
   }
 
-  /* ── Add Space implementation ──────────────────────────── */
+  /* ── Espaciado por reglas GEO ───────────────────────────── */
 
-  /** Show an interactive popup to set custom margin-bottom on the block. @private */
-  _showSpaceEditor(blockEl) {
-    const tagName = blockEl.tagName.toLowerCase();
-    const blockText = this._norm(blockEl.textContent);
-    const blockIndex = this._getBlockIndex(blockEl);
-
-    // Get current margin size
-    const styleAttr = blockEl.getAttribute('style') || '';
-    const match = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
-    const baseline = tagName === 'li' ? 10 : (tagName.startsWith('h') ? 8 : 16);
-    const currentMargin = match ? parseInt(match[1], 10) : baseline;
-
-    // Create overlay container
-    const overlay = document.createElement('div');
-    overlay.className = 'space-editor';
-
-    const title = document.createElement('div');
-    title.className = 'space-editor__title';
-    title.textContent = 'Ajustar espacio inferior';
-
-    // Preset buttons
-    const presetsDiv = document.createElement('div');
-    presetsDiv.className = 'space-editor__presets';
-
-    const presets = [
-      { label: '+10px', val: baseline + 10 },
-      { label: '+20px', val: baseline + 20 },
-      { label: '+30px', val: baseline + 30 },
-      { label: 'Original', val: baseline },
-    ];
-
-    presets.forEach(p => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'space-editor__preset-btn';
-      btn.textContent = p.label;
-      btn.addEventListener('click', () => {
-        inputField.value = String(p.val);
-      });
-      presetsDiv.appendChild(btn);
-    });
-
-    // Custom input area
-    const customDiv = document.createElement('div');
-    customDiv.className = 'space-editor__custom';
-
-    const label = document.createElement('label');
-    label.className = 'space-editor__label';
-    label.textContent = 'Tamaño:';
-
-    const inputField = document.createElement('input');
-    inputField.type = 'number';
-    inputField.className = 'space-editor__input';
-    inputField.min = '0';
-    inputField.max = '200';
-    inputField.value = String(currentMargin);
-
-    const unit = document.createElement('span');
-    unit.className = 'space-editor__unit';
-    unit.textContent = 'px';
-
-    customDiv.append(label, inputField, unit);
-
-    // Actions area
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'space-editor__actions';
-
-    const btnSave = document.createElement('button');
-    btnSave.type = 'button';
-    btnSave.className = 'space-editor__btn space-editor__btn--confirm';
-    btnSave.textContent = 'Guardar';
-
-    const btnCancel = document.createElement('button');
-    btnCancel.type = 'button';
-    btnCancel.className = 'space-editor__btn space-editor__btn--cancel';
-    btnCancel.textContent = 'Cancelar';
-
-    actionsDiv.append(btnSave, btnCancel);
-    overlay.append(title, presetsDiv, customDiv, actionsDiv);
-
-    // Position overlay over the block element
-    const containerRect = this._container.getBoundingClientRect();
-    const blockRect = blockEl.getBoundingClientRect();
-
-    // Position slightly below the element, aligned to its left
-    overlay.style.top = `${blockRect.bottom - containerRect.top + this._container.scrollTop + 4}px`;
-    overlay.style.left = `${blockRect.left - containerRect.left}px`;
-
-    this._container.appendChild(overlay);
-    inputField.focus();
-    inputField.select();
-
-    // Confirm handler
-    btnSave.addEventListener('click', () => {
-      const val = parseInt(inputField.value, 10);
-      overlay.remove();
-      if (isNaN(val) || val < 0) return;
-
-      const html = this._engine.getResult();
-      const patch = addSpaceAfter(html, blockText, tagName, blockIndex, val);
-
-      if (patch) {
-        try {
-          this._engine.addPatch(patch.original, patch.replacement);
-          this.render();
-          this._onEdit();
-        } catch (err) {
-          console.error('[Preview] Set space size failed:', err);
-        }
-      }
-    });
-
-    // Cancel handler
-    btnCancel.addEventListener('click', () => overlay.remove());
-
-    // Close on Escape key or submit on Enter
-    overlay.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        overlay.remove();
-      }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        btnSave.click();
-      }
-    });
-  }
-
-  /** Decrease margin-bottom or remove empty spacer elements after a block. @private */
-  _doRemoveSpace(blockEl) {
-    const tagName = blockEl.tagName.toLowerCase();
-    const blockText = this._norm(blockEl.textContent);
-    const blockIndex = this._getBlockIndex(blockEl);
-
-    // ── Try reducing inline margin-bottom first ──────────────
-    const html = this._engine.getResult();
-    const patch = removeSpaceAfter(html, blockText, tagName, blockIndex);
-
-    if (patch) {
-      try {
-        this._engine.addPatch(patch.original, patch.replacement);
-        this.render();
-        this._onEdit();
-        return;
-      } catch (err) {
-        console.error('[Preview] Remove space (margin) failed:', err);
-      }
+  /** Apply a patch from BlockOps, re-render and notify. @private */
+  _applyPatch(patch, label) {
+    if (!patch) {
+      console.warn(`[Preview] ${label}: no aplica en este contexto.`);
+      return;
     }
-
-    // ── Fallback 2: remove the first empty spacer element after this block, or a leading <br> inside the next block ──
-    let nextEl = this._getNextContentElement(blockEl);
-
-    if (nextEl && (this._isEmptySpacerEl(nextEl) || this._hasLeadingBr(nextEl))) {
-      const spacerPatch = removeFollowerSpacer(html, blockText, tagName, blockIndex);
-      if (spacerPatch) {
-        try {
-          this._engine.addPatch(spacerPatch.original, spacerPatch.replacement);
-          this.render();
-          this._onEdit();
-          return;
-        } catch (err) {
-          console.error('[Preview] Remove follower spacer failed:', err);
-        }
-      }
-    }
-
-    // ── Fallback 3: Reduce below baseline ──────────────────────
-    // If we are at the baseline (no custom inline margin is set) and there are no empty spacer elements,
-    // explicitly set it below baseline (visual space - 10, clamped to 0) to override browser/Moodle CSS defaults.
-    const styleAttr = blockEl.getAttribute('style') || '';
-    const inlineMarginMatch = styleAttr.match(/margin-bottom\s*:\s*(\d+)px/i);
-    if (!inlineMarginMatch) {
-      const baseline = getBaseline(tagName, blockEl.className);
-
-      // Calculate the actual visual gap
-      let nextContentEl = this._getNextContentElement(blockEl);
-      while (
-        nextContentEl &&
-        (nextContentEl === this._blockGrip ||
-         nextContentEl === this._blockMenu ||
-         nextContentEl.classList?.contains('geo-spacer-guide') ||
-         getComputedStyle(nextContentEl).display === 'none' ||
-         this._isEmptySpacerEl(nextContentEl))
-      ) {
-        nextContentEl = this._getNextContentElement(nextContentEl);
-      }
-
-      const br = blockEl.getBoundingClientRect();
-      let realGapPx = null;
-      if (nextContentEl) {
-        const nextBrTop = this._getVisualTop(nextContentEl);
-        realGapPx = Math.round(nextBrTop - br.bottom);
-      }
-
-      const currentVal = (realGapPx !== null && realGapPx > 0) ? realGapPx : baseline;
-      const newVal = Math.max(0, currentVal - 10);
-      const patchBelow = addSpaceAfter(html, blockText, tagName, blockIndex, newVal);
-      if (patchBelow) {
-        try {
-          this._engine.addPatch(patchBelow.original, patchBelow.replacement);
-          this.render();
-          this._onEdit();
-        } catch (err) {
-          console.error('[Preview] Reduce below baseline failed:', err);
-        }
-      }
+    try {
+      this._engine.addPatch(patch.original, patch.replacement);
+      this.render();
+      this._onEdit();
+    } catch (err) {
+      console.error(`[Preview] ${label} failed:`, err);
     }
   }
 
-  /**
-   * Returns true if an element has a leading `<br>` (with no meaningful text before it).
-   * @private
-   * @param {Element} el
-   * @returns {boolean}
-   */
-  _hasLeadingBr(el) {
-    if (!el) return false;
-    const firstEl = el.firstElementChild;
-    if (!firstEl || firstEl.tagName !== 'BR') return false;
+  /** Insertar/quitar el <br> entre esta viñeta y la siguiente. @private */
+  _doToggleBrLi(blockEl, add) {
+    this._applyPatch(
+      toggleBrBetweenLis(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        this._getBlockIndex(blockEl),
+        add
+      ),
+      'Toggle <br> entre viñetas'
+    );
+  }
 
-    let child = el.firstChild;
-    while (child && child !== firstEl) {
-      if (child.nodeType === Node.TEXT_NODE && child.textContent.trim().length > 0) {
-        return false;
-      }
-      child = child.nextSibling;
-    }
-    return true;
+  /** Insertar/quitar el <br> entre </ul> y el <p> siguiente. @private */
+  _doToggleBrUl(blockEl, add) {
+    this._applyPatch(
+      toggleBrAfterList(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        this._getBlockIndex(blockEl),
+        add
+      ),
+      'Toggle <br> de salida de lista'
+    );
+  }
+
+  /** Quitar margin-top/bottom inline (código basura heredado). @private */
+  _doCleanMargin(blockEl) {
+    this._applyPatch(
+      removeInlineMargin(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        blockEl.tagName.toLowerCase(),
+        this._getBlockIndex(blockEl)
+      ),
+      'Quitar margin inline'
+    );
+  }
+
+  /** Quitar el espaciador vacío (<br> suelto, <p> vacío…) tras el bloque. @private */
+  _doRemoveSpacer(blockEl) {
+    this._applyPatch(
+      removeFollowerSpacer(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        blockEl.tagName.toLowerCase(),
+        this._getBlockIndex(blockEl)
+      ),
+      'Quitar espaciador vacío'
+    );
   }
 
   /**
