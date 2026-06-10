@@ -89,19 +89,21 @@
   padding-left: 15px;
 }
 
-/* col-md-* (always applied since preview is wide enough) */
-.preview-container .col-md-1  { flex: 0 0 8.333%;  max-width: 8.333%; }
-.preview-container .col-md-2  { flex: 0 0 16.666%; max-width: 16.666%; }
-.preview-container .col-md-3  { flex: 0 0 25%;     max-width: 25%; }
-.preview-container .col-md-4  { flex: 0 0 33.333%; max-width: 33.333%; }
-.preview-container .col-md-5  { flex: 0 0 41.666%; max-width: 41.666%; }
-.preview-container .col-md-6  { flex: 0 0 50%;     max-width: 50%; }
-.preview-container .col-md-7  { flex: 0 0 58.333%; max-width: 58.333%; }
-.preview-container .col-md-8  { flex: 0 0 66.666%; max-width: 66.666%; }
-.preview-container .col-md-9  { flex: 0 0 75%;     max-width: 75%; }
-.preview-container .col-md-10 { flex: 0 0 83.333%; max-width: 83.333%; }
-.preview-container .col-md-11 { flex: 0 0 91.666%; max-width: 91.666%; }
-.preview-container .col-md-12 { flex: 0 0 100%;    max-width: 100%; }
+/* col-md-* (applied at min-width 768px for responsive Bootstrap behavior) */
+@media (min-width: 768px) {
+  .preview-container .col-md-1  { flex: 0 0 8.333%;  max-width: 8.333%; }
+  .preview-container .col-md-2  { flex: 0 0 16.666%; max-width: 16.666%; }
+  .preview-container .col-md-3  { flex: 0 0 25%;     max-width: 25%; }
+  .preview-container .col-md-4  { flex: 0 0 33.333%; max-width: 33.333%; }
+  .preview-container .col-md-5  { flex: 0 0 41.666%; max-width: 41.666%; }
+  .preview-container .col-md-6  { flex: 0 0 50%;     max-width: 50%; }
+  .preview-container .col-md-7  { flex: 0 0 58.333%; max-width: 58.333%; }
+  .preview-container .col-md-8  { flex: 0 0 66.666%; max-width: 66.666%; }
+  .preview-container .col-md-9  { flex: 0 0 75%;     max-width: 75%; }
+  .preview-container .col-md-10 { flex: 0 0 83.333%; max-width: 83.333%; }
+  .preview-container .col-md-11 { flex: 0 0 91.666%; max-width: 91.666%; }
+  .preview-container .col-md-12 { flex: 0 0 100%;    max-width: 100%; }
+}
 
 /* ═════════════════════════════════════════
    Nav Pills — Vertical sidebar (Momentos)

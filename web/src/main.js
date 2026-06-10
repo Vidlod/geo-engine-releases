@@ -188,6 +188,7 @@ class App {
     this.preview = new Preview(previewPanel, this.engine, () => this._onEdit());
 
     this.linterPanel = new LinterPanel(linterSidebar);
+    this.linterPanel.onFindingClick = (finding) => this._onFindingClick(finding);
     this.linterPanel.init();
     this.linterPanel.hide(); // start collapsed
 
@@ -222,27 +223,74 @@ class App {
    */
   _renderHome() {
     this._homeScreen.innerHTML = `
+      <div class="home__glow-1"></div>
+      <div class="home__glow-2"></div>
       <div class="home__hero">
+        <span class="home__badge">v1.2.0 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
-        <p class="home__subtitle">Maquetación y control de calidad para Moodle UDES</p>
+        <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
       <div class="home__cards">
-        <button type="button" class="home__card" id="geo-home-wizard">
+        <div class="home__card home__card--primary" id="geo-home-wizard">
+          <div class="home__card-tag">Recomendado</div>
           <span class="home__card-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>
           </span>
           <span class="home__card-title">Asistente de curso</span>
-          <span class="home__card-desc">Convierte la AAA y los PDF a Markdown, registra los RED, arma el prompt para la IA y revisa el resultado.</span>
-          <span class="dropzone__badge home__card-badge">docx · pdf → prompt → editor</span>
-        </button>
-        <button type="button" class="home__card" id="geo-home-editor">
+          <span class="home__card-desc">Crea prompts estructurados para la IA a partir de tus archivos AAA (.docx) e instrucciones (.pdf) conservando los RED.</span>
+          
+          <div class="home__flow">
+            <div class="home__flow-step">
+              <div class="home__flow-number">1</div>
+              <div class="home__flow-text">Subir Docs</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">2</div>
+              <div class="home__flow-text">Registrar RED</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">3</div>
+              <div class="home__flow-text">Copiar Prompt</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">4</div>
+              <div class="home__flow-text">Linter/Editor</div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn--primary home__card-btn">
+            <span>Comenzar Flujo</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="home__card home__card--secondary" id="geo-home-editor">
           <span class="home__card-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           </span>
           <span class="home__card-title">Editor directo</span>
-          <span class="home__card-desc">Carga o pega un HTML existente para revisarlo con el linter y corregirlo en la vista previa.</span>
-          <span class="dropzone__badge home__card-badge">.html → linter</span>
-        </button>
+          <span class="home__card-desc">Inspecciona y edita directamente un archivo HTML de Moodle existente utilizando la guía interactiva del linter.</span>
+          
+          <div class="home__flow">
+            <div class="home__flow-step">
+              <div class="home__flow-number">1</div>
+              <div class="home__flow-text">Cargar HTML</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">2</div>
+              <div class="home__flow-text">Corregir Linter</div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn--ghost home__card-btn">
+            <span>Abrir Editor</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>`;
 
     this._homeScreen.querySelector('#geo-home-wizard')
@@ -361,6 +409,17 @@ class App {
       }
     } catch (err) {
       console.error('[App] Linter error:', err);
+    }
+  }
+
+  /**
+   * Called when a linter finding card is clicked in the sidebar.
+   * @private
+   * @param {object} finding
+   */
+  _onFindingClick(finding) {
+    if (this.preview) {
+      this.preview.highlightFinding(finding);
     }
   }
 

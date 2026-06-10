@@ -13,6 +13,7 @@
 
 import { InlineEditor } from './InlineEditor.js';
 import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph } from './BlockOps.js';
+import { showToast } from '../ui/Toast.js';
 
 /** Tags whose text content must NOT be wrapped. */
 const SKIP_TAGS = new Set([
@@ -1213,4 +1214,157 @@ export class Preview {
       });
     });
   }
+
+  /**
+   * Highlights a linter finding in the preview and scrolls to it.
+   * @param {{rule_id: string, severity: string, message: string, line: number, snippet?: string}} f
+   */
+  highlightFinding(f) {
+    if (!this._container) return;
+
+    // Clear any previous highlights
+    this._container.querySelectorAll('.geo-highlight-error').forEach((el) => {
+      el.classList.remove('geo-highlight-error');
+    });
+
+    const el = this._findElementForFinding(f.snippet, f.line, f.message);
+    if (el) {
+      // Switch active tab if the element is hidden inside tab panes
+      this._activateParentTabsOf(el);
+
+      // Apply highlighting
+      el.classList.add('geo-highlight-error');
+
+      // Scroll smoothly to center
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Automatically clear highlight after 5 seconds
+      setTimeout(() => {
+        el.classList.remove('geo-highlight-error');
+      }, 5000);
+    } else {
+      showToast('No se pudo ubicar el error en la vista previa', 'info');
+    }
+  }
+
+  /**
+   * Attempt to find the DOM element inside preview matching the linter finding.
+   * @private
+   * @param {string|undefined} snippet
+   * @param {number} line
+   * @param {string} message
+   * @returns {HTMLElement|null}
+   */
+  _findElementForFinding(snippet, line, message) {
+    if (!snippet) return null;
+
+    let cleanSnippet = snippet;
+    if (cleanSnippet.endsWith('…')) {
+      cleanSnippet = cleanSnippet.slice(0, -1);
+    }
+    cleanSnippet = cleanSnippet.trim();
+    if (!cleanSnippet) return null;
+
+    // Helper to get outer HTML without data-geo attributes
+    const getCleanOuter = (el) => {
+      const clone = el.cloneNode(true);
+      const removeAttrs = (node) => {
+        if (node.removeAttribute) {
+          node.removeAttribute('data-geo-editable');
+          node.removeAttribute('data-geo-index');
+          node.removeAttribute('data-geo-link');
+        }
+        if (node.children) {
+          for (let i = 0; i < node.children.length; i++) {
+            removeAttrs(node.children[i]);
+          }
+        }
+      };
+      removeAttrs(clone);
+      return clone.outerHTML;
+    };
+
+    const allElements = Array.from(this._container.querySelectorAll('*'));
+    let bestMatch = null;
+    let bestScore = 0;
+
+    // 1. Match by clean outerHTML (including tags like <i> or <br>)
+    for (const el of allElements) {
+      if (
+        el.classList.contains('block-grip') ||
+        el.classList.contains('block-menu') ||
+        el.classList.contains('geo-spacer-guide')
+      ) {
+        continue;
+      }
+
+      const cleanOuter = getCleanOuter(el);
+      if (cleanOuter.includes(cleanSnippet)) {
+        // Specificity score: smaller element length wins (closer to target)
+        const score = 100000 - cleanOuter.length;
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = el;
+        }
+      }
+    }
+
+    if (bestMatch) return bestMatch;
+
+    // 2. Match by textContent fallback (parse HTML tags in snippet first)
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(cleanSnippet, 'text/html');
+    const snippetText = doc.body.textContent.trim();
+
+    if (snippetText.length > 0) {
+      bestScore = 0;
+      for (const el of allElements) {
+        if (
+          el.classList.contains('block-grip') ||
+          el.classList.contains('block-menu') ||
+          el.classList.contains('geo-spacer-guide')
+        ) {
+          continue;
+        }
+
+        const elText = el.textContent.trim();
+        if (elText.includes(snippetText)) {
+          const score = 100000 - elText.length;
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = el;
+          }
+        }
+      }
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * Traverse up ancestors of the element to activate Bootstrap tabs if needed.
+   * @private
+   * @param {HTMLElement} el
+   */
+  _activateParentTabsOf(el) {
+    let parent = el.parentElement;
+    while (parent && parent !== this._container) {
+      if (parent.classList.contains('tab-pane') && !parent.classList.contains('active')) {
+        const id = parent.id;
+        if (id) {
+          const tabLink = this._container.querySelector(
+            `[data-toggle="tab"][href="#${id}"],` +
+            `[data-toggle="pill"][href="#${id}"],` +
+            `[data-bs-toggle="tab"][href="#${id}"],` +
+            `[data-bs-toggle="pill"][href="#${id}"]`
+          );
+          if (tabLink) {
+            tabLink.click();
+          }
+        }
+      }
+      parent = parent.parentElement;
+    }
+  }
 }
+

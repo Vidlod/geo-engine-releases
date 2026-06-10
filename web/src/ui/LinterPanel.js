@@ -15,10 +15,13 @@ export class LinterPanel {
     /** @private */ this._el = containerEl;
     /** @private @type {HTMLElement|null} */ this._listEl = null;
     /** @private @type {HTMLElement|null} */ this._headerCountEl = null;
+
+    /** @type {((finding: any) => void)|null} */
+    this.onFindingClick = null;
   }
 
   /* ── Public API ──────────────────────────────────────────── */
-
+  
   /**
    * Build the sidebar shell (header + scrollable list area).
    * Call this once at startup.
@@ -151,6 +154,11 @@ export class LinterPanel {
   _createCard(f) {
     const card = document.createElement('div');
     card.className = 'finding-card';
+    card.addEventListener('click', () => {
+      if (typeof this.onFindingClick === 'function') {
+        this.onFindingClick(f);
+      }
+    });
 
     // Header row: severity dot + rule id + line number
     const header = document.createElement('div');

@@ -458,5 +458,22 @@
 }
 
 /* El antiguo "Space Editor" (margin-bottom en px) se eliminó: el espaciado
-   ahora es estructural según las reglas GEO (acciones de <br> en el menú). */
+   now is structural according to GEO rules (actions of <br> in the menu). */
+
+/* ── Linter error highlighting ── */
+.geo-highlight-error {
+  outline: 2px dashed var(--error) !important;
+  outline-offset: 2px;
+  background-color: var(--error-soft) !important;
+  animation: geo-pulse-error 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+
+@keyframes geo-pulse-error {
+  0% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(229, 72, 77, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+}
+
 

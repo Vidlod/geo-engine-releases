@@ -826,3 +826,66 @@ body {
   clip: rect(0,0,0,0);
   border: 0;
 }
+
+/* ── Responsiveness and Mobile Drawer ── */
+@media (max-width: 768px) {
+  /* Toolbar responsiveness */
+  .toolbar {
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .toolbar__logo span {
+    display: none;
+  }
+  .toolbar__separator {
+    margin: 0 2px;
+  }
+  .toolbar__filename {
+    max-width: 100px;
+    font-size: 0.75rem;
+  }
+  .toolbar__actions {
+    gap: 4px;
+  }
+  .toolbar__actions .btn span {
+    display: none;
+  }
+  .toolbar__actions .btn {
+    padding: 7px;
+    min-width: 32px;
+    justify-content: center;
+  }
+
+  /* Editor Layout & Linter Sidebar Drawer */
+  .editor-layout {
+    position: relative;
+  }
+  .linter-sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    height: 100%;
+    width: 320px;
+    max-width: calc(100vw - 40px);
+    border-left: 1px solid var(--border);
+    transition: transform var(--duration-mid) var(--ease-out) !important;
+    transform: translateX(0);
+  }
+  .linter-sidebar--collapsed {
+    transform: translateX(100%);
+    width: 320px !important;
+    border-left: none;
+  }
+
+  /* Optimized preview spacing */
+  .preview-panel {
+    padding: 16px;
+  }
+  .preview-container {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+}
+
