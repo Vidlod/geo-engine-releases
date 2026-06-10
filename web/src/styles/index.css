@@ -889,3 +889,13 @@ body {
   }
 }
 
+/* Hide editor-specific elements when not actively editing a document */
+#app:not(.view-editor) .toolbar__actions,
+#app:not(.view-editor) .toolbar__filename,
+#app:not(.view-editor) .toolbar__separator,
+#app:not(.view-editor) .changes-badge,
+#app:not(.view-editor) .status-bar {
+  display: none !important;
+}
+
+

@@ -88,6 +88,7 @@ class App {
     if (!app) {
       throw new Error('#app element not found');
     }
+    app.className = 'view-home';
 
     // ── Build the app shell ──────────────────────────────────
     //  <header.toolbar>
@@ -203,6 +204,11 @@ class App {
    * @param {'home'|'wizard'|'dropzone'|'editor'} view
    */
   _showView(view) {
+    const app = document.getElementById('app');
+    if (app) {
+      app.className = `view-${view}`;
+    }
+
     this._homeScreen.classList.toggle('hidden', view !== 'home');
     this._wizardScreen.classList.toggle('hidden', view !== 'wizard');
     this._dropzoneScreen.classList.toggle('hidden', view !== 'dropzone');
