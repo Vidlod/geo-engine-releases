@@ -3,7 +3,11 @@
 # necesario para la regla `producto-final`, que lee course.last_avance).
 PyYAML>=6.0
 
+# Servidor local + conversión de documentos (server.py — asistente de la web app):
+Flask>=3.0          # sirve web/dist y el API /api/convert
+pypandoc>=1.13      # .docx -> Markdown (requiere binario pandoc: brew install pandoc)
+pymupdf4llm>=0.0.17 # .pdf -> Markdown respetando columnas y tablas
+mammoth>=1.6        # .docx -> HTML (motor alternativo, trasplante 1:1)
+
 # Fase 2 (motor de plantillas) — descomentar cuando se implemente:
-# mammoth>=1.6      # conversión Word -> HTML
-# Flask>=3.0        # web app para compañeros no técnicos
 # openpyxl>=3.1     # lectura de glosario en Excel

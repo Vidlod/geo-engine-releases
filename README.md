@@ -15,23 +15,45 @@ las partes mecánicas.
 | 3 | Skill de Claude (criterio) | ⬜ Pendiente |
 | 4 | **Web app — GEO Engine Editor** | ✅ Funcional |
 
-## Web App (Editor Visual)
+## Web App (Asistente + Editor Visual)
 
-Editor visual de HTML para Moodle que permite modificar **texto** sin romper la estructura del código.
+La web tiene dos modos desde la pantalla de inicio:
 
-```bash
-cd web
-npm install
-npm run dev        # → http://localhost:3000
+**1 · Asistente de curso** — el flujo GEO completo en 4 pasos:
+
+```
+01 Documentos   .docx → Markdown (Pandoc) · .pdf → Markdown (PyMuPDF4LLM)
+02 Archivos RED registra los NOMBRES de los RED (no se suben los archivos)
+03 Prompt       sección (Momento N / Entregable N / Glosario / Introducción)
+                → genérico de skills/generic/ + documentos + lista RED → copiar
+04 Resultado    pega el HTML de la IA → editor con linter
 ```
 
-Desplegable en Vercel: `web/vercel.json` ya está configurado.
+Los genéricos se embeben en el build directamente desde `skills/generic/*-prompt.md`
+(fuente única). Si se agrega p. ej. `geo-glosario-prompt.md`, la sección Glosario
+se habilita sola al recompilar.
 
-**Características:**
-- Carga archivos HTML con drag & drop
+**2 · Editor directo** — carga o pega un HTML existente para revisarlo.
+
+```bash
+# Servidor todo-en-uno (web compilada + API de conversión):
+pip3 install -r requirements.txt   # Flask, pypandoc, pymupdf4llm, mammoth
+cd web && npm install && npm run build && cd ..
+python3 server.py                  # → http://127.0.0.1:5001
+
+# Desarrollo del frontend (proxy /api → server.py en :5001):
+cd web && npm run dev              # → http://localhost:3000
+npm run smoke                      # smoke test del bundle (jsdom)
+```
+
+> Pandoc requiere el binario del sistema: `brew install pandoc`
+> (o el .pkg oficial). pypandoc lo detecta automáticamente.
+
+**Características del editor:**
+- Carga archivos HTML con drag & drop o pegado directo
 - Previsualización fiel con estilos de Moodle (Bootstrap)
 - Edición inline: clic en texto → editar → la estructura HTML se preserva byte a byte
-- Linter integrado (14 reglas portadas de Python a JS, check-only)
+- Linter integrado (15 reglas portadas de Python a JS, check-only)
 - Copiar HTML / Descargar archivo
 - Dark mode con glassmorphism
 
