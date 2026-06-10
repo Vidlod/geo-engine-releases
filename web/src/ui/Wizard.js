@@ -25,6 +25,9 @@ const I = {
   trash: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
   back: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`,
   check: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  layers: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+  restart: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`,
+  close: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
 };
 
 const STEPS = [
@@ -62,7 +65,9 @@ export class Wizard {
     /** @private */ this._number = 1;
     /** @private */ this._prompt = '';
     /** @private @type {string[]} */ this._parts = [];
-    /** @private */ this._partIdx = 0;
+    /** @private */ this._partIdx = 0;            // próxima parte a copiar
+    /** @private @type {Set<number>} */ this._partsDone = new Set();
+    /** @private */ this._partsOpen = false;      // panel del secuenciador abierto
   }
 
   /* ── Render raíz ─────────────────────────────────────────── */
@@ -508,15 +513,17 @@ export class Wizard {
     preview.innerHTML = `
       <div class="wizard__prompt-bar">
         <span class="wizard__prompt-stats" id="geo-wizard-promptstats"></span>
-        <button type="button" class="btn btn--ghost" id="geo-wizard-dl">${I.download} <span>Descargar .md</span></button>
-        <button type="button" class="btn btn--ghost" id="geo-wizard-copyparts">${I.copy} <span id="geo-wizard-copyparts-label">Copiar por partes</span></button>
-        <button type="button" class="btn btn--primary" id="geo-wizard-copy">${I.copy} <span>Copiar prompt</span></button>
+        <div class="wizard__prompt-actions">
+          <button type="button" class="btn btn--ghost" id="geo-wizard-dl">${I.download} <span>Descargar .md</span></button>
+          <button type="button" class="btn btn--ghost" id="geo-wizard-parts-toggle" aria-expanded="false">${I.layers} <span>Copiar por partes</span></button>
+          <button type="button" class="btn btn--primary" id="geo-wizard-copy">${I.copy} <span>Copiar prompt</span></button>
+        </div>
       </div>
+      <div class="wizard__parts hidden" id="geo-wizard-parts"></div>
       <div class="wizard__prompt-tip hidden" id="geo-wizard-prompttip">
-        Prompt largo: usa <strong>Copiar por partes</strong> (mensajes de tamaño seguro,
-        la IA confirma cada parte y genera solo al final) o <strong>Descargar .md</strong>
-        para Claude, que sí ingiere adjuntos completos. ChatGPT lee los adjuntos por
-        fragmentos: con archivos grandes prefiere las partes.
+        Prompt largo: <strong>Descargar .md</strong> y adjuntarlo (ideal en Claude, que
+        ingiere el archivo completo) o <strong>Copiar por partes</strong> (ChatGPT lee los
+        adjuntos por fragmentos: con archivos grandes, envíalo en mensajes guiados).
       </div>
       <pre class="wizard__prompt-pre" id="geo-wizard-promptpre"></pre>`;
     p.appendChild(preview);
@@ -530,29 +537,8 @@ export class Wizard {
       }
     });
 
-    preview.querySelector('#geo-wizard-copyparts').addEventListener('click', async () => {
-      if (this._parts.length === 0) return;
-      const i = this._partIdx;
-      try {
-        await navigator.clipboard.writeText(this._parts[i]);
-      } catch {
-        showToast('No se pudo copiar al portapapeles', 'error');
-        return;
-      }
-      if (i + 1 < this._parts.length) {
-        this._partIdx = i + 1;
-        showToast(
-          `Parte ${i + 1}/${this._parts.length} copiada — pégala, espera ` +
-          `«recibida» y vuelve por la siguiente`, 'success'
-        );
-      } else {
-        this._partIdx = 0;
-        showToast(
-          `Parte ${i + 1}/${this._parts.length} copiada (final) — la IA genera ahora`,
-          'success'
-        );
-      }
-      this._syncPartsLabel();
+    preview.querySelector('#geo-wizard-parts-toggle').addEventListener('click', () => {
+      this._togglePartsPanel();
     });
 
     preview.querySelector('#geo-wizard-dl').addEventListener('click', () => {
@@ -610,8 +596,10 @@ export class Wizard {
     };
     this._prompt = buildPrompt(inputs);
     this._parts = buildPromptParts(inputs);
-    this._partIdx = 0;   // cambiar sección/número reinicia la secuencia
-    this._syncPartsLabel();
+    // Cambiar sección/número invalida la secuencia: reiniciar el progreso.
+    this._partIdx = 0;
+    this._partsDone.clear();
+    this._renderParts();
 
     const pre = this._panel.querySelector('#geo-wizard-promptpre');
     const stats = this._panel.querySelector('#geo-wizard-promptstats');
@@ -627,14 +615,138 @@ export class Wizard {
     if (tip) tip.classList.toggle('hidden', this._prompt.length <= 60000);
   }
 
-  /** @private Refresca la etiqueta del botón "Copiar por partes". */
-  _syncPartsLabel() {
-    const label = this._panel.querySelector('#geo-wizard-copyparts-label');
-    if (!label) return;
+  /* ── Secuenciador "Copiar por partes" ───────────────────── */
+
+  /** Título descriptivo de la parte i (primera línea del mensaje). @private */
+  _partTitle(i) {
+    if (i === 0) return 'Reglas y esqueleto';
+    const first = (this._parts[i] || '').split('\n', 1)[0];
+    const afterDash = first.split('— ')[1];
+    return (afterDash || `Parte ${i + 1}`).trim();
+  }
+
+  /** Abre/cierra el panel del secuenciador. @private */
+  _togglePartsPanel() {
+    this._partsOpen = !this._partsOpen;
+    const toggle = this._panel.querySelector('#geo-wizard-parts-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', String(this._partsOpen));
+    this._renderParts();
+    if (this._partsOpen) {
+      const panel = this._panel.querySelector('#geo-wizard-parts');
+      panel?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  /** Copia la parte i, la marca como enviada y avanza. @private */
+  async _copyPart(i) {
+    if (i < 0 || i >= this._parts.length) return;
+    try {
+      await navigator.clipboard.writeText(this._parts[i]);
+    } catch {
+      showToast('No se pudo copiar al portapapeles', 'error');
+      return;
+    }
+    this._partsDone.add(i);
     const n = this._parts.length;
-    label.textContent = this._partIdx === 0
-      ? `Copiar por partes (${n})`
-      : `Copiar parte ${this._partIdx + 1}/${n}`;
+    // Avanzar a la primera parte aún no enviada (si queda alguna).
+    let next = i + 1;
+    while (next < n && this._partsDone.has(next)) next++;
+    this._partIdx = Math.min(next, n - 1);
+
+    if (this._partsDone.size >= n) {
+      showToast('Todas las partes enviadas — la IA genera el HTML ahora', 'success');
+    } else {
+      showToast(`Parte ${i + 1}/${n} copiada — pégala y espera «recibida»`, 'success');
+    }
+    this._renderParts();
+  }
+
+  /**
+   * Renderiza el panel del secuenciador: barra de progreso por segmentos,
+   * tarjeta de la parte actual y guía según el estado.
+   * @private
+   */
+  _renderParts() {
+    const box = this._panel.querySelector('#geo-wizard-parts');
+    if (!box) return;
+    box.classList.toggle('hidden', !this._partsOpen);
+    if (!this._partsOpen) { box.innerHTML = ''; return; }
+
+    const n = this._parts.length;
+    const i = this._partIdx;
+    const allDone = this._partsDone.size >= n;
+    const isLast = i === n - 1;
+
+    // Segmentos de progreso (clicables para revisitar una parte).
+    const segs = this._parts.map((_, k) => {
+      const done = this._partsDone.has(k);
+      const current = !allDone && k === i;
+      const cls = done ? 'wizard__parts-seg--done' : (current ? 'wizard__parts-seg--current' : '');
+      return `<button type="button" class="wizard__parts-seg ${cls}" data-seg="${k}"
+                 title="Parte ${k + 1}: ${this._partTitle(k)}">${done ? I.check : k + 1}</button>`;
+    }).join('');
+
+    const headline = allDone
+      ? `${this._partsDone.size}/${n} partes enviadas`
+      : `Parte ${i + 1} de ${n}`;
+
+    const helper = allDone
+      ? 'La IA ya tiene el material completo y debió generar el HTML tras la parte final. Pégalo en el paso 4.'
+      : i === 0
+        ? 'Copia esta parte, pégala en un chat <strong>nuevo</strong> y espera a que la IA responda «recibida». Luego vuelve aquí por la siguiente.'
+        : isLast
+          ? 'Parte final: al pegarla, la IA generará el HTML completo. No hace falta esperar confirmación.'
+          : 'Pega esta parte, espera la confirmación «recibida» y vuelve por la siguiente.';
+
+    const card = allDone
+      ? `<div class="wizard__parts-card wizard__parts-card--done">
+           <span class="wizard__parts-doneicon">${I.check}</span>
+           <div class="wizard__parts-cardtext">
+             <span class="wizard__parts-cardtitle">Secuencia completa</span>
+             <span class="wizard__parts-cardmeta">Se enviaron las ${n} partes</span>
+           </div>
+         </div>`
+      : `<div class="wizard__parts-card">
+           <span class="wizard__parts-badge ${isLast ? 'wizard__parts-badge--final' : ''}">${i + 1}</span>
+           <div class="wizard__parts-cardtext">
+             <span class="wizard__parts-cardtitle">${this._partTitle(i)}</span>
+             <span class="wizard__parts-cardmeta">${(this._parts[i] || '').length.toLocaleString('es-CO')} caracteres${isLast ? ' · genera el HTML' : ''}</span>
+           </div>
+           <button type="button" class="btn btn--primary wizard__parts-copy" id="geo-wizard-parts-copy">
+             ${I.copy} <span>${isLast ? `Copiar parte final (${i + 1}/${n})` : `Copiar parte ${i + 1} de ${n}`}</span>
+           </button>
+         </div>`;
+
+    box.innerHTML = `
+      <div class="wizard__parts-head">
+        <span class="wizard__parts-title">${I.layers} Envío por partes · <strong>${n} mensajes</strong></span>
+        <span class="wizard__parts-progress">${headline}</span>
+        <button type="button" class="wizard__parts-close" id="geo-wizard-parts-close" aria-label="Cerrar">${I.close}</button>
+      </div>
+      <div class="wizard__parts-track">${segs}</div>
+      ${card}
+      <div class="wizard__parts-helper">${helper}</div>
+      <div class="wizard__parts-foot">
+        <button type="button" class="wizard__parts-restart" id="geo-wizard-parts-restart" ${this._partsDone.size === 0 ? 'disabled' : ''}>
+          ${I.restart} <span>Reiniciar secuencia</span>
+        </button>
+      </div>`;
+
+    // Wiring
+    box.querySelector('#geo-wizard-parts-copy')?.addEventListener('click', () => this._copyPart(this._partIdx));
+    box.querySelector('#geo-wizard-parts-close')?.addEventListener('click', () => this._togglePartsPanel());
+    box.querySelector('#geo-wizard-parts-restart')?.addEventListener('click', () => {
+      this._partIdx = 0;
+      this._partsDone.clear();
+      this._renderParts();
+      showToast('Secuencia reiniciada', 'info');
+    });
+    box.querySelectorAll('.wizard__parts-seg').forEach((seg) => {
+      seg.addEventListener('click', () => {
+        this._partIdx = Number(seg.getAttribute('data-seg'));
+        this._renderParts();
+      });
+    });
   }
 
   /* ════════════════════════════════════════════════════════════

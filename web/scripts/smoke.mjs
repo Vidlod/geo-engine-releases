@@ -99,8 +99,10 @@ check('chip RED registrado', $$('.wizard__chip').length === 1);
 $('#geo-wizard-next').click();                  // → paso 3 (prompt)
 check('paso 3 activo', $('.wizard__step[data-step="3"]').classList.contains('wizard__step--active'));
 check('4 tarjetas de sección', $$('.wizard__section').length === 4);
-check('2 secciones habilitadas (momento, entregable)',
-  $$('.wizard__section').filter((s) => !s.disabled).length === 2);
+check('3 secciones habilitadas (momento, entregable, introduccion)',
+  $$('.wizard__section').filter((s) => !s.disabled).length === 3);
+check('sección Introducción al curso disponible',
+  $$('.wizard__section').some((s) => /Introducción al curso/.test(s.textContent) && !s.disabled));
 
 const prompt = $('#geo-wizard-promptpre').textContent;
 check('prompt contiene el genérico', prompt.includes('PARTE 1'));
@@ -121,19 +123,32 @@ $('.wizard__num[data-num="2"]').click();        // cambiar a Momento 2
 check('número 2 actualiza el prompt',
   $('#geo-wizard-promptpre').textContent.includes('Momento Evaluativo 2'));
 
-console.log('— Copiar por partes —');
+console.log('— Copiar por partes (secuenciador) —');
 const copied = [];
 Object.defineProperty(dom.window.navigator, 'clipboard', {
   value: { writeText: async (t) => { copied.push(t); } },
   configurable: true,
 });
-const partsBtn = $('#geo-wizard-copyparts');
-const partsLabel = $('#geo-wizard-copyparts-label');
-check('etiqueta inicial con total de partes', partsLabel.textContent === 'Copiar por partes (3)');
-partsBtn.click(); await new Promise((r) => setTimeout(r, 10));
-check('tras parte 1, ofrece la 2', partsLabel.textContent === 'Copiar parte 2/3');
-partsBtn.click(); await new Promise((r) => setTimeout(r, 10));
-partsBtn.click(); await new Promise((r) => setTimeout(r, 10));
+
+// El panel arranca cerrado; el toggle lo abre.
+check('panel cerrado al inicio', $('#geo-wizard-parts').classList.contains('hidden'));
+$('#geo-wizard-parts-toggle').click();
+check('panel abierto tras el toggle', !$('#geo-wizard-parts').classList.contains('hidden'));
+check('3 segmentos de progreso', $$('.wizard__parts-seg').length === 3);
+check('parte 1 marcada como actual',
+  $('.wizard__parts-seg[data-seg="0"]').classList.contains('wizard__parts-seg--current'));
+check('título descriptivo de la parte 1',
+  $('.wizard__parts-cardtitle').textContent === 'Reglas y esqueleto');
+
+// Copiar las 3 partes en orden.
+$('#geo-wizard-parts-copy').click(); await new Promise((r) => setTimeout(r, 10));
+check('segmento 1 marcado como enviado',
+  $('.wizard__parts-seg[data-seg="0"]').classList.contains('wizard__parts-seg--done'));
+check('avanza a la parte 2',
+  $('.wizard__parts-seg[data-seg="1"]').classList.contains('wizard__parts-seg--current'));
+$('#geo-wizard-parts-copy').click(); await new Promise((r) => setTimeout(r, 10));
+$('#geo-wizard-parts-copy').click(); await new Promise((r) => setTimeout(r, 10));
+
 check('3 partes copiadas', copied.length === 3);
 check('parte 1: reglas + orden de espera',
   copied[0].includes('PARTE 1/3') && copied[0].includes('REGLA DE ORO') &&
@@ -143,7 +158,17 @@ check('parte 2: documento fuente',
 check('parte 3: insumos + GENERA AHORA',
   copied[2].includes('GENERA AHORA') && copied[2].includes('Mapa_Curso_Demo.pdf') &&
   copied[2].includes('Momento Evaluativo 2'));
-check('etiqueta reinicia tras la última', partsLabel.textContent === 'Copiar por partes (3)');
+check('estado final: secuencia completa', !!$('.wizard__parts-card--done'));
+
+// Reiniciar vuelve a cero.
+$('#geo-wizard-parts-restart').click();
+check('reiniciar marca la parte 1 como actual otra vez',
+  $('.wizard__parts-seg[data-seg="0"]').classList.contains('wizard__parts-seg--current') &&
+  $$('.wizard__parts-seg--done').length === 0);
+
+// Cerrar el panel para no interferir con el resto del flujo.
+$('#geo-wizard-parts-close').click();
+check('panel cerrado tras close', $('#geo-wizard-parts').classList.contains('hidden'));
 
 $('#geo-wizard-next').click();                  // → paso 4 (resultado)
 const ta4 = $('#geo-wizard-out-html');
