@@ -319,7 +319,7 @@
 
 /* ── Rail de pasos ── */
 .wizard__rail {
-  width: 248px;
+  width: 270px;
   flex-shrink: 0;
   padding: 20px 16px;
   border-right: 1px solid var(--border);
@@ -349,32 +349,34 @@
 .wizard__steps::before {
   content: '';
   position: absolute;
-  left: 17px;
-  top: 22px;
-  bottom: 22px;
+  left: 41px;
+  top: 39px;
+  bottom: 39px;
   width: 2px;
   background: var(--bg-elevated);
   border-radius: 1px;
+  z-index: 0;
 }
 
 .wizard__steps::after {
   content: '';
   position: absolute;
-  left: 17px;
-  top: 22px;
+  left: 41px;
+  top: 39px;
   width: 2px;
-  height: calc((100% - 44px) * var(--progress));
+  height: calc((100% - 78px) * var(--progress));
   background: linear-gradient(180deg, var(--accent), var(--accent-light));
   border-radius: 1px;
   box-shadow: 0 0 8px var(--accent-glow-strong);
   transition: height var(--duration-slow) var(--ease-out);
+  z-index: 0;
 }
 
 .wizard__step {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
+  gap: 16px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   cursor: pointer;
   position: relative;
@@ -383,39 +385,56 @@
 }
 
 .wizard__step:hover { background: var(--bg-hover); }
-.wizard__step--locked { cursor: not-allowed; opacity: 0.45; }
-.wizard__step--locked:hover { background: transparent; }
+
+/* En vez de aplicar opacity: 0.45 en todo el contenedor, lo aplicamos por elementos
+   para evitar que la línea conectora traspase el círculo opaco */
+.wizard__step--locked {
+  cursor: not-allowed;
+}
+.wizard__step--locked:hover {
+  background: transparent;
+}
+.wizard__step--locked .wizard__step-dot {
+  border-color: rgba(34, 34, 48, 0.45);
+  background: var(--bg-surface-3); /* Mantiene fondo sólido */
+}
+.wizard__step--locked .wizard__step-code,
+.wizard__step--locked .wizard__step-text {
+  opacity: 0.45;
+}
 
 .wizard__step-dot {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 54px;
+  height: 54px;
   flex-shrink: 0;
   border-radius: 50%;
   border: 2px solid var(--bg-elevated);
-  background: var(--bg-surface-3);
+  background: var(--bg-surface-3); /* Fondo sólido */
+  position: relative;
+  z-index: 2; /* Encima de la línea */
   transition: all var(--duration-mid) var(--ease-out);
 }
 
 .wizard__step-code {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .wizard__step--active .wizard__step-dot {
   border-color: var(--accent);
-  background: var(--accent-glow);
+  background: #20354b; /* Solid custom blend to mask line */
   box-shadow: 0 0 12px var(--accent-glow-strong);
 }
 .wizard__step--active .wizard__step-code { color: var(--accent-light); }
 
 .wizard__step--done .wizard__step-dot {
   border-color: var(--success);
-  background: var(--success-soft);
+  background: #1e3a30; /* Solid custom blend to mask line */
 }
 .wizard__step--done .wizard__step-code { color: var(--success); }
 
@@ -449,7 +468,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 980px;
+  max-width: 100%;
 }
 
 .wizard__head { animation: home-rise 350ms var(--ease-out) both; }
@@ -770,6 +789,8 @@ select.wizard__engine:focus { border-color: var(--accent); }
   border-radius: var(--radius-lg);
   background: var(--bg-root);
   overflow: hidden;
+  flex: 1;
+  min-height: 300px;
 }
 
 .wizard__prompt-bar {
@@ -802,7 +823,8 @@ select.wizard__engine:focus { border-color: var(--accent); }
 .wizard__prompt-pre {
   margin: 0;
   padding: 16px;
-  height: 300px;
+  flex: 1;
+  min-height: 180px;
   overflow: auto;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
@@ -812,7 +834,10 @@ select.wizard__engine:focus { border-color: var(--accent); }
 }
 
 /* ── Paso 4 ── */
-.wizard__result-ta { height: 320px; }
+.wizard__result-ta {
+  flex: 1;
+  min-height: 320px;
+}
 
 /* ── Pie de navegación ── */
 .wizard__footer {
@@ -869,7 +894,7 @@ select.wizard__engine:focus { border-color: var(--accent); }
   .wizard__steps::before {
     left: 20px;
     right: 20px;
-    top: 18px;
+    top: 20px;
     bottom: auto;
     width: auto;
     height: 2px;
@@ -877,7 +902,7 @@ select.wizard__engine:focus { border-color: var(--accent); }
 
   .wizard__steps::after {
     left: 20px;
-    top: 18px;
+    top: 20px;
     width: calc((100% - 40px) * var(--progress));
     height: 2px;
     transition: width var(--duration-slow) var(--ease-out);
