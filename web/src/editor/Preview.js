@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph, swapBlocks } from './BlockOps.js';
 import { showToast } from '../ui/Toast.js';
 
 /** Tags whose text content must NOT be wrapped. */
@@ -210,10 +210,11 @@ export class Preview {
       (newText) => {
         if (newText !== currentText) {
           try {
+            const label = `Texto: "${newText.length > 40 ? newText.slice(0, 40) + '…' : newText}"`;
             if (isLinkText) {
-              this._patchLinkText(currentText, newText);
+              this._patchLinkText(currentText, newText, label);
             } else {
-              this._engine.addPatch(currentText, newText);
+              this._engine.addPatch(currentText, newText, label);
             }
             this.render();
             this._onEdit();
@@ -233,7 +234,7 @@ export class Preview {
    * Otherwise → normal in-place replacement.
    * @private
    */
-  _patchLinkText(originalText, newText) {
+  _patchLinkText(originalText, newText, label = 'Texto de enlace') {
     const html = this._engine.getResult();
 
     // Find common prefix and suffix between old and new text
@@ -253,7 +254,7 @@ export class Preview {
       // Find the pattern: originalText</a>  →  originalText</a>appended
       const needle = originalText + '</a>';
       if (html.includes(needle)) {
-        this._engine.addPatch(needle, originalText + '</a>' + appended);
+        this._engine.addPatch(needle, originalText + '</a>' + appended, label);
         return;
       }
     }
@@ -266,13 +267,13 @@ export class Preview {
       const re = new RegExp(`(<a\\b[^>]*>)(${this._escRegex(originalText)})`);
       const match = html.match(re);
       if (match) {
-        this._engine.addPatch(match[0], prepended + match[0]);
+        this._engine.addPatch(match[0], prepended + match[0], label);
         return;
       }
     }
 
     // Default: normal replacement (text changed in the middle)
-    this._engine.addPatch(originalText, newText);
+    this._engine.addPatch(originalText, newText, label);
   }
 
   /** Escape special regex characters in a string. @private */
@@ -495,6 +496,8 @@ export class Preview {
 
       if (action === 'merge-up')     this._doMerge(blockEl, 'up');
       else if (action === 'merge-down')  this._doMerge(blockEl, 'down');
+      else if (action === 'move-up')     this._doMove(blockEl, 'prev');
+      else if (action === 'move-down')   this._doMove(blockEl, 'next');
       else if (action === 'split')       this._doSplit(blockEl);
       else if (action === 'clean-br')    this._doCleanBr(blockEl);
       else if (action === 'split-lines') this._doSplitLines(blockEl);
@@ -562,8 +565,17 @@ export class Preview {
     const hasPrev = !!this._findAdjacentBlock(block, 'prev');
     const hasNext = !!this._findAdjacentBlock(block, 'next');
     const hasBr = !!block.querySelector('br');
+    const canMoveUp = !!this._findImmediateSibling(block, 'prev');
+    const canMoveDown = !!this._findImmediateSibling(block, 'next');
 
     let html = '';
+
+    // ── Move group (intercambio con el vecino inmediato del mismo tag) ──
+    if (canMoveUp || canMoveDown) {
+      if (canMoveUp) html += `<button class="block-menu__item" data-action="move-up"><span class="block-menu__icon">▲</span>Subir bloque</button>`;
+      if (canMoveDown) html += `<button class="block-menu__item" data-action="move-down"><span class="block-menu__icon">▼</span>Bajar bloque</button>`;
+      html += '<div class="block-menu__sep"></div>';
+    }
 
     // ── Merge group ──
     if (hasPrev || hasNext) {
@@ -658,17 +670,7 @@ export class Preview {
     const html = this._engine.getResult();
     const patch = mergeBlocks(html, currText, prevText, tagName, currIndex, prevIndex);
 
-    if (patch) {
-      try {
-        this._engine.addPatch(patch.original, patch.replacement);
-        this.render();
-        this._onEdit();
-      } catch (err) {
-        console.error('[Preview] Merge failed:', err);
-      }
-    } else {
-      console.warn('[Preview] mergeBlocks returned null for:', { prevText, currText, tagName });
-    }
+    this._applyPatch(patch, 'Unir bloques');
   }
 
   /* ── Clean BR implementation ───────────────────────────── */
@@ -695,13 +697,7 @@ export class Preview {
     const original = block.fullMatch;
     const replacement = `<${tagName}${block.attrs}>${cleanInner}</${tagName}>`;
 
-    try {
-      this._engine.addPatch(original, replacement);
-      this.render();
-      this._onEdit();
-    } catch (err) {
-      console.error('[Preview] Clean BR failed:', err);
-    }
+    this._applyPatch({ original, replacement }, 'Quitar saltos de línea');
   }
 
   /* ── Split Lines implementation ────────────────────────── */
@@ -714,18 +710,7 @@ export class Preview {
     const html = this._engine.getResult();
     const blockIndex = this._getBlockIndex(blockEl);
     const patch = splitAtBreaks(html, blockText, tagName, blockIndex);
-
-    if (patch) {
-      try {
-        this._engine.addPatch(patch.original, patch.replacement);
-        this.render();
-        this._onEdit();
-      } catch (err) {
-        console.error('[Preview] Split lines failed:', err);
-      }
-    } else {
-      console.warn('[Preview] splitAtBreaks returned null.');
-    }
+    this._applyPatch(patch, 'Separar todas las líneas');
   }
 
   /* ── Split implementation ──────────────────────────────── */
@@ -809,18 +794,7 @@ export class Preview {
       const html = this._engine.getResult();
       const blockIndex = this._getBlockIndex(blockEl);
       const patch = splitBlock(html, blockText, cursorPos, tagName, blockIndex);
-
-      if (patch) {
-        try {
-          this._engine.addPatch(patch.original, patch.replacement);
-          this.render();
-          this._onEdit();
-        } catch (err) {
-          console.error('[Preview] Split failed:', err);
-        }
-      } else {
-        console.warn('[Preview] splitBlock returned null for:', { blockText: blockText.substring(0, 80), cursorPos, tagName });
-      }
+      this._applyPatch(patch, 'Separar en un punto');
     });
 
     // Handle cancel
@@ -844,7 +818,7 @@ export class Preview {
       return;
     }
     try {
-      this._engine.addPatch(patch.original, patch.replacement);
+      this._engine.addPatch(patch.original, patch.replacement, label);
       this.render();
       this._onEdit();
     } catch (err) {
@@ -1085,6 +1059,63 @@ export class Preview {
   }
 
   /**
+   * Find the IMMEDIATE same-tag sibling (skipping only the editor's own UI
+   * elements).  Unlike `_findAdjacentBlock`, it does NOT walk past other
+   * content (listas, tablas…) — moving a block must not jump over nada.
+   * @private
+   * @param {HTMLElement} blockEl
+   * @param {'prev'|'next'} direction
+   * @returns {HTMLElement|null}
+   */
+  _findImmediateSibling(blockEl, direction) {
+    let sibling = direction === 'prev'
+      ? blockEl.previousElementSibling
+      : blockEl.nextElementSibling;
+
+    while (
+      sibling &&
+      (sibling.classList?.contains('block-grip') ||
+       sibling.classList?.contains('block-menu') ||
+       sibling.classList?.contains('geo-spacer-guide'))
+    ) {
+      sibling = direction === 'prev'
+        ? sibling.previousElementSibling
+        : sibling.nextElementSibling;
+    }
+
+    if (sibling && sibling.tagName === blockEl.tagName) {
+      return /** @type {HTMLElement} */ (sibling);
+    }
+    return null;
+  }
+
+  /**
+   * Swap the block with its immediate same-tag sibling (mover arriba/abajo).
+   * @private
+   * @param {HTMLElement} blockEl
+   * @param {'prev'|'next'} direction
+   */
+  _doMove(blockEl, direction) {
+    const other = this._findImmediateSibling(blockEl, direction);
+    if (!other) return;
+
+    const tagName = blockEl.tagName.toLowerCase();
+    const firstEl = direction === 'prev' ? other : blockEl;
+    const secondEl = direction === 'prev' ? blockEl : other;
+
+    const patch = swapBlocks(
+      this._engine.getResult(),
+      this._norm(firstEl.textContent),
+      this._norm(secondEl.textContent),
+      tagName,
+      this._getBlockIndex(firstEl),
+      this._getBlockIndex(secondEl)
+    );
+
+    this._applyPatch(patch, direction === 'prev' ? 'Subir bloque' : 'Bajar bloque');
+  }
+
+  /**
    * Wrap a standalone `<strong>` heading element in a `<p>` block.
    * Removes the trailing `<br>` tags that were acting as spacers.
    * @private
@@ -1093,17 +1124,7 @@ export class Preview {
     const text = this._norm(blockEl.textContent);
     const html = this._engine.getResult();
     const patch = wrapStrongInParagraph(html, text);
-    if (patch) {
-      try {
-        this._engine.addPatch(patch.original, patch.replacement);
-        this.render();
-        this._onEdit();
-      } catch (err) {
-        console.error('[Preview] Wrap in paragraph failed:', err);
-      }
-    } else {
-      console.warn('[Preview] wrapStrongInParagraph returned null for:', text);
-    }
+    this._applyPatch(patch, 'Envolver título en <p>');
   }
 
   /**

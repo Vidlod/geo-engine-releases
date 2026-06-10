@@ -194,11 +194,44 @@ console.log('— Carga de HTML → editor + linter —');
 $('#geo-paste-btn').click();
 const ta = $('#geo-paste-textarea');
 check('modal de pegado abre', !!ta);
-ta.value = '<p>Hola <i>curso</i> del módulo.</p><br><br><p>Fin.</p>';
+ta.value = '<p>Hola <i>curso</i> del módulo.</p><br><br><p>Fin: <a href="https://example.com">guía</a>.</p>';
 ta.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 $('#geo-paste-load').click();
 check('editor visible tras cargar', !$('#geo-editor-layout').classList.contains('editor-layout--hidden'));
 check('linter detectó problemas', $$('.finding-card').length > 0);
+
+console.log('— Quick-fixes del linter —');
+check('botón Corregir en tarjetas mecánicas', $$('.finding-card__fix').length >= 1);
+check('Corregir todos visible', !$('#geo-linter-fixall').classList.contains('hidden'));
+$('#geo-linter-fixall').click();
+check('max-br corregido', !$$('.finding-card').some((c) => c.textContent.includes('max-br')));
+check('br-between-blocks corregido', !$$('.finding-card').some((c) => c.textContent.includes('br-between-blocks')));
+check('Corregir todos desaparece sin pendientes', $('#geo-linter-fixall').classList.contains('hidden'));
+check('badge de cambios visible', !$('#geo-changes-badge').classList.contains('hidden'));
+
+console.log('— Historial / deshacer / rehacer —');
+$('#geo-changes-badge').click();
+check('historial abre al clicar el badge', !$('#geo-history-panel').classList.contains('hidden'));
+check('historial con una fila por cambio', $$('.toolbar__history-row').length >= 2);
+check('filas con label descriptivo',
+  $$('.toolbar__history-label').some((l) => /Colapsar <br>|Quitar <br>/.test(l.textContent)));
+$('#geo-changes-badge').click(); // cerrar
+
+dom.window.document.dispatchEvent(
+  new dom.window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true })
+);
+check('Ctrl+Z deshace (rehacer se habilita)', $('#geo-btn-redo').disabled === false);
+$('#geo-btn-redo').click();
+check('Rehacer re-aplica el cambio', $('#geo-btn-redo').disabled === true);
+
+console.log('— Vista diff —');
+check('botón Cambios habilitado con parches', $('#geo-btn-diff').disabled === false);
+$('#geo-btn-diff').click();
+check('vista diff abre', !!$('#geo-diff-view'));
+check('diff con líneas añadidas y quitadas',
+  $$('.diff-line--add').length >= 1 && $$('.diff-line--del').length >= 1);
+$('#geo-btn-diff').click();
+check('vista diff cierra', !$('#geo-diff-view'));
 
 console.log(failures === 0 ? '\nSMOKE OK' : `\nSMOKE FALLÓ: ${failures} aserciones`);
 process.exit(failures === 0 ? 0 : 1);

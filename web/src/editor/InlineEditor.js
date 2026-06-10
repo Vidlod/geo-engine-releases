@@ -51,6 +51,26 @@ export class InlineEditor {
     textarea.value = currentText;
     textarea.rows = 1;
 
+    // ── Mini-formato (whitelist GEO: solo <strong>; cursivas prohibidas) ──
+    const format = document.createElement('div');
+    format.className = 'inline-editor__format';
+
+    const btnBold = document.createElement('button');
+    btnBold.className = 'inline-editor__fmt-btn';
+    btnBold.innerHTML = '<strong>B</strong>';
+    btnBold.title = 'Negrita (<strong>) sobre la selección';
+    btnBold.type = 'button';
+    btnBold.addEventListener('click', () => this._wrapSelection('strong'));
+
+    const btnClean = document.createElement('button');
+    btnClean.className = 'inline-editor__fmt-btn';
+    btnClean.textContent = 'Quitar formato';
+    btnClean.title = 'Quitar etiquetas de formato de la selección';
+    btnClean.type = 'button';
+    btnClean.addEventListener('click', () => this._stripFormat());
+
+    format.append(btnBold, btnClean);
+
     const actions = document.createElement('div');
     actions.className = 'inline-editor__actions';
 
@@ -65,7 +85,7 @@ export class InlineEditor {
     btnCancel.type = 'button';
 
     actions.append(btnSave, btnCancel);
-    wrapper.append(textarea, actions);
+    wrapper.append(textarea, format, actions);
 
     this._applyFontStyles(textarea, element);
     this._positionOver(wrapper, element);
@@ -131,6 +151,55 @@ export class InlineEditor {
     if (!ta) return;
     ta.style.height = 'auto';
     ta.style.height = `${ta.scrollHeight}px`;
+  }
+
+  /**
+   * Wrap the textarea selection in `<tag>…</tag>` (or unwrap when the
+   * selection is already exactly wrapped — toggle behaviour).
+   * @private
+   * @param {string} tag
+   */
+  _wrapSelection(tag) {
+    const ta = this._textarea;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    if (start === end) return; // sin selección, nada que envolver
+
+    const sel = ta.value.slice(start, end);
+    const open = `<${tag}>`;
+    const close = `</${tag}>`;
+
+    const wrapped = sel.startsWith(open) && sel.endsWith(close)
+      ? sel.slice(open.length, sel.length - close.length)  // toggle off
+      : open + sel + close;
+
+    ta.value = ta.value.slice(0, start) + wrapped + ta.value.slice(end);
+    ta.focus();
+    ta.setSelectionRange(start, start + wrapped.length);
+    this._autoResize();
+  }
+
+  /**
+   * Strip formatting tags (strong/b/em/i/u/span) from the selection,
+   * keeping the plain text.
+   * @private
+   */
+  _stripFormat() {
+    const ta = this._textarea;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    if (start === end) return;
+
+    const sel = ta.value.slice(start, end);
+    const clean = sel.replace(/<\/?(?:strong|b|em|i|u|span)\b[^>]*>/gi, '');
+    if (clean === sel) return;
+
+    ta.value = ta.value.slice(0, start) + clean + ta.value.slice(end);
+    ta.focus();
+    ta.setSelectionRange(start, start + clean.length);
+    this._autoResize();
   }
 
   /** @private */

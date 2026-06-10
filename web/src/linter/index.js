@@ -33,7 +33,7 @@ import {
   MaxSpacesRule,
 } from './rules/spacing.js';
 
-import { LinkTargetRule, ElibroProxyRule } from './rules/links.js';
+import { LinkTargetRule, ElibroProxyRule, ForbiddenSourceRule, PluginfileRedRule } from './rules/links.js';
 import { TerminologyRule } from './rules/terminology.js';
 import { ParagraphInListRule, ListItemPeriodRule } from './rules/lists.js';
 import { TableroAnotacionesRule } from './rules/phrases.js';
@@ -59,6 +59,8 @@ export const ALL_RULES = [
   // links
   LinkTargetRule,
   ElibroProxyRule,
+  ForbiddenSourceRule,
+  PluginfileRedRule,
   // terminology
   TerminologyRule,
   // lists

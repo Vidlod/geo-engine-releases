@@ -15,9 +15,19 @@ export class LinterPanel {
     /** @private */ this._el = containerEl;
     /** @private @type {HTMLElement|null} */ this._listEl = null;
     /** @private @type {HTMLElement|null} */ this._headerCountEl = null;
+    /** @private @type {HTMLButtonElement|null} */ this._fixAllBtn = null;
 
     /** @type {((finding: any) => void)|null} */
     this.onFindingClick = null;
+
+    /** @type {((finding: any) => boolean)|null} — true si el hallazgo tiene quick-fix */
+    this.canFix = null;
+
+    /** @type {((finding: any) => void)|null} — aplicar el quick-fix de una tarjeta */
+    this.onFix = null;
+
+    /** @type {(() => void)|null} — aplicar todos los quick-fixes disponibles */
+    this.onFixAll = null;
   }
 
   /* ── Public API ──────────────────────────────────────────── */
@@ -48,6 +58,17 @@ export class LinterPanel {
     title.appendChild(count);
     header.appendChild(title);
 
+    // Corregir todos (visible solo cuando hay hallazgos con quick-fix)
+    const fixAll = document.createElement('button');
+    fixAll.type = 'button';
+    fixAll.className = 'linter-sidebar__fixall hidden';
+    fixAll.id = 'geo-linter-fixall';
+    fixAll.addEventListener('click', () => {
+      if (typeof this.onFixAll === 'function') this.onFixAll();
+    });
+    this._fixAllBtn = fixAll;
+    header.appendChild(fixAll);
+
     // List
     const list = document.createElement('div');
     list.className = 'linter-sidebar__list';
@@ -71,6 +92,7 @@ export class LinterPanel {
     if (!findings || findings.length === 0) {
       this._showEmpty();
       this._updateCount(0, 0);
+      this._updateFixAll(0);
       return;
     }
 
@@ -78,9 +100,13 @@ export class LinterPanel {
     const warnings = findings.filter((f) => f.severity === 'warning').length;
     this._updateCount(errors, warnings);
 
+    let fixable = 0;
     for (const finding of findings) {
-      this._listEl.appendChild(this._createCard(finding));
+      const hasFix = typeof this.canFix === 'function' && this.canFix(finding);
+      if (hasFix) fixable++;
+      this._listEl.appendChild(this._createCard(finding, hasFix));
     }
+    this._updateFixAll(fixable);
   }
 
   /** Toggle sidebar visibility. */
@@ -146,12 +172,28 @@ export class LinterPanel {
   }
 
   /**
+   * Show/hide the "Corregir todos" header button.
+   * @private
+   * @param {number} fixable
+   */
+  _updateFixAll(fixable) {
+    if (!this._fixAllBtn) return;
+    if (fixable > 0) {
+      this._fixAllBtn.textContent = `⚡ Corregir todos (${fixable})`;
+      this._fixAllBtn.classList.remove('hidden');
+    } else {
+      this._fixAllBtn.classList.add('hidden');
+    }
+  }
+
+  /**
    * Create a single finding card.
    * @private
-   * @param {{rule_id: string, severity: string, message: string, line: number, snippet?: string}} f
+   * @param {{ruleId?: string, rule_id?: string, severity: string, message: string, line: number, snippet?: string}} f
+   * @param {boolean} [hasFix=false] — render the "Corregir" quick-fix button
    * @returns {HTMLElement}
    */
-  _createCard(f) {
+  _createCard(f, hasFix = false) {
     const card = document.createElement('div');
     card.className = 'finding-card';
     card.addEventListener('click', () => {
@@ -169,7 +211,7 @@ export class LinterPanel {
 
     const rule = document.createElement('span');
     rule.className = 'finding-card__rule';
-    rule.textContent = f.rule_id;
+    rule.textContent = f.ruleId ?? f.rule_id ?? '';
 
     const line = document.createElement('span');
     line.className = 'finding-card__line';
@@ -190,6 +232,19 @@ export class LinterPanel {
       snippet.className = 'finding-card__snippet';
       snippet.textContent = f.snippet;
       card.appendChild(snippet);
+    }
+
+    // Quick-fix button (solo correcciones mecánicas sin ambigüedad)
+    if (hasFix) {
+      const fixBtn = document.createElement('button');
+      fixBtn.type = 'button';
+      fixBtn.className = 'finding-card__fix';
+      fixBtn.textContent = '⚡ Corregir';
+      fixBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // no disparar el highlight de la tarjeta
+        if (typeof this.onFix === 'function') this.onFix(f);
+      });
+      card.appendChild(fixBtn);
     }
 
     return card;

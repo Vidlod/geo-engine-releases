@@ -202,6 +202,43 @@ export function mergeBlocks(html, currTextContent, prevTextContent, tagName = 'p
   return { original, replacement: merged };
 }
 
+/* ── Swap (mover bloque arriba/abajo) ─────────────────────── */
+
+/**
+ * Swap two same-tag blocks, keeping whatever sits between them intact.
+ * `first` must appear before `second` in the HTML.
+ *
+ * Replaces: `<p>A</p>…<p>B</p>`  →  `<p>B</p>…<p>A</p>`
+ *
+ * @param {string} html
+ * @param {string} firstTextContent   Text of the earlier block
+ * @param {string} secondTextContent  Text of the later block
+ * @param {string} [tagName='p']
+ * @param {number|null} [firstIndex=null]
+ * @param {number|null} [secondIndex=null]
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function swapBlocks(html, firstTextContent, secondTextContent, tagName = 'p', firstIndex = null, secondIndex = null) {
+  const first = findBlock(html, firstTextContent, tagName, firstIndex);
+  const second = findBlock(html, secondTextContent, tagName, secondIndex);
+
+  if (!first || !second) {
+    console.warn('[BlockOps] swapBlocks: could not find one or both blocks.',
+      { firstFound: !!first, secondFound: !!second });
+    return null;
+  }
+  if (first.end > second.start) {
+    console.warn('[BlockOps] swapBlocks: blocks overlap or are out of order.');
+    return null;
+  }
+
+  const between = html.substring(first.end, second.start);
+  return {
+    original: html.substring(first.start, second.end),
+    replacement: second.fullMatch + between + first.fullMatch,
+  };
+}
+
 /* ── Display-text mapping ─────────────────────────────────── */
 
 /**

@@ -41,7 +41,7 @@ export class Wizard {
   /**
    * @param {HTMLElement} containerEl
    * @param {Object} callbacks
-   * @param {(filename: string, html: string) => void} callbacks.onLoadHtml
+   * @param {(filename: string, html: string, redFiles?: string[]) => void} callbacks.onLoadHtml
    * @param {() => void} callbacks.onBack
    */
   constructor(containerEl, callbacks) {
@@ -807,7 +807,8 @@ export class Wizard {
         if (!html) return;
         let name = nameInput.value.trim() || 'resultado.html';
         if (!/\.html?$/.test(name)) name += '.html';
-        this._cb.onLoadHtml(name, html);
+        // Los RED registrados viajan al editor para validar @@PLUGINFILE@@
+        this._cb.onLoadHtml(name, html, [...this._redFiles]);
       },
     }));
   }

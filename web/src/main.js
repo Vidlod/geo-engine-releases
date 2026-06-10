@@ -20,32 +20,45 @@ import { Preview } from './editor/Preview.js';
 import { Dropzone } from './ui/Dropzone.js';
 import { Toolbar } from './ui/Toolbar.js';
 import { LinterPanel } from './ui/LinterPanel.js';
+import { DiffView } from './ui/DiffView.js';
 import { Wizard } from './ui/Wizard.js';
 import { showToast } from './ui/Toast.js';
 
 import { Linter } from './linter/index.js';
+import { getQuickFix } from './linter/fixes.js';
 
 /* ── Default linter configuration ───────────────────────── */
-const DEFAULT_LINTER_CONFIG = {
-  rules: {
-    'max-br':              { enabled: true, max: 1 },
-    'br-before-close':     { enabled: true },
-    'br-between-blocks':   { enabled: true },
-    'br-before-button':    { enabled: true },
-    'max-spaces':          { enabled: true, max: 2 },
-    'terminology-module':  { enabled: true },
-    'emoticon-span':       { enabled: true },
-    'link-target':         { enabled: true },
-    'elibro-proxy':        { enabled: true },
-    'tablero-anotaciones': { enabled: true },
-    'no-italics':          { enabled: true },
-    'li-paragraph':        { enabled: true },
-    'li-period':           { enabled: true },
-    'producto-final':      { enabled: true },
-    'strong-heading':      { enabled: true },
-  },
-  course: { last_avance: 5 },
-};
+
+/**
+ * Build the linter config.  `redFiles` is a LIVE array reference: the app
+ * mutates it when the wizard registers RED files and the `pluginfile-red`
+ * rule reads it on every check.
+ * @param {string[]} redFiles
+ */
+function buildLinterConfig(redFiles) {
+  return {
+    rules: {
+      'max-br':              { enabled: true, max: 1 },
+      'br-before-close':     { enabled: true },
+      'br-between-blocks':   { enabled: true },
+      'br-before-button':    { enabled: true },
+      'max-spaces':          { enabled: true, max: 2 },
+      'terminology-module':  { enabled: true },
+      'emoticon-span':       { enabled: true },
+      'link-target':         { enabled: true },
+      'elibro-proxy':        { enabled: true },
+      'forbidden-source':    { enabled: true },
+      'pluginfile-red':      { enabled: true, redFiles },
+      'tablero-anotaciones': { enabled: true },
+      'no-italics':          { enabled: true },
+      'li-paragraph':        { enabled: true },
+      'li-period':           { enabled: true },
+      'producto-final':      { enabled: true },
+      'strong-heading':      { enabled: true },
+    },
+    course: { last_avance: 5 },
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════ */
 /*  App                                                       */
@@ -56,11 +69,20 @@ class App {
     /** @type {Engine} */
     this.engine = new Engine();
 
+    /** @type {string[]} RED filenames (live ref shared with pluginfile-red) */
+    this.redFiles = [];
+
     /** @type {InstanceType<typeof Linter>} */
-    this.linter = new Linter(DEFAULT_LINTER_CONFIG);
+    this.linter = new Linter(buildLinterConfig(this.redFiles));
 
     /** @type {string} Current loaded filename */
     this.filename = '';
+
+    /** @type {DiffView|null} */
+    this.diffView = null;
+
+    /** @type {'home'|'wizard'|'dropzone'|'editor'} */
+    this._view = 'home';
 
     // Component references (assigned in init)
     /** @type {Toolbar} */    this.toolbar = /** @type {any} */ (null);
@@ -166,8 +188,15 @@ class App {
       onDownload: () => this._downloadHtml(),
       onLint: () => this._runLinter(),
       onUndo: () => this._undo(),
+      onRedo: () => this._redo(),
+      onToggleDiff: () => this._toggleDiff(),
       onToggleLinter: () => this.linterPanel.toggle(),
       onReset: () => this._reset(),
+      getHistory: () => ({
+        patches: this.engine.patches,
+        redoCount: this.engine.redoStack.length,
+      }),
+      onRevertTo: (keep) => this._revertTo(keep),
     });
     this.toolbar.render();
 
@@ -188,12 +217,56 @@ class App {
 
     this.preview = new Preview(previewPanel, this.engine, () => this._onEdit());
 
+    this.diffView = new DiffView(previewPanel);
+
     this.linterPanel = new LinterPanel(linterSidebar);
     this.linterPanel.onFindingClick = (finding) => this._onFindingClick(finding);
+    this.linterPanel.canFix = (f) => !!getQuickFix(this.engine.getResult(), f);
+    this.linterPanel.onFix = (f) => this._fixFinding(f);
+    this.linterPanel.onFixAll = () => this._fixAll();
     this.linterPanel.init();
     this.linterPanel.hide(); // start collapsed
 
+    this._setupShortcuts();
+
+    // Aviso al salir con cambios sin exportar
+    window.addEventListener('beforeunload', (e) => {
+      if (this.engine.isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
     this._renderHome();
+  }
+
+  /**
+   * Global keyboard shortcuts (solo activos en la vista del editor).
+   * Ctrl+Z deshacer · Ctrl+Shift+Z / Ctrl+Y rehacer · Ctrl+S descargar.
+   * @private
+   */
+  _setupShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if (this._view !== 'editor') return;
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+
+      const key = e.key.toLowerCase();
+
+      // Ctrl+S siempre nuestro (evitar el "guardar página" del navegador)
+      if (key === 's') {
+        e.preventDefault();
+        this._downloadHtml();
+        return;
+      }
+
+      // No robar undo/redo nativos mientras se escribe en un campo
+      const t = /** @type {HTMLElement} */ (e.target);
+      if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;
+
+      if (key === 'z' && !e.shiftKey) { e.preventDefault(); this._undo(); }
+      else if ((key === 'z' && e.shiftKey) || key === 'y') { e.preventDefault(); this._redo(); }
+    });
   }
 
   /* ── Vistas ──────────────────────────────────────────────── */
@@ -204,6 +277,7 @@ class App {
    * @param {'home'|'wizard'|'dropzone'|'editor'} view
    */
   _showView(view) {
+    this._view = view;
     const app = document.getElementById('app');
     if (app) {
       app.className = `view-${view}`;
@@ -216,7 +290,7 @@ class App {
 
     if (view === 'wizard' && !this.wizard) {
       this.wizard = new Wizard(this._wizardScreen, {
-        onLoadHtml: (name, html) => this._loadFile(name, html),
+        onLoadHtml: (name, html, redFiles) => this._loadFile(name, html, redFiles),
         onBack: () => this._showView('home'),
       });
       this.wizard.render();
@@ -312,13 +386,21 @@ class App {
    * @private
    * @param {string} filename
    * @param {string} html
+   * @param {string[]} [redFiles] — RED filenames from the wizard (para pluginfile-red)
    */
-  _loadFile(filename, html) {
+  _loadFile(filename, html, redFiles) {
     this.filename = filename;
     this.engine.load(html);
 
+    // Lista RED viva: el linter la lee en cada check
+    if (Array.isArray(redFiles)) {
+      this.redFiles.length = 0;
+      this.redFiles.push(...redFiles);
+    }
+
     // Swap views
     this._showView('editor');
+    this._closeDiff();
 
     // Update toolbar
     this.toolbar.setFilename(filename);
@@ -349,6 +431,8 @@ class App {
 
     this.engine.load('');
     this.filename = '';
+    this.redFiles.length = 0;
+    this._closeDiff();
 
     this._showView('home');
 
@@ -364,13 +448,26 @@ class App {
   /* ── Editing callbacks ───────────────────────────────────── */
 
   /**
+   * Refresh toolbar / status / linter / diff after any change to the patch list.
+   * @private
+   */
+  _afterPatchChange() {
+    this.toolbar.setPatchCount(this.engine.patchCount, this.engine.redoStack.length);
+    if (this.engine.isDirty) {
+      this._setStatus('dirty', `${this.engine.patchCount} cambio(s)`);
+    } else {
+      this._setStatus('clean', 'Listo');
+    }
+    this._runLinter();
+    this._refreshDiff();
+  }
+
+  /**
    * Called after every successful inline edit.
    * @private
    */
   _onEdit() {
-    this.toolbar.setPatchCount(this.engine.patchCount);
-    this._setStatus('dirty', `${this.engine.patchCount} cambio(s)`);
-    this._runLinter();
+    this._afterPatchChange();
   }
 
   /**
@@ -382,16 +479,128 @@ class App {
     if (!removed) return;
 
     this.preview.render();
-    this.toolbar.setPatchCount(this.engine.patchCount);
-    this._runLinter();
+    this._afterPatchChange();
+    showToast(`Deshecho: ${removed.label || 'cambio'}`, 'info');
+  }
 
-    if (this.engine.isDirty) {
-      this._setStatus('dirty', `${this.engine.patchCount} cambio(s)`);
+  /**
+   * Re-apply the most recently undone patch.
+   * @private
+   */
+  _redo() {
+    const restored = this.engine.redo();
+    if (!restored) return;
+
+    this.preview.render();
+    this._afterPatchChange();
+    showToast(`Rehecho: ${restored.label || 'cambio'}`, 'info');
+  }
+
+  /**
+   * Undo patches until only `keep` remain (historial: "deshacer hasta aquí").
+   * @private
+   * @param {number} keep
+   */
+  _revertTo(keep) {
+    const undone = this.engine.revertTo(keep);
+    if (undone === 0) return;
+
+    this.preview.render();
+    this._afterPatchChange();
+    showToast(`${undone} cambio(s) deshechos`, 'info');
+  }
+
+  /* ── Vista diff ──────────────────────────────────────────── */
+
+  /**
+   * Toggle the original-vs-result diff overlay.
+   * @private
+   */
+  _toggleDiff() {
+    if (this.diffView.isOpen) {
+      this._closeDiff();
     } else {
-      this._setStatus('clean', 'Listo');
+      this.diffView.render(this.engine.originalHtml, this.engine.getResult());
+      this.toolbar.setDiffActive(true);
+    }
+  }
+
+  /** @private */
+  _closeDiff() {
+    this.diffView?.close();
+    this.toolbar.setDiffActive(false);
+  }
+
+  /** Re-render the diff if it is open (after undo/redo/fix). @private */
+  _refreshDiff() {
+    if (!this.diffView?.isOpen) return;
+    if (!this.engine.isDirty) {
+      this._closeDiff();
+      return;
+    }
+    this.diffView.render(this.engine.originalHtml, this.engine.getResult());
+  }
+
+  /* ── Quick-fixes del linter ──────────────────────────────── */
+
+  /**
+   * Apply the quick fix of a single finding.
+   * @private
+   * @param {object} finding
+   */
+  _fixFinding(finding) {
+    const fix = getQuickFix(this.engine.getResult(), finding);
+    if (!fix) {
+      showToast('Este hallazgo ya no tiene corrección automática', 'info');
+      this._runLinter();
+      return;
+    }
+    try {
+      this.engine.addPatch(fix.original, fix.replacement, fix.label);
+      this.preview.render();
+      this._afterPatchChange();
+      showToast(`Corregido: ${fix.label}`, 'success');
+    } catch (err) {
+      console.error('[App] Quick-fix failed:', err);
+      showToast('No se pudo aplicar la corrección', 'error');
+    }
+  }
+
+  /**
+   * Apply every available quick fix, re-running the linter between fixes so
+   * the positions stay correct as the HTML changes.
+   * @private
+   */
+  _fixAll() {
+    let applied = 0;
+    const MAX = 200; // tope de seguridad contra ciclos
+
+    while (applied < MAX) {
+      const html = this.engine.getResult();
+      const findings = this.linter.check(html, this.filename)?.findings ?? [];
+
+      let fixed = false;
+      for (const f of findings) {
+        const fix = getQuickFix(html, f);
+        if (!fix) continue;
+        try {
+          this.engine.addPatch(fix.original, fix.replacement, fix.label);
+          applied++;
+          fixed = true;
+          break; // re-lint con el HTML ya parchado
+        } catch { /* el siguiente hallazgo puede seguir siendo corregible */ }
+      }
+      if (!fixed) break;
     }
 
-    showToast('Cambio deshecho', 'info');
+    if (applied === 0) {
+      showToast('No hay correcciones automáticas pendientes', 'info');
+      return;
+    }
+
+    this.preview.render();
+    this._afterPatchChange();
+    showToast(`${applied} corrección(es) aplicadas`, 'success');
   }
 
   /* ── Linter ──────────────────────────────────────────────── */

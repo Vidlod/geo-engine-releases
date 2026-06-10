@@ -7,14 +7,19 @@
  * plain-string first-argument (NOT a RegExp) so only the **first**
  * occurrence is replaced — this preserves byte-level structure.
  *
+ * Undo/redo: `undo()` moves the newest patch to a redo stack; `redo()`
+ * brings it back.  Any new patch clears the redo stack (standard
+ * editor semantics).
+ *
  * @module editor/Engine
  */
 
 /**
  * A single text-replacement patch.
  * @typedef {Object} Patch
- * @property {string} original   — the exact substring to find
+ * @property {string} original    — the exact substring to find
  * @property {string} replacement — the text to substitute
+ * @property {string} label       — human-readable description of the change
  */
 
 export class Engine {
@@ -24,6 +29,9 @@ export class Engine {
 
     /** @type {Patch[]} Ordered list of patches (oldest → newest) */
     this.patches = [];
+
+    /** @type {Patch[]} Undone patches available for redo (newest last) */
+    this.redoStack = [];
   }
 
   /* ── Loading ──────────────────────────────────────────────── */
@@ -39,6 +47,7 @@ export class Engine {
     }
     this.originalHtml = html;
     this.patches = [];
+    this.redoStack = [];
   }
 
   /* ── Patch management ────────────────────────────────────── */
@@ -47,9 +56,10 @@ export class Engine {
    * Register a text replacement.
    * @param {string} original    — exact text to match (first occurrence wins)
    * @param {string} replacement — text to substitute
+   * @param {string} [label='Edición'] — description shown in the history panel
    * @throws {Error} if `original` cannot be found in the current result
    */
-  addPatch(original, replacement) {
+  addPatch(original, replacement, label = 'Edición') {
     if (typeof original !== 'string' || typeof replacement !== 'string') {
       throw new TypeError('addPatch() requires two string arguments');
     }
@@ -64,15 +74,45 @@ export class Engine {
       );
     }
 
-    this.patches.push({ original, replacement });
+    this.patches.push({ original, replacement, label });
+    this.redoStack = [];
   }
 
   /**
-   * Remove and return the most-recent patch, or `undefined` if none exist.
-   * @returns {Patch|undefined}
+   * Move the most-recent patch to the redo stack.
+   * @returns {Patch|undefined} the undone patch, or `undefined` if none exist
    */
   undo() {
-    return this.patches.pop();
+    const patch = this.patches.pop();
+    if (patch) this.redoStack.push(patch);
+    return patch;
+  }
+
+  /**
+   * Re-apply the most recently undone patch.
+   * @returns {Patch|undefined} the redone patch, or `undefined` if none exist
+   */
+  redo() {
+    const patch = this.redoStack.pop();
+    if (patch) this.patches.push(patch);
+    return patch;
+  }
+
+  /**
+   * Undo patches until only the first `count` remain.
+   * The undone patches go to the redo stack in order, so `redo()`
+   * re-applies them one by one.
+   * @param {number} count — how many patches to keep (0 = undo everything)
+   * @returns {number} how many patches were undone
+   */
+  revertTo(count) {
+    const target = Math.max(0, Math.min(count, this.patches.length));
+    let undone = 0;
+    while (this.patches.length > target) {
+      this.redoStack.push(/** @type {Patch} */ (this.patches.pop()));
+      undone++;
+    }
+    return undone;
   }
 
   /**
@@ -80,6 +120,7 @@ export class Engine {
    */
   clearPatches() {
     this.patches = [];
+    this.redoStack = [];
   }
 
   /* ── Output ──────────────────────────────────────────────── */
@@ -110,5 +151,10 @@ export class Engine {
   /** @returns {boolean} `true` when at least one patch has been applied */
   get isDirty() {
     return this.patches.length > 0;
+  }
+
+  /** @returns {boolean} `true` when redo() would re-apply a patch */
+  get canRedo() {
+    return this.redoStack.length > 0;
   }
 }
