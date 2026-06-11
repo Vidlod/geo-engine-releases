@@ -31,7 +31,37 @@ omitas nada.
   FLAG (ver Parte 2) y continúa.
 - "Módulo" / "módulos" → reemplaza siempre por "curso" / "cursos".
 - Elimina cualquier mención a "a través del tablero de anotaciones" o
-  "en el tablero de anotaciones".
+  "en el tablero de anotaciones". **Deja la frase gramatical** tras el recorte:
+  `envíelo en formato PDF a través del tablero de anotaciones en las fechas establecidas`
+  → `envíelo en formato PDF en las fechas establecidas` (nunca "a través de las
+  fechas establecidas").
+
+### Excepción al trasplante 1:1 — enumeraciones con guion
+
+Cuando el AAA trae una secuencia de párrafos que empiezan con guion (`-Portada.`,
+`-Introducción.`, `-Investiguen un caso...`), **NO los copies como `<p>` con guion**:
+conviértelos en una lista `<ul>` con un `<li>` por ítem, **quitando el guion**. El
+texto de cada ítem se conserva intacto (eso no es parafrasear). Ítems cortos de una
+línea van consecutivos; ítems largos (multilínea) con un `<br>` entre ellos (§12).
+Preguntas o sub-ítems que dependen de un ítem → `<ul>` anidada dentro de ese `<li>`.
+**Nunca dejes guiones literales como viñetas.**
+
+### Correcciones tipográficas OBLIGATORIAS (repórtalas todas)
+
+Corrige SOLO estos defectos evidentes del origen, sin tocar nada más:
+
+1. **Negrita rota a mitad de palabra**: `**estructura**r` → negrita sobre la palabra
+   completa: `<strong>estructurar</strong>` (nunca `<strong>estructura</strong>r`).
+2. **Signo de apertura faltante** en preguntas/exclamaciones: `Cuál es...?` →
+   `¿Cuál es...?`. Y a la inversa: **NUNCA pierdas un `¿`/`¡` que el origen sí tiene**.
+3. **Erratas evidentes de una palabra**: "Comprar y analizar" → "Comparar y analizar";
+   "experta disciplina" → "experta disciplinar".
+4. **Anglicismos de conversión** (palabras en inglés coladas por el convertidor):
+   "aspects" → "aspectos", "explaining" → "explicando", "interviews" → "entrevistas".
+
+Al final del HTML entrega, junto a los FLAGS, la lista `CORRECCIONES:` con cada
+cambio aplicado (`origen → corregido`, con la semana/pestaña donde está). Cualquier
+otra duda de redacción **NO se corrige**: emite FLAG `ubicacion` o `dato-faltante`.
 
 ---
 
@@ -67,13 +97,36 @@ Un Momento Evaluativo contiene en orden:
 
 ## ═══ PARTE 4 — TABLA DE RESUMEN DE ENTREGAS ═══
 
-### 4.1 Estructura con fusión rowspan
+### 4.1 Las filas son EXACTAMENTE las de la AAA — prohibido inventar filas
 
-Por cada avance hay **dos filas**: la del avance y la del cuestionario de evaluación.
+La tabla replica **fila por fila** la tabla "Resumen de entregas" de la AAA del
+curso. **Si la AAA no lista cuestionarios, la tabla NO lleva cuestionarios**: nada
+de inventar filas "Cuestionario de evaluación – Unidad N" con peso 0% por imitar
+otros cursos. Cuenta las filas de la AAA y reproduce exactamente esas.
+
+**Caso A — la AAA solo trae avances** (una fila por avance). Sin cuestionarios
+**NO hay `rowspan`** en "Duración Semana" ni "Semana de Entrega": cada fila lleva
+sus propios valores. El único `rowspan` es el de la columna del Momento:
+
+```html
+<tr>
+    <td rowspan="2" style="vertical-align: middle; text-align: center;">I <br> 40%</td>
+    <td style="vertical-align: middle; text-align: center;">1 - 3</td>
+    <td style="text-align: left; vertical-align: middle;"><strong>Avance 1. Nombre:</strong> descripción del avance.</td>
+    <td style="vertical-align: middle; text-align: center;">20%</td>
+    <td style="vertical-align: middle; text-align: center;">3</td>
+</tr>
+<tr>
+    <td style="vertical-align: middle; text-align: center;">4 - 6</td>
+    <td style="text-align: left; vertical-align: middle;"><strong>Avance 2. Nombre:</strong> descripción del avance.</td>
+    <td style="vertical-align: middle; text-align: center;">20%</td>
+    <td style="vertical-align: middle; text-align: center;">6</td>
+</tr>
+```
+
+**Caso B — la AAA trae avance + cuestionario por periodo** (dos filas por avance).
 Las columnas "Duración Semana" y "Semana de Entrega" se **fusionan** entre las dos
-filas usando `rowspan="2"`. **Nunca repitas** la misma semana en filas separadas.
-
-Ejemplo de estructura correcta para un avance de 3 semanas:
+filas usando `rowspan="2"`. **Nunca repitas** la misma semana en filas separadas:
 
 ```html
 <tr>
@@ -95,10 +148,11 @@ Ejemplo de estructura correcta para un avance de 3 semanas:
 ### 4.2 Columna del Momento (rowspan total)
 
 La primera columna con el nombre del Momento (ej. "I 40%") abarca todas las filas
-del momento completo usando `rowspan` igual al total de filas (avances × 2):
+del momento usando `rowspan` igual al **número total de filas reales** de la tabla
+(Caso A: nº de avances; Caso B: avances × 2):
 
 ```html
-<td rowspan="4" style="vertical-align: middle; text-align: center;">I <br> 40%</td>
+<td rowspan="2" style="vertical-align: middle; text-align: center;">I <br> 40%</td>
 ```
 
 ### 4.3 Negrita: solo el nombre del avance
@@ -159,13 +213,28 @@ Cada semana tiene su propio panel `tab-pane`.
 4. Párrafo de envío (solo en la última semana del avance).
 5. Botón de envío (solo en la última semana del avance).
 
-### 6.2 No duplicar recursos
+### 6.2 Secuencia de lectura: cada lista pegada a su párrafo anunciador
+
+- Un párrafo que termina en `:` **anuncia la lista que le sigue** (bibliografía,
+  RED, temas clave, estructura del documento). La lista va **INMEDIATAMENTE
+  después** de ese párrafo. Ejemplo: tras "Lea la bibliografía que se suministra y
+  que es de obligatoria consulta:" van las citas, no otro párrafo.
+- **Prohibido reordenar**: la bibliografía y los RED se quedan donde la AAA los
+  coloca; nunca los muevas al final de la pestaña.
+- **No dupliques párrafos anunciadores**: si la AAA solo trae "Complemente su
+  proceso... con los RED", no añadas además un "Igualmente, apóyese de los RED..."
+  copiado de otra semana. Un anunciador por lista.
+- El **párrafo de envío** ("Envíe el documento en formato PDF...") va **SIEMPRE de
+  último**, justo encima del botón — después de cualquier sección adicional como
+  "Exposiciones orales".
+
+### 6.3 No duplicar recursos
 
 Cada recurso (bibliográfico o RED) se lista **una única vez**, justo debajo de la
 actividad que lo usa. **Prohibido** repetir una lista general de recursos al final
 de la pestaña semanal.
 
-### 6.3 Títulos de actividades
+### 6.4 Títulos de actividades
 
 Cada actividad se titula **`Actividad N: Nombre`** en negrita:
 
@@ -179,15 +248,21 @@ Cada actividad se titula **`Actividad N: Nombre`** en negrita:
 - **Elimina el andamiaje del AAA** como "Título de la actividad": usa solo el nombre real.
 - Corrige mayúscula inicial y tildes ("grafico" → "gráfico", "contexto" → "Contexto").
 
-### 6.4 Listas numeradas dentro de una actividad
+### 6.5 Listas de preguntas con explicación (`a.`, `b.`, `c.`...)
 
-En listas de texto `1)`, `2)` o `a.`, `b.` separa cada ítem con **un** `<br>` (nunca
-`<br><br>`). El marcador va **dentro** del `<strong>` de forma consistente:
+Cuando cada ítem es **pregunta + explicación**, va **un `<p>` por ítem**: el
+marcador y la pregunta en negrita, la explicación en texto normal:
 
 ```html
-<strong>a. Enunciado del ítem.</strong><br>
-<strong>b. Enunciado del siguiente ítem.</strong>
+<p style="text-align: justify;"><strong>a. ¿Qué tipo de criminología podría abordar este caso?</strong> Define si es un enfoque clínico, académico o crítico, y justifica con base en las características del delito.</p>
+<p style="text-align: justify;"><strong>b. ¿Cuál es el objeto de estudio?</strong> Explica si se enfoca en el delincuente, la víctima, el delito o el control social.</p>
 ```
+
+- **Nunca** uses bloques `<strong>` sueltos separados por `<br>` fuera de un `<p>`,
+  ni pongas la explicación dentro de la negrita.
+- Enumeraciones simples sin explicación → viñetas `<li>` (ver la excepción de
+  guiones en la Parte 1): consecutivas si son cortas, con un `<br>` entre ítems
+  largos.
 
 ---
 
@@ -208,15 +283,17 @@ Toma la última semana de cada avance de la AAA del curso:
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
         </button>
     </a>
 </div>
 ```
 
+- Texto del botón semanal: `Enviar Entregable N` (N = número del avance). En la
+  pestaña "Instrumento para Enviar Entregable": `Enviar Entregable Avance N`.
 - Reemplaza `XXXX` por el ID de la tarea de Moodle.
 - Si no tienes el ID → `<!-- FLAG: dato-faltante Falta el enlace mod/assign para Avance N -->`.
-- Último avance: `Enviar Producto Final` (sin punto, como todos).
+- Último avance del último momento: `Enviar Producto Final` (sin punto, como todos).
 - **Sin `<br>` antes del botón**: el `<div>` va directo tras el último párrafo (el `<p>`
   ya aporta el espacio). Nunca `<br>` ni `<p></p>` vacío antes del botón.
 
@@ -423,8 +500,10 @@ Antes de entregar el HTML final, verifica que los enlaces bibliográficos extern
 
 Antes de entregar el HTML verifica:
 
-- [ ] Tabla de Resumen con `rowspan="2"` por cada par avance/cuestionario.
-- [ ] Primera columna del Momento con `rowspan` total correcto.
+- [ ] Tabla de Resumen: filas EXACTAS de la AAA — **sin cuestionarios inventados**
+      ni pesos 0%; `rowspan="2"` solo si la AAA trae el par avance/cuestionario.
+- [ ] Sin cuestionarios: nada de `rowspan` en "Duración Semana" / "Semana de Entrega".
+- [ ] Primera columna del Momento con `rowspan` = nº total de filas reales.
 - [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
 - [ ] **Una pestaña por SEMANA individual** (nunca fusionada por rango), con subtítulo del Avance.
 - [ ] Actividades tituladas `Actividad N: Nombre` (numeración continua por avance, sin "Título de la actividad").
@@ -443,7 +522,15 @@ Antes de entregar el HTML verifica:
 - [ ] Sin `<p>` en `<li>`. Sin cursiva. Sin `<br>` adyacente a un `<p>` (se auto-espacia).
 - [ ] Máximo un `<br>` (nunca `<br><br>`); `<br>` solo entre viñetas / elementos no-`<p>`.
 - [ ] Punto final en cada `<li>` de texto.
-- [ ] "módulo" → "curso". Sin "tablero de anotaciones".
+- [ ] "módulo" → "curso". Sin "tablero de anotaciones" (y la frase quedó gramatical).
+- [ ] **Ningún guion literal como viñeta**: enumeraciones `-Item.` convertidas a `<ul><li>`.
+- [ ] Cada lista inmediatamente después de su párrafo anunciador (bibliografía/RED/temas
+      sin reordenar ni mover al final); sin párrafos anunciadores duplicados.
+- [ ] Párrafo de envío al final de la pestaña, encima del botón (tras "Exposiciones orales").
+- [ ] Correcciones tipográficas aplicadas y reportadas en lista `CORRECCIONES:`
+      (negrita partida a media palabra, `¿` faltante, erratas evidentes, anglicismos).
+- [ ] Ningún `¿`/`¡` del origen perdido en la transcripción.
+- [ ] Botones semanales `Enviar Entregable N`; pestaña Instrumento `Enviar Entregable Avance N`.
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
 - [ ] Foros: FLAG `dato-faltante` con enlace pendiente (no avanzar sin él).
 - [ ] Inconsistencias PDF/Word: reportadas al usuario, no corregidas de forma autónoma.
@@ -528,7 +615,24 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                         <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;" nowrap="">Peso %</th>
                                         <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Semana de Entrega</th>
                                     </tr>
-                                    <!-- BLOQUE POR AVANCE: 2 filas (avance + cuestionario) con rowspan -->
+                                    <!-- FILAS = EXACTAMENTE las de la AAA (Parte 4). NO inventes cuestionarios. -->
+                                    <!-- CASO A (la AAA solo trae avances): una fila por avance, SIN rowspan en
+                                         Duración/Semana; el rowspan del Momento = nº de avances. -->
+                                    <tr>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[I/II] <br>[X]%</td>
+                                        <td style="vertical-align: middle; text-align: center;">[X - Y]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                        <td style="vertical-align: middle; text-align: center;">[N]</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="vertical-align: middle; text-align: center;">[X - Y]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
+                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
+                                        <td style="vertical-align: middle; text-align: center;">[N]</td>
+                                    </tr>
+                                    <!-- CASO B (la AAA trae avance + cuestionario): 2 filas por avance con
+                                         rowspan="2" en Duración/Semana; rowspan del Momento = avances x 2:
                                     <tr>
                                         <td rowspan="4" style="vertical-align: middle; text-align: center;">[I/II] <br>[X]%</td>
                                         <td rowspan="2" style="vertical-align: middle; text-align: center;">[X - Y]</td>
@@ -540,17 +644,7 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                         <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación – Unidad N - Nombre]</strong></td>
                                         <td style="vertical-align: middle; text-align: center;">[X]%</td>
                                     </tr>
-                                    <!-- Repite 2 filas por cada avance adicional -->
-                                    <tr>
-                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[X - Y]</td>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
-                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
-                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">[N]</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación - Unidad N – Nombre]</strong></td>
-                                        <td style="vertical-align: middle; text-align: center;">[X]%</td>
-                                    </tr>
+                                    -->
                                 </tbody>
                             </table>
                         </div>
@@ -668,7 +762,7 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                         <div style="text-align: center;">
                                             <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
                                                 <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N]
+                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable [N]
                                                 </button>
                                             </a>
                                         </div>

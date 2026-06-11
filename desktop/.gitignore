@@ -1,0 +1,8 @@
+node_modules/
+release/
+dist/
+pandoc-bin/
+*.dmg
+*.exe
+*.AppImage
+.DS_Store

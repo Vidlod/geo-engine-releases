@@ -22,7 +22,9 @@ import { Toolbar } from './ui/Toolbar.js';
 import { LinterPanel } from './ui/LinterPanel.js';
 import { DiffView } from './ui/DiffView.js';
 import { Wizard } from './ui/Wizard.js';
+import { CoursePanel, projectApi } from './ui/CoursePanel.js';
 import { showToast } from './ui/Toast.js';
+import { UpdateNotifier } from './ui/UpdateNotifier.js';
 
 import { Linter } from './linter/index.js';
 import { getQuickFix } from './linter/fixes.js';
@@ -93,13 +95,20 @@ class App {
     /** @type {Wizard|null} Lazy — keeps its state while navigating */
     this.wizard = null;
 
+    /** @type {CoursePanel|null} Lazy — solo en la app de escritorio */
+    this.coursePanel = null;
+
     // DOM references
     /** @type {HTMLElement} */ this._homeScreen = /** @type {any} */ (null);
     /** @type {HTMLElement} */ this._wizardScreen = /** @type {any} */ (null);
     /** @type {HTMLElement} */ this._dropzoneScreen = /** @type {any} */ (null);
+    /** @type {HTMLElement} */ this._courseScreen = /** @type {any} */ (null);
     /** @type {HTMLElement} */ this._editorLayout = /** @type {any} */ (null);
 
     this._init();
+
+    // Inicializar notificador de actualizaciones de Electron
+    new UpdateNotifier();
   }
 
   /* ── Bootstrap ───────────────────────────────────────────── */
@@ -152,6 +161,12 @@ class App {
     dropzoneScreen.id = 'geo-dropzone-screen';
     this._dropzoneScreen = dropzoneScreen;
 
+    // Course project screen (solo escritorio)
+    const courseScreen = document.createElement('section');
+    courseScreen.className = 'course-screen hidden';
+    courseScreen.id = 'geo-course-screen';
+    this._courseScreen = courseScreen;
+
     // Editor layout
     const editorLayout = document.createElement('section');
     editorLayout.className = 'editor-layout editor-layout--hidden';
@@ -166,7 +181,7 @@ class App {
     linterSidebar.id = 'geo-linter-sidebar-root';
 
     editorLayout.append(previewPanel, linterSidebar);
-    main.append(homeScreen, wizardScreen, dropzoneScreen, editorLayout);
+    main.append(homeScreen, wizardScreen, dropzoneScreen, courseScreen, editorLayout);
 
     // Status bar
     const statusBar = document.createElement('footer');
@@ -274,7 +289,7 @@ class App {
   /**
    * Show one of the main views, hiding the rest.
    * @private
-   * @param {'home'|'wizard'|'dropzone'|'editor'} view
+   * @param {'home'|'wizard'|'dropzone'|'course'|'editor'} view
    */
   _showView(view) {
     this._view = view;
@@ -286,6 +301,7 @@ class App {
     this._homeScreen.classList.toggle('hidden', view !== 'home');
     this._wizardScreen.classList.toggle('hidden', view !== 'wizard');
     this._dropzoneScreen.classList.toggle('hidden', view !== 'dropzone');
+    this._courseScreen.classList.toggle('hidden', view !== 'course');
     this._editorLayout.classList.toggle('editor-layout--hidden', view !== 'editor');
 
     if (view === 'wizard' && !this.wizard) {
@@ -295,6 +311,16 @@ class App {
       });
       this.wizard.render();
     }
+
+    if (view === 'course') {
+      if (!this.coursePanel) {
+        this.coursePanel = new CoursePanel(this._courseScreen, {
+          onLoadHtml: (name, html, redFiles) => this._loadFile(name, html, redFiles),
+          onBack: () => this._showView('home'),
+        });
+      }
+      this.coursePanel.render();
+    }
   }
 
   /**
@@ -302,15 +328,49 @@ class App {
    * @private
    */
   _renderHome() {
+    // Tarjeta del flujo con agente: solo en la app de escritorio
+    const courseCard = projectApi() ? `
+        <div class="home__card home__card--primary home__card--course" id="geo-home-course">
+          <div class="home__card-tag">Nuevo · IA</div>
+          <span class="home__card-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </span>
+          <span class="home__card-title">Proyecto de curso</span>
+          <span class="home__card-desc">Organiza el curso completo en una carpeta y deja que el agente ejecute las skills GEO: insumos, generación con IA y revisión en un solo flujo.</span>
+
+          <div class="home__flow">
+            <div class="home__flow-step">
+              <div class="home__flow-number">1</div>
+              <div class="home__flow-text">Insumos</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">2</div>
+              <div class="home__flow-text">Generar IA</div>
+            </div>
+            <div class="home__flow-arrow">➔</div>
+            <div class="home__flow-step">
+              <div class="home__flow-number">3</div>
+              <div class="home__flow-text">FLAGS/Editor</div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn--primary home__card-btn">
+            <span>Abrir Proyecto</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>` : '';
+
     this._homeScreen.innerHTML = `
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.2.0 · Moodle Builder</span>
+        <span class="home__badge">v1.9.0 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
-      <div class="home__cards">
+      <div class="home__cards ${projectApi() ? 'home__cards--three' : ''}">
+        ${courseCard}
         <div class="home__card home__card--primary" id="geo-home-wizard">
           <div class="home__card-tag">Recomendado</div>
           <span class="home__card-icon">
@@ -377,6 +437,8 @@ class App {
       .addEventListener('click', () => this._showView('wizard'));
     this._homeScreen.querySelector('#geo-home-editor')
       .addEventListener('click', () => this._showView('dropzone'));
+    const courseEl = this._homeScreen.querySelector('#geo-home-course');
+    if (courseEl) courseEl.addEventListener('click', () => this._showView('course'));
   }
 
   /* ── File lifecycle ──────────────────────────────────────── */

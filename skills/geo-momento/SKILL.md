@@ -32,10 +32,15 @@ citas, "Producto Final" y uso del linter).
 
 ## Estructura objetivo
 
-1. **Resumen de Entregas** (tabla): por cada periodo, el Avance y su Cuestionario.
-   - **Fusión rowspan**: las columnas "Duración Semana" y "Semana de Entrega" que
-     comparten avance + cuestionario se fusionan con `rowspan="2"` (o el nº de filas).
-     No repitas la misma semana en filas separadas.
+1. **Resumen de Entregas** (tabla): las filas son **exactamente** las de la tabla
+   resumen de la AAA. **Prohibido inventar filas**: si la AAA solo lista avances,
+   NO se agregan filas de "Cuestionario de evaluación" (ni con peso 0%).
+   - **Caso A (solo avances)**: una fila por avance, SIN `rowspan` en "Duración
+     Semana" / "Semana de Entrega"; el único `rowspan` es el de la columna del
+     Momento (= nº de avances).
+   - **Caso B (avance + cuestionario en la AAA)**: dos filas por avance; "Duración
+     Semana" y "Semana de Entrega" se fusionan con `rowspan="2"`. No repitas la
+     misma semana en filas separadas.
    - **Negrita solo en el nombre del avance**, NO en toda la celda:
      `<strong>Avance 1. Recolección de datos:</strong> Informe con la elaboración...`
      (el nombre con dos puntos `:` en negrita; la descripción en texto normal).
@@ -55,8 +60,9 @@ citas, "Producto Final" y uso del linter).
 1. **Producto Final**: el último avance del último momento pasa a "Producto Final" de
    forma global (tabla, pestañas, botones, textos, `title`). Donde diga "Avance N" (el
    último, según `config/course.yaml` → `last_avance`) se reemplaza por "Producto Final".
-2. **Botones de envío — texto SIN punto final**: `Enviar Avance 1`,
-   `Enviar Producto Final` (ninguno lleva punto).
+2. **Botones de envío — texto SIN punto final**: semanal `Enviar Entregable N`;
+   pestaña Instrumento `Enviar Entregable Avance N`; último avance del último
+   momento `Enviar Producto Final` (ninguno lleva punto).
 3. **Botones de envío — ubicación**: uno al final de la **última semana de cada avance**,
    según los rangos de la AAA del curso. Ejemplo (Estadística): semanas 3 / 5 / 7 / 9 / 12
    (Avance 1: 1-3, Avance 2: 4-5, Avance 3: 6-7, Avance 4: 8-9, Producto Final: 10-12).
@@ -71,11 +77,26 @@ citas, "Producto Final" y uso del linter).
      un `<br>` entre cada viñeta (los RED **siempre** separados).
    - **Listas cortas de una línea** (Portada/Introducción/Conclusiones): **sin** `<br>`.
    - El `<br>` va **entre** viñetas, nunca antes de `</ul>`/`</ol>` (ver reglas §6).
-6. **Párrafo de envío** al final de la pestaña, encima del botón.
+6. **Párrafo de envío** al final de la pestaña, encima del botón — después de
+   secciones adicionales como "Exposiciones orales". Al quitar "tablero de
+   anotaciones" la frase queda gramatical ("envíelo en formato PDF en las fechas
+   establecidas", no "a través de las fechas establecidas").
 7. **Videos y diapositivas en video = RED** (ver reglas transversales §4). Varían por curso
    y suelen ser lo último en colocarse. Si no tienes las URLs, emite FLAG `dato-faltante`
    indicando **cuáles son y en qué semana/actividad van**; no inventes videos.
 8. Volcado de contenido **respetando puntuación y párrafos originales**; no parafrasear.
+9. **Enumeraciones con guion → `<ul>/<li>`** (reglas §9): nunca dejes `-Portada.` como
+   párrafo con guion literal. Sub-preguntas de un ítem → `<ul>` anidada.
+10. **Secuencia de lectura** (reglas §16): cada lista va inmediatamente después de su
+    párrafo anunciador (el que termina en `:`); no muevas bibliografía/RED al final
+    de la pestaña ni dupliques párrafos anunciadores.
+11. **Listas de preguntas `a.`, `b.` con explicación**: un `<p>` por ítem, con
+    `<strong>marcador + pregunta</strong>` y la explicación en texto normal —
+    nunca bloques `<strong>` sueltos separados por `<br>`.
+12. **Correcciones tipográficas obligatorias** (reglas §17): negrita partida a media
+    palabra, `¿` faltante, erratas evidentes ("Comprar"→"Comparar") y anglicismos del
+    convertidor ("aspects", "explaining"). Repórtalas en lista `CORRECCIONES:` y nunca
+    pierdas un `¿` que el origen sí tiene.
 
 ## Flags típicos
 
@@ -93,9 +114,14 @@ citas, "Producto Final" y uso del linter).
 
 ## Hecho cuando
 
-- [ ] Tabla de Resumen con fusión `rowspan` correcta (avance + cuestionario).
+- [ ] Tabla de Resumen con las filas EXACTAS de la AAA (sin cuestionarios inventados);
+      `rowspan` según el caso (A: solo Momento; B: Momento + Duración/Semana).
 - [ ] **Una pestaña por semana individual** (nunca fusionada), con `Semana N` y subtítulo `Avance N`.
-- [ ] Botón de envío en la última semana de cada avance; **texto SIN punto final**; sin `<br>` antes del `<div>`.
+- [ ] Botón de envío en la última semana de cada avance (`Enviar Entregable N`);
+      **texto SIN punto final**; sin `<br>` antes del `<div>`.
+- [ ] Sin guiones literales: enumeraciones `-Item.` convertidas a `<ul><li>`.
+- [ ] Listas pegadas a su párrafo anunciador; párrafo de envío al final, encima del botón.
+- [ ] Correcciones tipográficas aplicadas y reportadas (`CORRECCIONES:`); ningún `¿` perdido.
 - [ ] Pestaña "Instrumento para Enviar Entregable" con el nº correcto de botones.
 - [ ] Producto Final aplicado globalmente; recursos sin duplicar.
 - [ ] Videos/diapositivas tratados como RED (o FLAG si faltan).

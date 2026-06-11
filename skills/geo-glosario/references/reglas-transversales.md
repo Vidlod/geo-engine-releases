@@ -47,7 +47,7 @@ en un agente sin acceso a shell:
 - Proxy eLibro con guion: `elibro-net.ezproxy.udes.edu.co`.
 - Eliminar "a través del / en el tablero de anotaciones".
 - Punto final en cada `<li>` de texto.
-- **Botones de envío SIN punto final** (`Enviar Avance 1`, no `Enviar Avance 1.`).
+- **Botones de envío SIN punto final** (`Enviar Entregable 1`, no `Enviar Entregable 1.`).
 - Nunca `<p>` dentro de `<li>`.
 
 ## 3. Enlaces a archivos locales: método portable @@PLUGINFILE@@
@@ -200,6 +200,11 @@ La regla es **trasplante 1:1**: cada `<p>` del origen = exactamente un `<p>` en 
 - Añadir `<strong>` donde el origen ya tiene negrita.
 - Añadir `<br><br>` internos que el HTML convertido ya traiga del Word.
 - Convertir atribuciones "Autor (Año). Título." de RED propios a formato viñeta (sección 12).
+- **Enumeraciones con guion → lista real.** Una secuencia de `<p>` que empiezan con
+  guion (`-Portada.`, `-Introducción.`, `-Investiguen un caso...`) se convierte en
+  `<ul>` con un `<li>` por ítem, **quitando el guion** y conservando el texto intacto.
+  Nunca dejes guiones literales como viñetas. Sub-ítems → `<ul>` anidada.
+- Las **correcciones tipográficas obligatorias** de la sección 17 (con reporte).
 
 **Flujo correcto:**
 ```
@@ -232,14 +237,14 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
 
 - El botón va **directo tras el último párrafo** (el `<p>` ya aporta su espacio).
 - **Sin `<br>`** ni `<p></p>` vacío entre el contenido y el botón.
-- **Texto del botón SIN punto final**: `Enviar Avance 1` (no `Enviar Avance 1.`).
+- **Texto del botón SIN punto final**: `Enviar Entregable 1` (no `Enviar Entregable 1.`).
 
 ```html
 <p style="text-align: justify;">...último párrafo / párrafo de envío.</p>
 <div style="text-align: center;">
     <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
         <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance 1
+            <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
         </button>
     </a>
 </div>
@@ -310,7 +315,41 @@ Dialnet, etc.) para descartar URLs caídas.
 - Ante cualquier inconsistencia: **detén el procesamiento e informa al usuario** de
   inmediato para que decida. **No corrijas de forma autónoma** en el HTML.
 
-## 16. Foros
+## 16. Secuencia de lectura: cada lista pegada a su párrafo anunciador
+
+- Un párrafo que termina en `:` **anuncia la lista que le sigue** (bibliografía,
+  RED, temas clave, estructura del documento). La lista va **inmediatamente
+  después** de ese párrafo: prohibido mover la bibliografía o los RED al final
+  de la pestaña o reordenar secciones.
+- **No dupliques párrafos anunciadores**: un anunciador por lista. No copies
+  fórmulas de otra semana ("Igualmente, apóyese de los RED...") si el origen
+  solo trae una.
+- El **párrafo de envío** ("Envíe el documento en formato PDF...") va siempre de
+  **último**, justo encima del botón de envío — después de secciones adicionales
+  como "Exposiciones orales".
+
+## 17. Correcciones tipográficas OBLIGATORIAS (con reporte)
+
+Única edición de texto permitida además de la sección 9. Corrige SOLO estos
+defectos evidentes del origen y **reporta cada cambio**:
+
+1. **Negrita rota a mitad de palabra**: `**estructura**r` → `<strong>estructurar</strong>`
+   (la negrita se extiende a la palabra completa, nunca `<strong>estructura</strong>r`).
+2. **Signo de apertura faltante**: `Cuál es...?` → `¿Cuál es...?`. Y a la inversa:
+   **nunca pierdas un `¿`/`¡` que el origen sí tiene**.
+3. **Erratas evidentes de una palabra**: "Comprar y analizar" → "Comparar y analizar";
+   "experta disciplina" → "experta disciplinar".
+4. **Anglicismos de conversión** (palabras en inglés coladas por el convertidor):
+   "aspects" → "aspectos", "explaining" → "explicando", "interviews" → "entrevistas".
+5. Al **eliminar "tablero de anotaciones"** la frase debe quedar gramatical:
+   `envíelo en formato PDF a través del tablero de anotaciones en las fechas
+   establecidas` → `envíelo en formato PDF en las fechas establecidas`.
+
+Al final del trabajo entrega, junto a los FLAGS, la lista `CORRECCIONES:` con cada
+cambio (`origen → corregido`, indicando semana/pestaña). Cualquier otra duda de
+redacción **NO se corrige**: FLAG `ubicacion` o `dato-faltante`.
+
+## 18. Foros
 
 - Siempre que el texto haga referencia a cualquier tipo de **foro** (social, punto de
   encuentro, presentación, etc.): **detente e informa al usuario** para que proporcione

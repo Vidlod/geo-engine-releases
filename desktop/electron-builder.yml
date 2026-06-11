@@ -1,0 +1,75 @@
+appId: com.geo-engine.desktop
+productName: GEO Engine
+copyright: Copyright © 2026 GEO Engine
+
+publish:
+  provider: github
+  owner: Vidlod
+  repo: geo-engine
+
+directories:
+  output: release
+
+files:
+  - "main.js"
+  - "preload.js"
+  - "menu.js"
+  - "server/**/*"
+  - "!server/convert_pdf.py"
+  - "node_modules/**/*"
+  - "package.json"
+
+extraResources:
+  - from: "../web/dist"
+    to: "web-dist"
+    filter:
+      - "**/*"
+  - from: "../skills"
+    to: "skills"
+    filter:
+      - "**/*"
+      - "!build.py"
+      - "!install.py"
+  - from: "server/convert_pdf.py"
+    to: "scripts/convert_pdf.py"
+
+mac:
+  category: public.app-category.developer-tools
+  target:
+    - target: dmg
+      arch:
+        - x64
+  darkModeSupport: true
+  icon: assets/icon.png
+  extraResources:
+    - from: "pandoc-bin/darwin"
+      to: "pandoc"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icon.png
+  extraResources:
+    - from: "pandoc-bin/win32"
+      to: "pandoc"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+dmg:
+  window:
+    width: 540
+    height: 380
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
