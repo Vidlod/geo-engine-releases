@@ -36,6 +36,11 @@ extraResources:
 mac:
   category: public.app-category.developer-tools
   target:
+    # electron-updater en macOS REQUIERE el target zip (el dmg es solo
+    # para la instalación manual; la actualización se descarga del zip).
+    - target: zip
+      arch:
+        - x64
     - target: dmg
       arch:
         - x64
