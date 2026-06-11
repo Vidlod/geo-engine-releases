@@ -37,6 +37,7 @@ const VALID_CHANNELS = [
   'agent:setToken',
   'agent:clearToken',
   'agent:setCommand',
+  'agent:setModel',
   'agent:generate',
 ];
 
@@ -199,6 +200,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     /** Cambia el comando de un agente CLI. @param {string} agentId @param {string} command */
     setCommand: (agentId, command) => ipcRenderer.invoke('agent:setCommand', agentId, command),
+
+    /** Cambia el modelo de un agente. @param {string} agentId @param {string} model */
+    setModel: (agentId, model) => ipcRenderer.invoke('agent:setModel', agentId, model),
 
     /**
      * Genera una estructura con el agente seleccionado (eventos por onEvent).

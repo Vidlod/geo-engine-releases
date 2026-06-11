@@ -60,13 +60,17 @@ const fakeProject = {
   ],
 };
 
-// Estado multi-agente: Claude conectado (sesión CLI), Antigravity sin detectar.
+// Estado multi-agente: Claude conectado (sesión CLI), Antigravity sin detectar
+// hasta que se configure un comando (lo que lo vuelve disponible).
 let agentSelected = 'claude';
+let agAvailable = false;
+let agCommand = 'antigravity';
+let agModel = 'gemini-3-flash-medium';
 const agentState = () => ({
   selected: agentSelected,
   agents: [
-    { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli' },
-    { id: 'antigravity', label: 'Antigravity', kind: 'cli', available: false, hasCredential: false, credentialSource: null, command: 'antigravity' },
+    { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli', account: 'david25geo@gmail.com', model: 'claude-3-7-sonnet-latest' },
+    { id: 'antigravity', label: 'Antigravity', kind: 'cli', available: agAvailable, hasCredential: agAvailable, credentialSource: agAvailable ? 'cli' : null, command: agCommand, model: agModel },
   ],
 });
 
@@ -91,7 +95,8 @@ dom.window.electronAPI = {
     select: async (id) => { agentSelected = id; return { ok: true, data: agentState() }; },
     setToken: async () => ({ ok: true, data: agentState() }),
     clearToken: async () => ({ ok: true, data: agentState() }),
-    setCommand: async () => ({ ok: true, data: agentState() }),
+    setCommand: async (_id, command) => { agCommand = command; agAvailable = true; return { ok: true, data: agentState() }; },
+    setModel: async (_id, model) => { agModel = model; return { ok: true, data: agentState() }; },
     generate: async () => ({ ok: true, data: { ok: true, file: 'momento-1.html' } }),
     onEvent: () => () => {},
   },
@@ -129,7 +134,7 @@ nameInput.value = 'Demo';
 nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 check('botón Crear se habilita al escribir', $('#geo-course-modal-ok').disabled === false);
 $('#geo-course-modal-ok').click();
-await tick(); await tick();
+await new Promise((r) => setTimeout(r, 220)); // dejar que el modal se desmonte (180 ms)
 
 console.log('— Proyecto abierto —');
 check('nombre del curso', $('.course__name')?.textContent === 'Demo');
@@ -145,14 +150,33 @@ check('LED de Claude encendido', !!$('.agent-tile--claude .agent-tile__led--on')
 check('Antigravity detectable como CLI no detectado',
   $('.agent-tile--antigravity .agent-tile__status')?.textContent.includes('no detectado'));
 check('acción Claude: conectado vía sesión', $('#geo-agent-action')?.textContent.includes('Conectado'));
+check('Claude muestra el email de la cuenta', $('.agent-tile--claude').textContent.includes('david25geo@gmail.com'));
+check('selector de modelo de Claude presente', !!$('#geo-agent-model-select'));
 
-// Cambiar a Antigravity
+// Cambiar a Antigravity (aún no configurado → no disponible)
 $('.agent-tile--antigravity').click();
 await tick();
 check('Antigravity pasa a activo', $('.agent-tile--antigravity').classList.contains('agent-tile--active'));
 check('acción muestra el comando configurable', !!$('#geo-agent-command') && $('#geo-agent-action').textContent.includes('antigravity'));
-check('Generar desaparece (Antigravity no disponible)',
+check('Generar oculto mientras Antigravity no está disponible',
   !$('.course-row[data-id="momento-1"] [data-act="generate"]'));
+
+console.log('— Configurar comando de Antigravity → modelo Gemini 3 —');
+$('#geo-agent-command').click();
+await tick();
+const cmdInput = $('#geo-course-modal-input');
+cmdInput.value = 'antigravity';
+cmdInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+$('#geo-course-modal-ok').click();
+await new Promise((r) => setTimeout(r, 220)); // desmontaje del modal
+check('Antigravity disponible tras configurar comando',
+  $('.agent-tile--antigravity .agent-tile__led--on') !== null || $('.agent-tile--antigravity .agent-tile__led--warn') !== null);
+const agSelect = $('#geo-agent-model-select');
+check('selector de modelo de Antigravity aparece', !!agSelect);
+check('opción Gemini 3 Flash medium disponible',
+  !!agSelect && [...agSelect.options].some((o) => o.value === 'gemini-3-flash-medium' && /Gemini 3 Flash/.test(o.textContent)));
+check('Gemini 3 Flash medium es el modelo activo',
+  !!agSelect && agSelect.value === 'gemini-3-flash-medium');
 
 // Volver a Claude para el resto del flujo
 $('.agent-tile--claude').click();

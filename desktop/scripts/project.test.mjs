@@ -109,6 +109,10 @@ console.log('— Agentes —');
     decryptString: (b) => b.toString(),
   };
 
+  // Temporarily stub findOnPath to make initial status test independent of host environment
+  const originalFindOnPath = agent.findOnPath;
+  agent.findOnPath = () => null;
+
   const status = await agent.getStatus(userData, fakeStorage);
   check('estado lista los dos agentes', status.agents.length === 2 &&
     status.agents.map((a) => a.id).join(',') === 'claude,antigravity');
@@ -118,6 +122,8 @@ console.log('— Agentes —');
   check('claude reporta available booleano', typeof claude.available === 'boolean');
   check('antigravity expone comando configurable', typeof ag.command === 'string');
   check('antigravity ausente del PATH no está available', ag.available === false);
+
+  agent.findOnPath = originalFindOnPath;
 
   // Selección persiste
   const selAg = await agent.selectAgent(userData, fakeStorage, 'antigravity');

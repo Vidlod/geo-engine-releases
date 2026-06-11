@@ -37,6 +37,10 @@ export class CoursePanel {
     this._log = [];
     /** @private {(() => void)|null} */
     this._unsubscribe = null;
+    /** @private {number} marca de inicio de la generación (ms) */
+    this._progressStart = 0;
+    /** @private {ReturnType<typeof setInterval>|null} */
+    this._progressTimer = null;
   }
 
   /* ── Ciclo de vida ───────────────────────────────────────── */
@@ -194,12 +198,20 @@ export class CoursePanel {
 
         <div class="course__list" id="geo-course-list">${rows}</div>
 
-        <div class="course__progress hidden" id="geo-course-progress">
+        <div class="course__progress hidden" id="geo-course-progress" role="status" aria-live="polite">
+          <div class="course__progress-bar"><span class="course__progress-bar-fill"></span></div>
           <div class="course__progress-head">
-            <span class="spinner"></span>
-            <span id="geo-course-progress-title">Generando…</span>
+            <span class="course__progress-orb"></span>
+            <div class="course__progress-headtext">
+              <span class="course__progress-phase" id="geo-course-progress-title">Generando…</span>
+              <span class="course__progress-activity" id="geo-course-progress-activity">Iniciando…</span>
+            </div>
+            <span class="course__progress-timer" id="geo-course-progress-timer">0:00</span>
           </div>
-          <div class="course__progress-log" id="geo-course-progress-log"></div>
+          <details class="course__progress-details">
+            <summary>Ver actividad detallada</summary>
+            <div class="course__progress-log" id="geo-course-progress-log"></div>
+          </details>
         </div>
       </div>`;
 
@@ -252,22 +264,60 @@ export class CoursePanel {
     }
     if (!a.available) return 'Motor no disponible';
     if (!a.hasCredential) return 'Sin cuenta conectada';
+    if (a.credentialSource === 'cli' && a.account) return `Sesión: ${a.account}`;
     return { app: 'token guardado', env: 'variable de entorno', cli: 'sesión de Claude Code' }[a.credentialSource] || 'conectado';
   }
 
   /** Acción contextual del agente seleccionado. @private @returns {string} */
   _agentActionHtml() {
     const a = this._selectedAgent();
+
+    const modelOptions = a.id === 'claude'
+      ? [
+          { value: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet (Recomendado)' },
+          { value: 'claude-3-7-haiku-latest', label: 'Claude 3.7 Haiku' },
+          { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet v2' },
+          { value: 'custom', label: 'Otro modelo (Personalizado)...' }
+        ]
+      : [
+          { value: 'gemini-3-flash-medium', label: 'Gemini 3 Flash · Medium (Rápido, recomendado)' },
+          { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+          { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+          { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+          { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
+          { value: 'custom', label: 'Otro modelo (Personalizado)...' }
+        ];
+
+    const isCustomModel = a.model && !modelOptions.slice(0, -1).some(opt => opt.value === a.model);
+    const selectedModelVal = isCustomModel ? 'custom' : (a.model || modelOptions[0].value);
+
+    const selectHtml = `
+      <div class="agent-action__model-select-wrapper">
+        <span class="agent-action__label">Modelo</span>
+        <select class="agent-action__select" id="geo-agent-model-select">
+          ${modelOptions.map(opt => `<option value="${opt.value}" ${opt.value === selectedModelVal ? 'selected' : ''}>${esc(opt.label)}</option>`).join('')}
+        </select>
+        ${isCustomModel ? `<span class="agent-action__model-val">(${esc(a.model)})</span>` : ''}
+        <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-model-custom-btn" style="margin-left: 8px;">Especificar...</button>
+      </div>
+    `;
+
     if (a.kind === 'cli') {
       const cmd = a.command || 'antigravity';
-      return `
+      const cmdRow = `
         <div class="agent-action__row">
           <span class="agent-action__label">Comando</span>
           <code class="agent-action__cmd">${esc(cmd)}</code>
           <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-command">Cambiar</button>
           ${!a.available ? '<span class="agent-action__warn">No se encontró en el PATH</span>' : ''}
         </div>`;
+      return `
+        <div class="agent-action__grid">
+          ${cmdRow}
+          ${a.available ? selectHtml : ''}
+        </div>`;
     }
+
     // Claude (SDK)
     if (!a.available) {
       return `<span class="agent-action__warn">El motor no cargó. Reinicia la app; si persiste, reinstala.</span>`;
@@ -275,14 +325,21 @@ export class CoursePanel {
     if (!a.hasCredential) {
       return `<button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">Conectar Claude</button>`;
     }
-    if (a.credentialSource === 'app') {
-      return `
-        <div class="agent-action__row">
-          <span class="agent-action__ok">Conectado con token guardado</span>
-          <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect">Desconectar</button>
-        </div>`;
-    }
-    return `<span class="agent-action__ok">Conectado vía ${esc(this._agentStatusLabel(a))}</span>`;
+
+    const discBtn = a.credentialSource === 'app'
+      ? `<button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect">Desconectar</button>`
+      : '';
+    const credentialsRow = `
+      <div class="agent-action__row">
+        <span class="agent-action__ok">Conectado vía ${esc(this._agentStatusLabel(a))}</span>
+        ${discBtn}
+      </div>`;
+
+    return `
+      <div class="agent-action__grid">
+        ${credentialsRow}
+        ${selectHtml}
+      </div>`;
   }
 
   /** @private */
@@ -296,6 +353,30 @@ export class CoursePanel {
     if (disconnect) disconnect.addEventListener('click', () => this._disconnect());
     const command = this._el.querySelector('#geo-agent-command');
     if (command) command.addEventListener('click', () => this._commandDialog());
+
+    const modelSelect = this._el.querySelector('#geo-agent-model-select');
+    if (modelSelect) {
+      modelSelect.addEventListener('change', async (e) => {
+        const val = e.target.value;
+        if (val === 'custom') {
+          this._customModelDialog();
+        } else {
+          const res = await projectApi().agent.setModel(this._agentStatus.selected, val);
+          if (res.ok) {
+            this._agentStatus = res.data;
+            this._renderProject();
+            showToast('Modelo actualizado', 'success');
+          } else {
+            showToast(res.error || 'No se pudo cambiar el modelo', 'error');
+          }
+        }
+      });
+    }
+
+    const customBtn = this._el.querySelector('#geo-agent-model-custom-btn');
+    if (customBtn) {
+      customBtn.addEventListener('click', () => this._customModelDialog());
+    }
   }
 
   /** @private @param {string} agentId */
@@ -331,18 +412,22 @@ export class CoursePanel {
           s.corrections.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></div>`
       : '';
 
+    const statusText = busy
+      ? `<span class="course-row__busy"><span class="course-row__busy-dot"></span>${generated ? 'Regenerando' : 'Generando'}…</span>`
+      : labels[s.status];
+
     return `
-      <div class="course-row" data-id="${esc(s.id)}">
+      <div class="course-row${busy ? ' course-row--busy' : ''}" data-id="${esc(s.id)}">
         <span class="course-row__dot course-row__dot--${dots[s.status]}"></span>
         <div class="course-row__info">
           <span class="course-row__label">${esc(s.label)}</span>
-          <span class="course-row__status">${labels[s.status]}</span>
+          <span class="course-row__status">${statusText}</span>
         </div>
         <div class="course-row__actions">
-          ${generated ? `<button type="button" class="btn btn--ghost btn--sm" data-act="open">Abrir en editor</button>` : ''}
+          ${generated ? `<button type="button" class="btn btn--ghost btn--sm" data-act="open" ${busy ? 'disabled' : ''}>Abrir en editor</button>` : ''}
           ${s.flags.length ? `<button type="button" class="btn btn--ghost btn--sm" data-act="flags">FLAGS (${s.flags.length})</button>` : ''}
           ${canGenerate ? `<button type="button" class="btn btn--primary btn--sm" data-act="generate" ${busy ? 'disabled' : ''}>
-            ${busy ? 'Generando…' : (generated ? '↻ Regenerar' : '⚡ Generar')}</button>` : ''}
+            ${busy ? '⏳ En curso…' : (generated ? '↻ Regenerar' : '⚡ Generar')}</button>` : ''}
         </div>
         <div class="course-row__detail hidden">${flagCards}${corrections}</div>
       </div>`;
@@ -421,28 +506,40 @@ export class CoursePanel {
   async _generate(structure) {
     if (this._busy) return;
     const api = projectApi();
+    const wasGenerated = structure.status === 'flags' || structure.status === 'ok';
+    const verbo = wasGenerated ? 'Regenerando' : 'Generando';
     this._busy = structure.id;
     this._log = [];
     this._renderProject();
-    this._showProgress(`Generando ${structure.label}…`);
+    this._showProgress(`${verbo} ${structure.label}…`);
 
-    const res = await api.agent.generate(this._project.path, {
-      id: structure.id,
-      skill: structure.skill,
-      file: structure.file,
-      label: structure.label,
-      numero: structure.numero,
-    });
-
-    this._busy = null;
-    this._hideProgress();
+    /** @type {{ok:boolean,error?:string}} */
+    let res;
+    try {
+      res = await api.agent.generate(this._project.path, {
+        id: structure.id,
+        skill: structure.skill,
+        file: structure.file,
+        label: structure.label,
+        numero: structure.numero,
+      });
+    } catch (err) {
+      // Si la llamada IPC se rechaza, NO dejar _busy atascado (causa de que
+      // "Regenerar" dejara de responder tras un fallo).
+      res = { ok: false, error: (err && err.message) || 'Error inesperado del agente.' };
+    } finally {
+      this._busy = null;
+      this._hideProgress();
+    }
 
     if (res.ok) {
       // Reabrir para recalcular estados y FLAGS
       const reopened = await api.project.open(this._project.path);
       if (reopened.ok) this._project = reopened.data;
       this._renderProject();
-      showToast(`${structure.label} generada`, 'success');
+      showToast(`${structure.label} ${wasGenerated ? 'regenerada' : 'generada'}`, 'success');
+      // Abrir automáticamente el HTML generado en el editor
+      this._openGenerated(structure);
     } else {
       this._renderProject();
       showToast(res.error || 'La generación falló', 'error');
@@ -503,6 +600,33 @@ export class CoursePanel {
       showToast('Comando actualizado', 'success');
     } else {
       showToast(res.error || 'No se pudo guardar el comando', 'error');
+    }
+  }
+
+  /** Permite al usuario especificar un modelo personalizado. @private */
+  async _customModelDialog() {
+    const current = this._selectedAgent();
+    const model = await this._askText({
+      title: 'Especificar modelo personalizado',
+      label: 'Nombre del modelo en la API / CLI',
+      placeholder: current.id === 'claude' ? 'claude-3-7-sonnet-latest' : 'gemini-2.5-flash',
+      confirmLabel: 'Guardar',
+      hint: 'Introduce el identificador exacto del modelo. Por ejemplo, ' +
+        (current.id === 'claude' 
+          ? '«claude-3-7-sonnet-latest» o «claude-3-7-haiku-latest».' 
+          : '«gemini-2.5-flash» o «gemini-2.5-pro».')
+    });
+    if (!model) {
+      this._renderProject();
+      return;
+    }
+    const res = await projectApi().agent.setModel(current.id, model);
+    if (res.ok) {
+      this._agentStatus = res.data;
+      this._renderProject();
+      showToast('Modelo personalizado guardado', 'success');
+    } else {
+      showToast(res.error || 'No se pudo guardar el modelo', 'error');
     }
   }
 
@@ -577,6 +701,15 @@ export class CoursePanel {
   _onAgentEvent(ev) {
     if (!this._busy || ev.structureId !== this._busy) return;
     this._log.push(ev.message);
+
+    // Línea de actividad actual (lo más visible: "qué está haciendo ahora")
+    const activity = this._el.querySelector('#geo-course-progress-activity');
+    if (activity) {
+      activity.textContent = ev.message;
+      activity.className = `course__progress-activity course__progress-activity--${ev.type}`;
+    }
+
+    // Registro completo (desplegable)
     const log = this._el.querySelector('#geo-course-progress-log');
     if (log) {
       const line = document.createElement('div');
@@ -587,17 +720,42 @@ export class CoursePanel {
     }
   }
 
+  /** @private Formatea segundos como m:ss. @param {number} secs */
+  _fmtElapsed(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
   /** @private @param {string} title */
   _showProgress(title) {
     const box = this._el.querySelector('#geo-course-progress');
     if (!box) return;
     box.classList.remove('hidden');
     this._el.querySelector('#geo-course-progress-title').textContent = title;
+    const activity = this._el.querySelector('#geo-course-progress-activity');
+    if (activity) {
+      activity.textContent = 'Iniciando…';
+      activity.className = 'course__progress-activity';
+    }
     this._el.querySelector('#geo-course-progress-log').innerHTML = '';
+
+    // Cronómetro: prueba de vida con modelos lentos.
+    this._progressStart = Date.now();
+    const timerEl = this._el.querySelector('#geo-course-progress-timer');
+    if (timerEl) timerEl.textContent = '0:00';
+    clearInterval(this._progressTimer);
+    this._progressTimer = setInterval(() => {
+      const el = this._el.querySelector('#geo-course-progress-timer');
+      if (!el) return;
+      el.textContent = this._fmtElapsed(Math.floor((Date.now() - this._progressStart) / 1000));
+    }, 1000);
   }
 
   /** @private */
   _hideProgress() {
+    clearInterval(this._progressTimer);
+    this._progressTimer = null;
     const box = this._el.querySelector('#geo-course-progress');
     if (box) box.classList.add('hidden');
   }

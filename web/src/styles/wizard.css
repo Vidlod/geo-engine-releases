@@ -1588,30 +1588,94 @@ select.wizard__engine:focus { border-color: var(--accent); }
   backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border-accent);
   border-radius: var(--radius-lg);
-  padding: 14px 16px;
+  padding: 0 0 12px;
+  overflow: hidden;
   box-shadow: var(--shadow-lg);
+  animation: course-progress-in 240ms var(--ease-out);
 }
+@keyframes course-progress-in { from { opacity: 0; transform: translateY(8px); } }
 .course__progress.hidden { display: none; }
+
+/* Barra indeterminada: comunica "vivo" sin fingir un % exacto. */
+.course__progress-bar {
+  position: relative;
+  height: 3px;
+  width: 100%;
+  background: var(--bg-surface-3);
+  overflow: hidden;
+}
+.course__progress-bar-fill {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  width: 38%;
+  background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
+  animation: course-progress-slide 1.25s ease-in-out infinite;
+}
+@keyframes course-progress-slide {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
 .course__progress-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 14px 16px 4px;
+}
+.course__progress-orb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--accent-light);
+  box-shadow: 0 0 0 0 var(--accent-glow-strong);
+  animation: course-orb-pulse 1.4s ease-out infinite;
+}
+@keyframes course-orb-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--accent-glow-strong); }
+  70%  { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.course__progress-headtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.course__progress-phase {
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--text-primary);
 }
-.course__progress .spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--accent-glow-strong);
-  border-top-color: var(--accent-light);
-  border-radius: 50%;
-  animation: course-spin 800ms linear infinite;
+.course__progress-activity {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-@keyframes course-spin { to { transform: rotate(360deg); } }
+.course__progress-activity--tool  { color: var(--accent-light); }
+.course__progress-activity--error { color: var(--error); }
+.course__progress-activity--done  { color: var(--success); }
+.course__progress-timer {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  background: var(--bg-surface-3);
+  padding: 3px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.course__progress-details { padding: 0 16px; }
+.course__progress-details summary {
+  cursor: pointer;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  padding: 4px 0;
+  user-select: none;
+}
+.course__progress-details summary:hover { color: var(--text-secondary); }
 .course__progress-log {
-  margin-top: 10px;
-  max-height: 160px;
+  margin-top: 6px;
+  max-height: 150px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1623,6 +1687,15 @@ select.wizard__engine:focus { border-color: var(--accent); }
 .course__progress-line--tool    { color: var(--accent-light); }
 .course__progress-line--error   { color: var(--error); }
 .course__progress-line--done    { color: var(--success); }
+
+/* Fila en curso: distintivo de qué estructura se está generando. */
+.course-row--busy { border-color: var(--accent); background: linear-gradient(90deg, var(--accent-glow), transparent 60%), var(--bg-surface); }
+.course-row__busy { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-light); font-weight: 500; }
+.course-row__busy-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-light);
+  animation: course-orb-pulse 1.4s ease-out infinite;
+}
 
 /* ── Modal de texto del proyecto (reemplazo de window.prompt) ── */
 .paste-modal--compact {
@@ -1645,4 +1718,37 @@ select.wizard__engine:focus { border-color: var(--accent); }
   justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
+}
+
+/* ── Selector de Modelos del Agente ── */
+.agent-action__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.agent-action__model-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.agent-action__select {
+  padding: 4px 10px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  min-width: 220px;
+}
+.agent-action__select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.agent-action__model-val {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }

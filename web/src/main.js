@@ -365,7 +365,7 @@ class App {
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.9.0 · Moodle Builder</span>
+        <span class="home__badge">v1.9.4 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
@@ -439,6 +439,16 @@ class App {
       .addEventListener('click', () => this._showView('dropzone'));
     const courseEl = this._homeScreen.querySelector('#geo-home-course');
     if (courseEl) courseEl.addEventListener('click', () => this._showView('course'));
+
+    // Consultar dinámicamente la versión real de la app Electron
+    const badge = this._homeScreen.querySelector('.home__badge');
+    if (badge && window.electronAPI && typeof window.electronAPI.getAppInfo === 'function') {
+      window.electronAPI.getAppInfo().then((info) => {
+        if (info && info.version) {
+          badge.textContent = `v${info.version} · Moodle Builder`;
+        }
+      }).catch(err => console.error('[main] Error al obtener info de la app:', err));
+    }
   }
 
   /* ── File lifecycle ──────────────────────────────────────── */
@@ -467,6 +477,7 @@ class App {
     // Update toolbar
     this.toolbar.setFilename(filename);
     this.toolbar.setPatchCount(0);
+    this.toolbar.setProjectMode(!!(this.coursePanel && this.coursePanel._project));
 
     // Render preview
     this.preview.render();
@@ -493,14 +504,20 @@ class App {
 
     this.engine.load('');
     this.filename = '';
-    this.redFiles.length = 0;
     this._closeDiff();
 
-    this._showView('home');
+    // Si hay un proyecto de curso activo, volvemos a la pantalla de curso, no a inicio.
+    if (this.coursePanel && this.coursePanel._project) {
+      this._showView('course');
+    } else {
+      this.redFiles.length = 0;
+      this._showView('home');
+    }
 
     this.toolbar.setFilename('—');
     this.toolbar.setPatchCount(0);
     this.toolbar.setLintCount(0, 0);
+    this.toolbar.setProjectMode(false);
     this.linterPanel.render([]);
     this.linterPanel.hide();
 

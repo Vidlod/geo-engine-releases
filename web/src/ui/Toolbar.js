@@ -301,6 +301,17 @@ export class Toolbar {
     }
   }
 
+  /**
+   * Cambia el título/tooltip del botón de cerrar según si hay un proyecto activo.
+   * @param {boolean} isCourse
+   */
+  setProjectMode(isCourse) {
+    const btn = this._el.querySelector('#geo-btn-reset');
+    if (btn) {
+      btn.title = isCourse ? 'Cerrar y volver al proyecto' : 'Nuevo archivo';
+    }
+  }
+
   /* ── Private helpers ─────────────────────────────────────── */
 
   /**

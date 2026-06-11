@@ -316,6 +316,9 @@ function registerIpcHandlers() {
   ipcMain.handle('agent:setCommand', (_e, agentId, command) =>
     safeAsync(() => agent.setCommand(userDataPath, safeStorage, agentId, command)));
 
+  ipcMain.handle('agent:setModel', (_e, agentId, model) =>
+    safeAsync(() => agent.setModel(userDataPath, safeStorage, agentId, model)));
+
   ipcMain.handle('agent:generate', async (_e, projectPath, structure) => {
     try {
       const result = await agent.generate({
