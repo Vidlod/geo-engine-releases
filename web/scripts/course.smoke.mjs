@@ -101,9 +101,25 @@ await tick();
 check('vista course visible', !$('#geo-course-screen').classList.contains('hidden'));
 check('acciones crear/abrir/importar', !!$('#geo-course-new') && !!$('#geo-course-open') && !!$('#geo-course-import'));
 
-console.log('— Proyecto abierto —');
-$('#geo-course-open').click();
+console.log('— Crear curso (modal propio, sin window.prompt) —');
+$('#geo-course-new').click();
 await tick();
+check('modal de nombre abre', !!$('#geo-course-modal'));
+check('botón Crear deshabilitado sin texto', $('#geo-course-modal-ok')?.disabled === true);
+$('#geo-course-modal-cancel').click();
+await new Promise((r) => setTimeout(r, 220));
+check('cancelar cierra el modal sin crear', !$('#geo-course-modal') && !!$('#geo-course-new'));
+
+$('#geo-course-new').click();
+await tick();
+const nameInput = $('#geo-course-modal-input');
+nameInput.value = 'Demo';
+nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+check('botón Crear se habilita al escribir', $('#geo-course-modal-ok').disabled === false);
+$('#geo-course-modal-ok').click();
+await tick(); await tick();
+
+console.log('— Proyecto abierto —');
 check('nombre del curso', $('.course__name')?.textContent === 'Demo');
 check('chip de Claude conectado', $('.course-chip--on')?.textContent.includes('Claude conectado'));
 check('contador de insumos', $('#geo-course-insumos')?.textContent.includes('2'));

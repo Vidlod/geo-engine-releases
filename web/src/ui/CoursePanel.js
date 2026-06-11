@@ -95,12 +95,18 @@ export class CoursePanel {
   /** @private */
   async _create() {
     const api = projectApi();
-    const name = prompt('Nombre del curso:');
-    if (!name || !name.trim()) return;
+    const name = await this._askText({
+      title: 'Crear curso',
+      label: 'Nombre del curso',
+      placeholder: 'Ej: Introducción a la Criminología',
+      confirmLabel: 'Crear',
+      hint: 'Después elegirás la carpeta donde guardar el proyecto.',
+    });
+    if (!name) return;
     const dir = await api.openDirectory({ title: 'Carpeta donde crear el proyecto' });
     if (dir.canceled || !dir.filePaths.length) return;
-    const res = await api.project.create(dir.filePaths[0], name.trim());
-    this._afterOpen(res, `Proyecto creado: ${name.trim()}`);
+    const res = await api.project.create(dir.filePaths[0], name);
+    this._afterOpen(res, `Proyecto creado: ${name}`);
   }
 
   /** @private */
@@ -117,11 +123,17 @@ export class CoursePanel {
     const api = projectApi();
     const src = await api.openDirectory({ title: 'Carpeta PLANTILLA_CURSO a importar' });
     if (src.canceled || !src.filePaths.length) return;
-    const name = prompt('Nombre del curso importado:');
-    if (!name || !name.trim()) return;
+    const name = await this._askText({
+      title: 'Importar PLANTILLA_CURSO',
+      label: 'Nombre del curso importado',
+      placeholder: 'Ej: Estadística Descriptiva',
+      confirmLabel: 'Importar',
+      hint: 'Después elegirás la carpeta donde guardar el proyecto nuevo.',
+    });
+    if (!name) return;
     const dst = await api.openDirectory({ title: 'Carpeta donde crear el proyecto' });
     if (dst.canceled || !dst.filePaths.length) return;
-    const res = await api.project.importPlantilla(src.filePaths[0], dst.filePaths[0], name.trim());
+    const res = await api.project.importPlantilla(src.filePaths[0], dst.filePaths[0], name);
     this._afterOpen(res, 'Curso importado desde PLANTILLA_CURSO');
   }
 
@@ -368,16 +380,19 @@ export class CoursePanel {
 
   /** @private */
   async _connectDialog() {
-    const token = prompt(
-      'Pega tu token de Claude.\n\n' +
-      'Cómo obtenerlo: en una terminal ejecuta `claude setup-token`, inicia sesión ' +
-      'en el navegador y copia el token resultante.\n' +
-      'También sirve una API key de Anthropic (sk-ant-api…).\n\n' +
-      'Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.'
-    );
-    if (!token || !token.trim()) return;
+    const token = await this._askText({
+      title: 'Conectar Claude',
+      label: 'Token de Claude o API key',
+      placeholder: 'sk-ant-… o token de claude setup-token',
+      confirmLabel: 'Conectar',
+      password: true,
+      hint: 'Cómo obtenerlo: en una terminal ejecuta «claude setup-token», inicia sesión ' +
+        'en el navegador y copia el token resultante. También sirve una API key de ' +
+        'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.',
+    });
+    if (!token) return;
     const api = projectApi();
-    const res = await api.agent.setToken(token.trim());
+    const res = await api.agent.setToken(token);
     if (res.ok) {
       this._agent = res.data;
       this._renderProject();
@@ -396,6 +411,71 @@ export class CoursePanel {
       this._renderProject();
       showToast('Token olvidado', 'info');
     }
+  }
+
+  /* ── Modal de texto (window.prompt no existe en Electron) ── */
+
+  /**
+   * Pide un texto con un modal propio. Resuelve con el valor (trim) o null.
+   * @private
+   * @param {object} opts
+   * @param {string} opts.title
+   * @param {string} opts.label
+   * @param {string} [opts.placeholder]
+   * @param {string} [opts.hint]
+   * @param {string} [opts.confirmLabel]
+   * @param {boolean} [opts.password]
+   * @returns {Promise<string|null>}
+   */
+  _askText({ title, label, placeholder = '', hint = '', confirmLabel = 'Aceptar', password = false }) {
+    return new Promise((resolve) => {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'paste-modal-backdrop';
+      backdrop.id = 'geo-course-modal';
+      backdrop.innerHTML = `
+        <div class="paste-modal paste-modal--compact" role="dialog" aria-modal="true" aria-labelledby="geo-course-modal-title">
+          <div class="paste-modal__header">
+            <h2 class="paste-modal__title" id="geo-course-modal-title">${esc(title)}</h2>
+            <button type="button" class="paste-modal__close" id="geo-course-modal-close" aria-label="Cerrar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <label class="paste-modal__label" for="geo-course-modal-input">${esc(label)}</label>
+          <input type="${password ? 'password' : 'text'}" class="paste-modal__filename-input"
+                 id="geo-course-modal-input" placeholder="${esc(placeholder)}"
+                 spellcheck="false" autocomplete="off">
+          ${hint ? `<p class="course-modal__hint">${esc(hint)}</p>` : ''}
+          <div class="course-modal__actions">
+            <button type="button" class="btn btn--ghost" id="geo-course-modal-cancel">Cancelar</button>
+            <button type="button" class="btn btn--primary" id="geo-course-modal-ok" disabled>${esc(confirmLabel)}</button>
+          </div>
+        </div>`;
+
+      document.body.appendChild(backdrop);
+      requestAnimationFrame(() => backdrop.classList.add('paste-modal-backdrop--open'));
+
+      const input = /** @type {HTMLInputElement} */ (backdrop.querySelector('#geo-course-modal-input'));
+      const okBtn = /** @type {HTMLButtonElement} */ (backdrop.querySelector('#geo-course-modal-ok'));
+
+      /** @param {string|null} value */
+      const close = (value) => {
+        backdrop.classList.remove('paste-modal-backdrop--open');
+        setTimeout(() => backdrop.remove(), 180);
+        resolve(value);
+      };
+
+      input.addEventListener('input', () => { okBtn.disabled = !input.value.trim(); });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && input.value.trim()) close(input.value.trim());
+        if (e.key === 'Escape') close(null);
+      });
+      okBtn.addEventListener('click', () => close(input.value.trim()));
+      backdrop.querySelector('#geo-course-modal-cancel').addEventListener('click', () => close(null));
+      backdrop.querySelector('#geo-course-modal-close').addEventListener('click', () => close(null));
+      backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(null); });
+
+      setTimeout(() => input.focus(), 50);
+    });
   }
 
   /* ── Progreso de la generación ───────────────────────────── */

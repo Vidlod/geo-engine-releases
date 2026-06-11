@@ -1525,3 +1525,26 @@ select.wizard__engine:focus { border-color: var(--accent); }
 .course__progress-line--tool    { color: var(--accent-light); }
 .course__progress-line--error   { color: var(--error); }
 .course__progress-line--done    { color: var(--success); }
+
+/* ── Modal de texto del proyecto (reemplazo de window.prompt) ── */
+.paste-modal--compact {
+  width: min(440px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.course-modal__hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding: 8px 10px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.course-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
