@@ -45,7 +45,7 @@ const tick = () => new Promise((r) => setTimeout(r, 20));
 const fakeProject = {
   path: '/tmp/Demo.geocurso',
   name: 'Demo',
-  config: { curso: 'Demo', momentos: 1, avances: 1, last_avance: 1, ids: {} },
+  config: { curso: 'Demo', momentos: 1, avances: 1, ids: {} },
   insumos: ['AAA-demo.docx', 'Rubrica1.pdf'],
   generadas: ['momento-1.html'],
   fileMap: { 'rubrica1': 'Rubrica1.pdf' },
@@ -59,6 +59,16 @@ const fakeProject = {
     },
   ],
 };
+
+// Estado multi-agente: Claude conectado (sesión CLI), Antigravity sin detectar.
+let agentSelected = 'claude';
+const agentState = () => ({
+  selected: agentSelected,
+  agents: [
+    { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli' },
+    { id: 'antigravity', label: 'Antigravity', kind: 'cli', available: false, hasCredential: false, credentialSource: null, command: 'antigravity' },
+  ],
+});
 
 dom.window.electronAPI = {
   onUpdateAvailable: () => () => {},
@@ -77,9 +87,11 @@ dom.window.electronAPI = {
     addInsumos: async () => ({ ok: true, data: fakeProject }),
   },
   agent: {
-    status: async () => ({ ok: true, data: { sdkAvailable: true, hasCredential: true, credentialSource: 'cli' } }),
-    setToken: async () => ({ ok: true, data: { sdkAvailable: true, hasCredential: true, credentialSource: 'app' } }),
-    clearToken: async () => ({ ok: true, data: { sdkAvailable: true, hasCredential: false, credentialSource: null } }),
+    status: async () => ({ ok: true, data: agentState() }),
+    select: async (id) => { agentSelected = id; return { ok: true, data: agentState() }; },
+    setToken: async () => ({ ok: true, data: agentState() }),
+    clearToken: async () => ({ ok: true, data: agentState() }),
+    setCommand: async () => ({ ok: true, data: agentState() }),
     generate: async () => ({ ok: true, data: { ok: true, file: 'momento-1.html' } }),
     onEvent: () => () => {},
   },
@@ -121,9 +133,31 @@ await tick(); await tick();
 
 console.log('— Proyecto abierto —');
 check('nombre del curso', $('.course__name')?.textContent === 'Demo');
-check('chip de Claude conectado', $('.course-chip--on')?.textContent.includes('Claude conectado'));
 check('contador de insumos', $('#geo-course-insumos')?.textContent.includes('2'));
 check('checklist con 2 estructuras', $$('.course-row').length === 2);
+check('sin campo Último avance', !$('#geo-course-last'));
+check('nota de Producto Final', !!$('.course__field-note'));
+
+console.log('— Selector de agentes (Claude / Antigravity) —');
+check('dos tiles de agente', $$('.agent-tile').length === 2);
+check('Claude es el activo', $('.agent-tile--claude').classList.contains('agent-tile--active'));
+check('LED de Claude encendido', !!$('.agent-tile--claude .agent-tile__led--on'));
+check('Antigravity detectable como CLI no detectado',
+  $('.agent-tile--antigravity .agent-tile__status')?.textContent.includes('no detectado'));
+check('acción Claude: conectado vía sesión', $('#geo-agent-action')?.textContent.includes('Conectado'));
+
+// Cambiar a Antigravity
+$('.agent-tile--antigravity').click();
+await tick();
+check('Antigravity pasa a activo', $('.agent-tile--antigravity').classList.contains('agent-tile--active'));
+check('acción muestra el comando configurable', !!$('#geo-agent-command') && $('#geo-agent-action').textContent.includes('antigravity'));
+check('Generar desaparece (Antigravity no disponible)',
+  !$('.course-row[data-id="momento-1"] [data-act="generate"]'));
+
+// Volver a Claude para el resto del flujo
+$('.agent-tile--claude').click();
+await tick();
+check('Generar vuelve con Claude activo', !!$('.course-row[data-id="momento-1"] [data-act="generate"]'));
 
 const momento = $('.course-row[data-id="momento-1"]');
 check('momento-1 con punto de FLAGS', !!momento.querySelector('.course-row__dot--warn'));

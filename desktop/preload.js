@@ -33,8 +33,10 @@ const VALID_CHANNELS = [
   'project:readGenerated',
   'project:addInsumos',
   'agent:status',
+  'agent:select',
   'agent:setToken',
   'agent:clearToken',
+  'agent:setCommand',
   'agent:generate',
 ];
 
@@ -181,19 +183,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('project:addInsumos', projectPath, filePaths),
   },
 
-  // ─── Agente embebido (Agent SDK) ───────────────────────────────────
+  // ─── Agentes (Claude SDK + Antigravity CLI) ────────────────────────
   agent: {
-    /** Estado del motor de IA: SDK + credencial. */
+    /** Estado de todos los agentes + cuál está seleccionado. */
     status: () => ipcRenderer.invoke('agent:status'),
 
-    /** Guarda el token de Claude (setup-token o API key) cifrado. @param {string} token */
-    setToken: (token) => ipcRenderer.invoke('agent:setToken', token),
+    /** Cambia el agente activo. @param {string} agentId */
+    select: (agentId) => ipcRenderer.invoke('agent:select', agentId),
 
-    /** Olvida el token guardado. */
-    clearToken: () => ipcRenderer.invoke('agent:clearToken'),
+    /** Guarda el token/API key cifrado de un agente. @param {string} agentId @param {string} token */
+    setToken: (agentId, token) => ipcRenderer.invoke('agent:setToken', agentId, token),
+
+    /** Olvida el token guardado de un agente. @param {string} agentId */
+    clearToken: (agentId) => ipcRenderer.invoke('agent:clearToken', agentId),
+
+    /** Cambia el comando de un agente CLI. @param {string} agentId @param {string} command */
+    setCommand: (agentId, command) => ipcRenderer.invoke('agent:setCommand', agentId, command),
 
     /**
-     * Genera una estructura con el agente (eventos por onEvent).
+     * Genera una estructura con el agente seleccionado (eventos por onEvent).
      * @param {string} projectPath @param {object} structure
      */
     generate: (projectPath, structure) =>

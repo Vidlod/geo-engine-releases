@@ -304,11 +304,17 @@ function registerIpcHandlers() {
   ipcMain.handle('agent:status', () =>
     safeAsync(() => agent.getStatus(userDataPath, safeStorage)));
 
-  ipcMain.handle('agent:setToken', (_e, token) =>
-    safeAsync(() => agent.setToken(userDataPath, safeStorage, token)));
+  ipcMain.handle('agent:select', (_e, agentId) =>
+    safeAsync(() => agent.selectAgent(userDataPath, safeStorage, agentId)));
 
-  ipcMain.handle('agent:clearToken', () =>
-    safeAsync(() => agent.clearToken(userDataPath, safeStorage)));
+  ipcMain.handle('agent:setToken', (_e, agentId, token) =>
+    safeAsync(() => agent.setToken(userDataPath, safeStorage, agentId, token)));
+
+  ipcMain.handle('agent:clearToken', (_e, agentId) =>
+    safeAsync(() => agent.clearToken(userDataPath, safeStorage, agentId)));
+
+  ipcMain.handle('agent:setCommand', (_e, agentId, command) =>
+    safeAsync(() => agent.setCommand(userDataPath, safeStorage, agentId, command)));
 
   ipcMain.handle('agent:generate', async (_e, projectPath, structure) => {
     try {

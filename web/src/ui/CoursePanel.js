@@ -29,8 +29,8 @@ export class CoursePanel {
     /** @private */ this._cb = callbacks;
     /** @private {any|null} Proyecto abierto (resultado de project:open) */
     this._project = null;
-    /** @private {any} Estado del agente {sdkAvailable, hasCredential, credentialSource} */
-    this._agent = { sdkAvailable: false, hasCredential: false, credentialSource: null };
+    /** @private {{selected:string, agents:object[]}} Estado de todos los agentes */
+    this._agentStatus = { selected: 'claude', agents: [] };
     /** @private {string|null} id de la estructura generándose */
     this._busy = null;
     /** @private {string[]} líneas de progreso de la generación en curso */
@@ -49,9 +49,15 @@ export class CoursePanel {
       this._unsubscribe = api.agent.onEvent((ev) => this._onAgentEvent(ev));
     }
     const status = await api.agent.status();
-    if (status.ok) this._agent = status.data;
+    if (status.ok) this._agentStatus = status.data;
 
     this._project ? this._renderProject() : this._renderEmpty();
+  }
+
+  /** @private @returns {any} el agente seleccionado o un stub. */
+  _selectedAgent() {
+    const s = this._agentStatus;
+    return s.agents.find((a) => a.id === s.selected) || { id: s.selected, available: false, hasCredential: false };
   }
 
   /* ── Estado vacío: crear / abrir / importar ──────────────── */
@@ -157,7 +163,6 @@ export class CoursePanel {
   /** @private */
   _renderProject() {
     const p = this._project;
-    const agentChip = this._agentChipHtml();
 
     const rows = p.structures.map((s) => this._structureRowHtml(s)).join('');
 
@@ -169,8 +174,9 @@ export class CoursePanel {
             <h2 class="course__name">${esc(p.name)}</h2>
             <span class="course__path">${esc(p.path)}</span>
           </div>
-          <div class="course__agent">${agentChip}</div>
         </header>
+
+        ${this._agentBarHtml()}
 
         <div class="course__meta">
           <label class="course__field">Momentos
@@ -179,9 +185,7 @@ export class CoursePanel {
           <label class="course__field">Avances
             <input type="number" min="0" max="12" id="geo-course-avances" value="${Number(p.config.avances) || 0}">
           </label>
-          <label class="course__field">Último avance
-            <input type="number" min="0" max="12" id="geo-course-last" value="${Number(p.config.last_avance) || 0}">
-          </label>
+          <span class="course__field-note">El avance de número mayor es el Producto Final.</span>
           <button type="button" class="btn btn--ghost course__meta-btn" id="geo-course-insumos">
             + Insumos <span class="course__count">${p.insumos.length}</span>
           </button>
@@ -206,35 +210,102 @@ export class CoursePanel {
     });
     this._el.querySelector('#geo-course-insumos').addEventListener('click', () => this._addInsumos());
 
-    for (const id of ['momentos', 'avances', 'last']) {
+    for (const id of ['momentos', 'avances']) {
       this._el.querySelector(`#geo-course-${id}`).addEventListener('change', () => this._saveConfig());
     }
 
-    const connectBtn = this._el.querySelector('#geo-course-connect');
-    if (connectBtn) connectBtn.addEventListener('click', () => this._connectDialog());
-    const disconnectBtn = this._el.querySelector('#geo-course-disconnect');
-    if (disconnectBtn) disconnectBtn.addEventListener('click', () => this._disconnect());
-
+    this._bindAgentBar();
     this._bindStructureRows();
   }
 
+  /* ── Barra de agentes (Claude / Antigravity) ─────────────── */
+
   /** @private @returns {string} */
-  _agentChipHtml() {
-    const a = this._agent;
-    if (!a.sdkAvailable) {
-      return `<span class="course-chip course-chip--off">Motor IA no disponible</span>`;
-    }
-    if (a.hasCredential) {
-      const src = { app: 'token guardado', env: 'variable de entorno', cli: 'sesión de Claude Code' }[a.credentialSource] || '';
+  _agentBarHtml() {
+    const sel = this._agentStatus.selected;
+    const tiles = this._agentStatus.agents.map((a) => {
+      const led = a.available && a.hasCredential ? 'on' : (a.available ? 'warn' : 'off');
+      const status = this._agentStatusLabel(a);
       return `
-        <span class="course-chip course-chip--on">Claude conectado · ${esc(src)}</span>
-        ${a.credentialSource === 'app'
-          ? '<button type="button" class="btn btn--ghost btn--sm" id="geo-course-disconnect">Desconectar</button>'
-          : ''}`;
-    }
+        <button type="button" class="agent-tile agent-tile--${a.id}${a.id === sel ? ' agent-tile--active' : ''}"
+                data-agent="${esc(a.id)}" aria-pressed="${a.id === sel}">
+          <span class="agent-tile__led agent-tile__led--${led}"></span>
+          <span class="agent-tile__body">
+            <span class="agent-tile__name">${esc(a.label)}</span>
+            <span class="agent-tile__status">${esc(status)}</span>
+          </span>
+          <span class="agent-tile__pick" aria-hidden="true">${a.id === sel ? '✓ activo' : 'usar'}</span>
+        </button>`;
+    }).join('');
+
     return `
-      <span class="course-chip course-chip--warn">Sin cuenta conectada</span>
-      <button type="button" class="btn btn--primary btn--sm" id="geo-course-connect">Conectar Claude</button>`;
+      <section class="agent-bar" aria-label="Motor de generación">
+        <div class="agent-bar__tiles">${tiles}</div>
+        <div class="agent-bar__action" id="geo-agent-action">${this._agentActionHtml()}</div>
+      </section>`;
+  }
+
+  /** @private @param {any} a @returns {string} */
+  _agentStatusLabel(a) {
+    if (a.kind === 'cli') {
+      return a.available ? 'CLI detectado' : 'CLI no detectado';
+    }
+    if (!a.available) return 'Motor no disponible';
+    if (!a.hasCredential) return 'Sin cuenta conectada';
+    return { app: 'token guardado', env: 'variable de entorno', cli: 'sesión de Claude Code' }[a.credentialSource] || 'conectado';
+  }
+
+  /** Acción contextual del agente seleccionado. @private @returns {string} */
+  _agentActionHtml() {
+    const a = this._selectedAgent();
+    if (a.kind === 'cli') {
+      const cmd = a.command || 'antigravity';
+      return `
+        <div class="agent-action__row">
+          <span class="agent-action__label">Comando</span>
+          <code class="agent-action__cmd">${esc(cmd)}</code>
+          <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-command">Cambiar</button>
+          ${!a.available ? '<span class="agent-action__warn">No se encontró en el PATH</span>' : ''}
+        </div>`;
+    }
+    // Claude (SDK)
+    if (!a.available) {
+      return `<span class="agent-action__warn">El motor no cargó. Reinicia la app; si persiste, reinstala.</span>`;
+    }
+    if (!a.hasCredential) {
+      return `<button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">Conectar Claude</button>`;
+    }
+    if (a.credentialSource === 'app') {
+      return `
+        <div class="agent-action__row">
+          <span class="agent-action__ok">Conectado con token guardado</span>
+          <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect">Desconectar</button>
+        </div>`;
+    }
+    return `<span class="agent-action__ok">Conectado vía ${esc(this._agentStatusLabel(a))}</span>`;
+  }
+
+  /** @private */
+  _bindAgentBar() {
+    for (const tile of this._el.querySelectorAll('.agent-tile')) {
+      tile.addEventListener('click', () => this._selectAgent(tile.getAttribute('data-agent')));
+    }
+    const connect = this._el.querySelector('#geo-agent-connect');
+    if (connect) connect.addEventListener('click', () => this._connectDialog());
+    const disconnect = this._el.querySelector('#geo-agent-disconnect');
+    if (disconnect) disconnect.addEventListener('click', () => this._disconnect());
+    const command = this._el.querySelector('#geo-agent-command');
+    if (command) command.addEventListener('click', () => this._commandDialog());
+  }
+
+  /** @private @param {string} agentId */
+  async _selectAgent(agentId) {
+    if (agentId === this._agentStatus.selected) return;
+    const res = await projectApi().agent.select(agentId);
+    if (res.ok) {
+      this._agentStatus = res.data;
+      this._renderProject();
+    }
   }
 
   /**
@@ -245,7 +316,8 @@ export class CoursePanel {
   _structureRowHtml(s) {
     const dots = { 'sin-insumos': 'off', lista: 'ready', flags: 'warn', ok: 'ok' };
     const labels = { 'sin-insumos': 'Faltan insumos (AAA)', lista: 'Lista para generar', flags: `${s.flags.length} FLAG(s)`, ok: 'Generada' };
-    const canGenerate = this._agent.sdkAvailable && this._agent.hasCredential && s.status !== 'sin-insumos';
+    const sel = this._selectedAgent();
+    const canGenerate = sel.available && sel.hasCredential && s.status !== 'sin-insumos';
     const generated = s.status === 'flags' || s.status === 'ok';
     const busy = this._busy === s.id;
 
@@ -305,7 +377,6 @@ export class CoursePanel {
     const res = await api.project.saveConfig(this._project.path, {
       momentos: val('momentos'),
       avances: val('avances'),
-      last_avance: val('last'),
     });
     if (res.ok) {
       this._project = res.data;
@@ -391,10 +462,9 @@ export class CoursePanel {
         'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.',
     });
     if (!token) return;
-    const api = projectApi();
-    const res = await api.agent.setToken(token);
+    const res = await projectApi().agent.setToken('claude', token);
     if (res.ok) {
-      this._agent = res.data;
+      this._agentStatus = res.data;
       this._renderProject();
       showToast('Cuenta de Claude conectada', 'success');
     } else {
@@ -404,12 +474,35 @@ export class CoursePanel {
 
   /** @private */
   async _disconnect() {
-    const api = projectApi();
-    const res = await api.agent.clearToken();
+    const res = await projectApi().agent.clearToken(this._agentStatus.selected);
     if (res.ok) {
-      this._agent = res.data;
+      this._agentStatus = res.data;
       this._renderProject();
       showToast('Token olvidado', 'info');
+    }
+  }
+
+  /** Configura el comando de un agente CLI (Antigravity). @private */
+  async _commandDialog() {
+    const current = this._selectedAgent();
+    const command = await this._askText({
+      title: `Comando de ${current.label}`,
+      label: 'Comando del CLI',
+      placeholder: 'antigravity',
+      confirmLabel: 'Guardar',
+      hint: 'Comando que la app ejecutará en la carpeta del curso para generar la ' +
+        'estructura. La instrucción se envía por la entrada estándar; si tu CLI la ' +
+        'espera como argumento, incluye el token {prompt} donde deba ir. Ejemplos: ' +
+        '«antigravity» · «antigravity run» · «antigravity agent --prompt {prompt}».',
+    });
+    if (!command) return;
+    const res = await projectApi().agent.setCommand(current.id, command);
+    if (res.ok) {
+      this._agentStatus = res.data;
+      this._renderProject();
+      showToast('Comando actualizado', 'success');
+    } else {
+      showToast(res.error || 'No se pudo guardar el comando', 'error');
     }
   }
 

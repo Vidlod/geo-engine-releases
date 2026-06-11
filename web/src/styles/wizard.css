@@ -1351,18 +1351,109 @@ select.wizard__engine:focus { border-color: var(--accent); }
   color: var(--text-muted);
   word-break: break-all;
 }
-.course__agent { display: flex; align-items: center; gap: 8px; }
-
-.course-chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+/* ── Selector de agente (Claude / Antigravity) ── */
+.agent-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
-.course-chip--on   { background: var(--success-soft); color: var(--success); border: 1px solid rgba(48,164,108,.3); }
-.course-chip--warn { background: var(--warning-soft); color: var(--warning); border: 1px solid rgba(245,166,35,.3); }
-.course-chip--off  { background: var(--bg-surface-2);  color: var(--text-muted); border: 1px solid var(--border); }
+.agent-bar__tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 620px) { .agent-bar__tiles { grid-template-columns: 1fr; } }
+
+/* Cada agente tiene su propio acento para distinguirlos de un vistazo. */
+.agent-tile {
+  --agent-accent: var(--accent);
+  --agent-glow: var(--accent-glow);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  transition: border-color var(--duration-mid) var(--ease-out),
+              background var(--duration-mid) var(--ease-out),
+              transform var(--duration-mid) var(--ease-out);
+}
+.agent-tile:hover { transform: translateY(-1px); border-color: var(--border-hover); }
+.agent-tile--claude      { --agent-accent: #d98a4a; --agent-glow: rgba(217, 138, 74, 0.16); }
+.agent-tile--antigravity { --agent-accent: #8b7cf0; --agent-glow: rgba(139, 124, 240, 0.18); }
+
+.agent-tile--active {
+  border-color: var(--agent-accent);
+  background: linear-gradient(135deg, var(--agent-glow), transparent 70%), var(--bg-surface-2);
+  box-shadow: 0 0 0 1px var(--agent-accent) inset, 0 0 18px var(--agent-glow);
+}
+
+.agent-tile__led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.agent-tile__led--on   { background: var(--success); box-shadow: 0 0 8px var(--success-soft); }
+.agent-tile__led--warn { background: var(--warning); box-shadow: 0 0 8px var(--warning-soft); }
+.agent-tile__led--off  { background: var(--text-muted); }
+
+.agent-tile__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.agent-tile__name { font-weight: 600; font-size: 0.875rem; }
+.agent-tile__status { font-size: 0.6875rem; color: var(--text-secondary); }
+
+.agent-tile__pick {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.agent-tile--active .agent-tile__pick {
+  color: var(--agent-accent);
+  border-color: var(--agent-accent);
+}
+
+.agent-bar__action {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding-top: 2px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.agent-action__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.agent-action__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.agent-action__cmd {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  background: var(--bg-surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+.agent-action__ok   { font-size: 0.75rem; color: var(--success); }
+.agent-action__warn { font-size: 0.75rem; color: var(--warning); }
 
 .course__meta {
   display: flex;
@@ -1395,6 +1486,13 @@ select.wizard__engine:focus { border-color: var(--accent); }
   font-size: 0.8125rem;
 }
 .course__field input:focus { outline: none; border-color: var(--accent); }
+.course__field-note {
+  align-self: center;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  max-width: 180px;
+  line-height: 1.4;
+}
 .course__meta-btn { margin-left: auto; }
 .course__meta-btn + .course__meta-btn { margin-left: 0; }
 .course__count {

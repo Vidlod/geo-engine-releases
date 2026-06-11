@@ -29,7 +29,6 @@ const DEFAULT_CONFIG = {
   curso: '',
   momentos: 2,
   avances: 4,
-  last_avance: 4,
   autor_red: '',
   ids: {},
 };
@@ -87,7 +86,7 @@ function toYaml(config, fileMap) {
     `curso: ${q(config.curso)}`,
     `momentos: ${Number(config.momentos) || 0}`,
     `avances: ${Number(config.avances) || 0}`,
-    `last_avance: ${Number(config.last_avance) || 0}`,
+    `last_avance: ${Number(config.avances) || 0}`,
     `autor_red: ${q(config.autor_red || '')}`,
     'ids:',
   ];
@@ -184,7 +183,8 @@ function computeStructures(config, insumos, generadasDir) {
   }
   const avances = Math.max(0, Number(config.avances) || 0);
   for (let n = 1; n <= avances; n++) {
-    const esFinal = n === Number(config.last_avance);
+    // El último avance (el de número mayor) es siempre el "Producto Final".
+    const esFinal = n === avances;
     defs.push({
       id: `entregable-${n}`,
       label: esFinal ? `Entregable ${n} (Producto Final)` : `Entregable ${n}`,

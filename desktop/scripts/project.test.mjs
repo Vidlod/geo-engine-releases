@@ -58,11 +58,14 @@ console.log('— Proyecto: crear y abrir —');
     m1.corrections.some((c) => c.includes('Comprar')));
   check('momento-2 generada limpia', m2.status === 'ok' && m2.flags.length === 0);
 
-  // saveConfig
-  const p4 = project.saveConfig(projectPath, { momentos: 1, avances: 2, last_avance: 2 });
+  // saveConfig (sin last_avance: el avance mayor es el Producto Final)
+  const p4 = project.saveConfig(projectPath, { momentos: 1, avances: 2 });
   check('saveConfig recalcula estructuras', p4.structures.filter((s) => s.id.startsWith('momento')).length === 1);
-  check('Producto Final etiquetado',
-    p4.structures.some((s) => s.label.includes('Producto Final') && s.id === 'entregable-2'));
+  check('Producto Final = avance mayor (2)',
+    p4.structures.some((s) => s.label.includes('Producto Final') && s.id === 'entregable-2') &&
+    !p4.structures.find((s) => s.id === 'entregable-1').label.includes('Producto Final'));
+  const p4yaml = readFileSync(path.join(projectPath, 'curso.yaml'), 'utf-8');
+  check('curso.yaml deriva last_avance del mayor', /last_avance:\s*2/.test(p4yaml));
 
   // readGenerated + validación de ruta
   const rg = project.readGenerated(projectPath, 'momento-2.html');
@@ -96,8 +99,8 @@ console.log('— Importar PLANTILLA_CURSO —');
   check('Lineadeltiempo → linea-tiempo.html', p.generadas.includes('linea-tiempo.html'));
 }
 
-/* ── Agente: estado, token, skills, instrucción ───────────── */
-console.log('— Agente —');
+/* ── Agentes (multi-driver): estado, selección, credenciales ── */
+console.log('— Agentes —');
 {
   const userData = mkdtempSync(path.join(tmpdir(), 'geo-userdata-'));
   const fakeStorage = {
@@ -107,15 +110,40 @@ console.log('— Agente —');
   };
 
   const status = await agent.getStatus(userData, fakeStorage);
-  // Nota: bajo `node` puro el SDK (ESM) carga; bajo Electron 20 también, vía
-  // import() dinámico. El campo debe existir y ser booleano en ambos casos.
-  check('estado reporta sdkAvailable booleano', typeof status.sdkAvailable === 'boolean');
-  check('estado con forma esperada', 'hasCredential' in status && 'credentialSource' in status);
+  check('estado lista los dos agentes', status.agents.length === 2 &&
+    status.agents.map((a) => a.id).join(',') === 'claude,antigravity');
+  check('selección por defecto = claude', status.selected === 'claude');
+  const claude = status.agents.find((a) => a.id === 'claude');
+  const ag = status.agents.find((a) => a.id === 'antigravity');
+  check('claude reporta available booleano', typeof claude.available === 'boolean');
+  check('antigravity expone comando configurable', typeof ag.command === 'string');
+  check('antigravity ausente del PATH no está available', ag.available === false);
 
-  const withToken = await agent.setToken(userData, fakeStorage, 'sk-ant-api03-prueba');
-  check('setToken → credencial de la app', withToken.hasCredential && withToken.credentialSource === 'app');
-  const cleared = await agent.clearToken(userData, fakeStorage);
-  check('clearToken vuelve al estado base', cleared.credentialSource !== 'app');
+  // Selección persiste
+  const selAg = await agent.selectAgent(userData, fakeStorage, 'antigravity');
+  check('selectAgent cambia el activo', selAg.selected === 'antigravity');
+  const reread = await agent.getStatus(userData, fakeStorage);
+  check('selección persiste entre lecturas', reread.selected === 'antigravity');
+
+  // Comando configurable (apuntar a un binario real del sistema → available)
+  const realBin = process.platform === 'win32' ? 'where' : 'sh';
+  const withCmd = await agent.setCommand(userData, fakeStorage, 'antigravity', realBin);
+  const agAfter = withCmd.agents.find((a) => a.id === 'antigravity');
+  check('setCommand resuelve binario real → available', agAfter.available === true && agAfter.command === realBin);
+
+  // Credencial por-agente
+  const withToken = await agent.setToken(userData, fakeStorage, 'claude', 'sk-ant-api03-prueba');
+  const claudeTok = withToken.agents.find((a) => a.id === 'claude');
+  check('setToken(claude) → credencial de la app', claudeTok.hasCredential && claudeTok.credentialSource === 'app');
+  const cleared = await agent.clearToken(userData, fakeStorage, 'claude');
+  check('clearToken(claude) quita el token de la app',
+    cleared.agents.find((a) => a.id === 'claude').credentialSource !== 'app');
+
+  // parseCommand: {prompt} como arg vs stdin
+  const viaStdin = agent.parseCommand('antigravity run', 'HOLA');
+  check('parseCommand sin {prompt} → stdin', viaStdin.promptViaStdin === true && viaStdin.tokens.join(' ') === 'antigravity run');
+  const viaArg = agent.parseCommand('ag --prompt {prompt}', 'HOLA');
+  check('parseCommand con {prompt} → argumento', viaArg.promptViaStdin === false && viaArg.tokens.includes('HOLA'));
 
   // syncSkills desde el repo real
   const projDir = mkdtempSync(path.join(tmpdir(), 'geo-proj-'));
