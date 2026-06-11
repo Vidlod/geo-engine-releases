@@ -5,7 +5,8 @@ copyright: Copyright © 2026 GEO Engine
 publish:
   provider: github
   owner: Vidlod
-  repo: geo-engine
+  repo: geo-engine-releases   # Apunta al repositorio público de releases
+  releaseType: draft
 
 directories:
   output: release
@@ -18,6 +19,13 @@ files:
   - "!server/convert_pdf.py"
   - "node_modules/**/*"
   - "package.json"
+
+# El Agent SDK es ESM y trae un binario nativo (`claude`) que se ejecuta como
+# proceso. Ni el `import()` de ESM ni la ejecución de binarios funcionan desde
+# dentro de app.asar, así que estos paquetes se desempaquetan a app.asar.unpacked.
+asarUnpack:
+  - "node_modules/@anthropic-ai/claude-agent-sdk/**"
+  - "node_modules/@anthropic-ai/claude-agent-sdk-*/**"
 
 extraResources:
   - from: "../web/dist"

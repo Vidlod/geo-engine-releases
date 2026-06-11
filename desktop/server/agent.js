@@ -21,6 +21,8 @@
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { createRequire } = require('module');
+const { pathToFileURL } = require('url');
 
 /** Skills que la app instala en cada proyecto. */
 const SKILL_DIRS = [
@@ -36,19 +38,31 @@ const CRED_FILE = 'agent-credential.bin';
 
 /* ── Disponibilidad del SDK ───────────────────────────────────────── */
 
-/** @type {any|null|undefined} undefined = no probado, null = no disponible */
-let sdkModule;
+/**
+ * El Agent SDK se publica como **ESM puro** (`main: sdk.mjs`). Electron usa
+ * Node 20, donde `require()` de un módulo ESM falla (`ERR_REQUIRE_ESM` /
+ * `MODULE_NOT_FOUND`). Por eso se carga con `import()` dinámico, resolviendo
+ * la ruta en disco con `createRequire` desde este archivo (funciona tanto en
+ * desarrollo como empaquetado, donde el paquete va `asarUnpack`).
+ *
+ * @type {Promise<any|null>|undefined} undefined = no intentado
+ */
+let sdkPromise;
 
-/** Carga diferida del Agent SDK. @returns {any|null} */
+/** Carga diferida del Agent SDK. @returns {Promise<any|null>} */
 function loadSdk() {
-  if (sdkModule !== undefined) return sdkModule;
-  try {
-    // eslint-disable-next-line global-require
-    sdkModule = require('@anthropic-ai/claude-agent-sdk');
-  } catch {
-    sdkModule = null;
-  }
-  return sdkModule;
+  if (sdkPromise !== undefined) return sdkPromise;
+  sdkPromise = (async () => {
+    try {
+      const req = createRequire(__filename);
+      const entry = req.resolve('@anthropic-ai/claude-agent-sdk');
+      return await import(pathToFileURL(entry).href);
+    } catch (err) {
+      console.error('[agent] No se pudo cargar el Agent SDK:', err && err.message);
+      return null;
+    }
+  })();
+  return sdkPromise;
 }
 
 /* ── Credenciales ─────────────────────────────────────────────────── */
@@ -67,7 +81,7 @@ function credPath(userDataPath) {
  * @param {any} safeStorage - electron.safeStorage
  * @param {string} token
  */
-function setToken(userDataPath, safeStorage, token) {
+async function setToken(userDataPath, safeStorage, token) {
   const clean = String(token).trim();
   if (!clean) throw new Error('El token está vacío.');
   const data = safeStorage && safeStorage.isEncryptionAvailable()
@@ -78,7 +92,7 @@ function setToken(userDataPath, safeStorage, token) {
 }
 
 /** @param {string} userDataPath @param {any} safeStorage */
-function clearToken(userDataPath, safeStorage) {
+async function clearToken(userDataPath, safeStorage) {
   try { fs.unlinkSync(credPath(userDataPath)); } catch { /* no existía */ }
   return getStatus(userDataPath, safeStorage);
 }
@@ -114,9 +128,10 @@ function hasCliSession() {
  * Estado del driver: SDK + credencial detectada.
  * @param {string} userDataPath
  * @param {any} safeStorage
+ * @returns {Promise<{sdkAvailable:boolean, hasCredential:boolean, credentialSource:string|null}>}
  */
-function getStatus(userDataPath, safeStorage) {
-  const sdkAvailable = loadSdk() !== null;
+async function getStatus(userDataPath, safeStorage) {
+  const sdkAvailable = (await loadSdk()) !== null;
   const stored = readStoredToken(userDataPath, safeStorage);
   /** @type {string|null} */
   let credentialSource = null;
@@ -193,14 +208,14 @@ function buildInstruction(structure) {
  */
 async function generate({ projectPath, structure, skillsSrcPath, userDataPath, safeStorage, onEvent }) {
   const emit = typeof onEvent === 'function' ? onEvent : () => {};
-  const sdk = loadSdk();
+  const sdk = await loadSdk();
   if (!sdk) {
     const error = 'El motor de IA no está disponible en esta instalación. Usa "Copiar prompt" como alternativa.';
     emit({ type: 'error', message: error });
     return { ok: false, error };
   }
 
-  const status = getStatus(userDataPath, safeStorage);
+  const status = await getStatus(userDataPath, safeStorage);
   if (!status.hasCredential) {
     const error = 'No hay una cuenta de Claude conectada. Conéctala desde el panel del proyecto.';
     emit({ type: 'error', message: error });

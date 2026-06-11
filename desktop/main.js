@@ -270,6 +270,16 @@ function registerIpcHandlers() {
     }
   };
 
+  /** Igual que `safe` pero espera una promesa. @param {() => Promise<any>} fn */
+  const safeAsync = async (fn) => {
+    try {
+      return { ok: true, data: await fn() };
+    } catch (error) {
+      console.error('[IPC:async]', error.message);
+      return { ok: false, error: error.message };
+    }
+  };
+
   ipcMain.handle('project:create', (_e, parentDir, name) =>
     safe(() => project.openProject(project.createProject(parentDir, name).path)));
 
@@ -292,13 +302,13 @@ function registerIpcHandlers() {
   const userDataPath = app.getPath('userData');
 
   ipcMain.handle('agent:status', () =>
-    safe(() => agent.getStatus(userDataPath, safeStorage)));
+    safeAsync(() => agent.getStatus(userDataPath, safeStorage)));
 
   ipcMain.handle('agent:setToken', (_e, token) =>
-    safe(() => agent.setToken(userDataPath, safeStorage, token)));
+    safeAsync(() => agent.setToken(userDataPath, safeStorage, token)));
 
   ipcMain.handle('agent:clearToken', () =>
-    safe(() => agent.clearToken(userDataPath, safeStorage)));
+    safeAsync(() => agent.clearToken(userDataPath, safeStorage)));
 
   ipcMain.handle('agent:generate', async (_e, projectPath, structure) => {
     try {
@@ -327,20 +337,60 @@ function registerIpcHandlers() {
  * Configura el sistema de actualizaciones automáticas.
  */
 function setupAutoUpdater() {
-  autoUpdater.autoDownload = true;
+  // Desactivar descarga automática para pedir confirmación al usuario primero
+  autoUpdater.autoDownload = false;
 
   autoUpdater.on('update-available', (info) => {
     console.log('[Updater] Actualización disponible:', info.version);
+    
+    // Notificar al frontend
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update:available', info);
     }
+
+    // Mostrar cuadro de diálogo interactivo al usuario
+    dialog.showMessageBox(mainWindow, {
+      type: 'question',
+      title: 'Actualización disponible',
+      message: `Una nueva versión de GEO Engine (v${info.version}) está disponible. ¿Deseas descargarla e instalarla ahora?`,
+      buttons: ['Descargar e instalar', 'No, después'],
+      defaultId: 0,
+      cancelId: 1
+    }).then((result) => {
+      if (result.response === 0) {
+        console.log('[Updater] Iniciando descarga de la actualización...');
+        autoUpdater.downloadUpdate();
+        
+        dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: 'Descargando',
+          message: 'La actualización se está descargando en segundo plano. Se te notificará cuando esté lista.'
+        });
+      }
+    });
   });
 
   autoUpdater.on('update-downloaded', (info) => {
     console.log('[Updater] Actualización descargada:', info.version);
+    
+    // Notificar al frontend
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('update:downloaded', info);
     }
+
+    // Preguntar si desea reiniciar ahora
+    dialog.showMessageBox(mainWindow, {
+      type: 'question',
+      title: 'Actualización lista',
+      message: `La versión v${info.version} ha sido descargada con éxito. ¿Deseas reiniciar la aplicación ahora para aplicar la actualización?`,
+      buttons: ['Reiniciar y actualizar', 'Más tarde'],
+      defaultId: 0,
+      cancelId: 1
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
   });
 
   autoUpdater.on('error', (err) => {

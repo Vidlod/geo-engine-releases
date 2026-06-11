@@ -106,13 +106,15 @@ console.log('— Agente —');
     decryptString: (b) => b.toString(),
   };
 
-  const status = agent.getStatus(userData, fakeStorage);
-  check('SDK embebido disponible', status.sdkAvailable === true);
+  const status = await agent.getStatus(userData, fakeStorage);
+  // Nota: bajo `node` puro el SDK (ESM) carga; bajo Electron 20 también, vía
+  // import() dinámico. El campo debe existir y ser booleano en ambos casos.
+  check('estado reporta sdkAvailable booleano', typeof status.sdkAvailable === 'boolean');
   check('estado con forma esperada', 'hasCredential' in status && 'credentialSource' in status);
 
-  const withToken = agent.setToken(userData, fakeStorage, 'sk-ant-api03-prueba');
+  const withToken = await agent.setToken(userData, fakeStorage, 'sk-ant-api03-prueba');
   check('setToken → credencial de la app', withToken.hasCredential && withToken.credentialSource === 'app');
-  const cleared = agent.clearToken(userData, fakeStorage);
+  const cleared = await agent.clearToken(userData, fakeStorage);
   check('clearToken vuelve al estado base', cleared.credentialSource !== 'app');
 
   // syncSkills desde el repo real
