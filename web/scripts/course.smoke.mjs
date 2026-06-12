@@ -69,7 +69,7 @@ let agModel = 'gemini-3-flash-medium';
 const agentState = () => ({
   selected: agentSelected,
   agents: [
-    { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli', account: 'david25geo@gmail.com', model: 'claude-3-7-sonnet-latest' },
+    { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli', account: 'david25geo@gmail.com', model: 'claude-sonnet-4-6' },
     { id: 'antigravity', label: 'Antigravity', kind: 'cli', available: agAvailable, hasCredential: agAvailable, credentialSource: agAvailable ? 'cli' : null, command: agCommand, model: agModel },
   ],
 });
@@ -152,6 +152,9 @@ check('Antigravity detectable como CLI no detectado',
 check('acción Claude: conectado vía sesión', $('#geo-agent-action')?.textContent.includes('Conectado'));
 check('Claude muestra el email de la cuenta', $('.agent-tile--claude').textContent.includes('david25geo@gmail.com'));
 check('selector de modelo de Claude presente', !!$('#geo-agent-model-select'));
+check('Claude ofrece Sonnet 4.6 como recomendado',
+  [...$('#geo-agent-model-select').options].some((o) => o.value === 'claude-sonnet-4-6' && /Recomendado/.test(o.textContent)));
+check('Sonnet 4.6 es el modelo activo de Claude', $('#geo-agent-model-select').value === 'claude-sonnet-4-6');
 
 // Cambiar a Antigravity (aún no configurado → no disponible)
 $('.agent-tile--antigravity').click();

@@ -160,6 +160,28 @@ console.log('— Agentes —');
   check('referencias de la skill copiadas',
     existsSync(path.join(projDir, '.claude', 'skills', 'geo-momento', 'references', 'reglas-transversales.md')));
 
+  // syncSkills con `only`: instala solo la skill del segmento y elimina las demás
+  const syncedOne = agent.syncSkills(projDir, skillsSrc, 'geo-glosario');
+  check('syncSkills(only) instala solo geo-glosario',
+    syncedOne.length === 1 && syncedOne[0] === 'geo-glosario' &&
+    existsSync(path.join(projDir, '.claude', 'skills', 'geo-glosario', 'SKILL.md')));
+  check('syncSkills(only) elimina las otras skills del proyecto',
+    !existsSync(path.join(projDir, '.claude', 'skills', 'geo-momento')));
+
+  // relevantInsumos: cada segmento recibe SOLO su insumo
+  const insumosLista = ['AAA Estadistica.docx', 'Introducción al Curso.pdf', 'Rúbrica M1.xlsx', 'logo-red.png'];
+  const mIns = agent.relevantInsumos('geo-momento', insumosLista);
+  check('momento ← solo la AAA', mIns.matched && mIns.files.join() === 'AAA Estadistica.docx');
+  const iIns = agent.relevantInsumos('geo-introduccion', insumosLista);
+  check('introducción ← solo la AAA', iIns.matched && iIns.files.join() === 'AAA Estadistica.docx');
+  const eIns = agent.relevantInsumos('geo-entregable', insumosLista);
+  check('entregable ← Introducción al Curso.pdf', eIns.matched && eIns.files.join() === 'Introducción al Curso.pdf');
+  const gIns = agent.relevantInsumos('geo-glosario', insumosLista);
+  check('glosario ← la Rúbrica', gIns.matched && gIns.files.join() === 'Rúbrica M1.xlsx');
+  const fallback = agent.relevantInsumos('geo-glosario', ['otro-archivo.pdf']);
+  check('sin coincidencia → lista completa (fallback)',
+    !fallback.matched && fallback.files.length === 1);
+
   const instr = agent.buildInstruction({
     id: 'momento-1', skill: 'geo-momento', file: 'momento-1.html',
     label: 'Momento Evaluativo 1', numero: 1,
@@ -167,6 +189,13 @@ console.log('— Agentes —');
   check('instrucción menciona skill, archivo y curso.yaml',
     instr.includes('geo-momento') && instr.includes('generadas/momento-1.html') && instr.includes('curso.yaml'));
   check('instrucción exige el mapa de archivos', instr.includes('MAPA DE ARCHIVOS'));
+
+  const instrIns = agent.buildInstruction(
+    { id: 'glosario', skill: 'geo-glosario', file: 'glosario.html', label: 'Glosario' },
+    ['Rúbrica M1.xlsx']
+  );
+  check('instrucción limita los insumos al del segmento',
+    instrIns.includes('ÚNICAMENTE') && instrIns.includes('insumos/Rúbrica M1.xlsx'));
 
   check('describeTool legible',
     agent.describeTool({ name: 'Write', input: { file_path: '/x/momento-1.html' } }).includes('momento-1.html'));

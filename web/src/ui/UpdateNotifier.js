@@ -209,17 +209,19 @@ export class UpdateNotifier {
     this.container.className = 'update-toast';
     
     if (status === 'available') {
+      // En macOS sin firma la descarga es manual (navegador): sin barra de progreso.
+      const body = info && info.manual
+        ? `La versión v${version} está lista para descargar desde GitHub (revisa el diálogo de la app).`
+        : `Descargando la versión v${version} en segundo plano...`;
       this.container.innerHTML = `
         <div class="update-toast__header">
           <span class="update-toast__icon">🔄</span>
           <strong class="update-toast__title">Actualización disponible</strong>
         </div>
-        <div class="update-toast__body">
-          Descargando la versión v${version} en segundo plano...
-        </div>
-        <div class="update-toast__progress">
+        <div class="update-toast__body">${body}</div>
+        ${info && info.manual ? '' : `<div class="update-toast__progress">
           <div class="update-toast__progress-bar"></div>
-        </div>
+        </div>`}
       `;
     } else if (status === 'downloaded') {
       this.container.innerHTML = `

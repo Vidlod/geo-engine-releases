@@ -20,6 +20,10 @@ El esqueleto completo con placeholders está en `examples/skeleton.html`.
 
 ## Insumos
 
+> **Insumo principal: la AAA del curso (.docx).** En el flujo de la app este
+> segmento se construye SOLO con la AAA + `curso.yaml`; no leas otros archivos
+> de `insumos/` salvo que la instrucción los liste explícitamente.
+
 - La **AAA del curso** (Resultado de Aprendizaje, dimensiones, créditos/horas,
   unidades y temas, palabras clave, tabla de Resumen de Entregas).
 - Las **Instrucciones Generales** del curso.

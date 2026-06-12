@@ -551,6 +551,81 @@ export function removeInlineMargin(html, textContent, tagName = 'p', blockIndex 
   };
 }
 
+/* ── Insertar bloques nuevos ──────────────────────────────── */
+
+/**
+ * Insert a brand-new block right after the given one, keeping the source
+ * indentation and the GEO clean-HTML rules (no inline styles, no spacers).
+ *
+ * Kinds:
+ *  • 'p'  → `<p>Nuevo párrafo.</p>`
+ *  • 'ul' → `<ul>` with one starter `<li>`
+ *  • 'li' → a sibling `<li>` (only valid when the anchor block is an <li>)
+ *
+ * @param {string} html
+ * @param {string} textContent   Text of the anchor block
+ * @param {string} [tagName='p']
+ * @param {number|null} [blockIndex=null]
+ * @param {'p'|'ul'|'li'} [kind='p']
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function insertBlockAfter(html, textContent, tagName = 'p', blockIndex = null, kind = 'p') {
+  const block = findBlock(html, textContent, tagName, blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] insertBlockAfter: could not find block.');
+    return null;
+  }
+
+  // Una <li> nueva solo tiene sentido junto a otra <li>
+  if (kind === 'li' && tagName.toLowerCase() !== 'li') return null;
+
+  // Detect indentation of the anchor block
+  const lineStart = html.lastIndexOf('\n', block.start);
+  const indent = lineStart >= 0
+    ? (html.substring(lineStart + 1, block.start).match(/^(\s*)/)?.[1] ?? '')
+    : '';
+
+  let snippet;
+  if (kind === 'ul') {
+    snippet = `<ul>\n${indent}<li>Nuevo elemento de lista.</li>\n${indent}<li>Otro elemento de lista.</li>\n${indent}</ul>`;
+  } else if (kind === 'li') {
+    snippet = '<li>Nueva viñeta.</li>';
+  } else {
+    snippet = '<p>Nuevo párrafo.</p>';
+  }
+
+  return {
+    original: block.fullMatch,
+    replacement: `${block.fullMatch}\n${indent}${snippet}`,
+  };
+}
+
+/**
+ * Strip every `<strong>` / `<b>` tag from a block, keeping the text
+ * (eliminar negrilla a nivel de bloque).
+ *
+ * @param {string} html
+ * @param {string} textContent
+ * @param {string} [tagName='p']
+ * @param {number|null} [blockIndex=null]
+ * @returns {{ original: string, replacement: string } | null}
+ */
+export function removeBoldInBlock(html, textContent, tagName = 'p', blockIndex = null) {
+  const block = findBlock(html, textContent, tagName, blockIndex);
+  if (!block) {
+    console.warn('[BlockOps] removeBoldInBlock: could not find block.');
+    return null;
+  }
+
+  const cleanInner = block.innerHTML.replace(/<\/?(?:strong|b)\b[^>]*>/gi, '');
+  if (cleanInner === block.innerHTML) return null;
+
+  return {
+    original: block.fullMatch,
+    replacement: `<${tagName}${block.attrs}>${cleanInner}</${tagName}>`,
+  };
+}
+
 /* ── Wrap standalone <strong> in <p> ─────────────────────── */
 
 /**

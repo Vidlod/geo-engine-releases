@@ -19,6 +19,10 @@ citas, "Producto Final" y uso del linter). Aplican a esta estructura.
 
 ## Insumos que necesitas
 
+> **Insumo principal: el PDF "Introducción al Curso".** En el flujo de la app
+> los entregables se construyen con ese PDF + `curso.yaml`; no leas otros
+> archivos de `insumos/` salvo que la instrucción los liste explícitamente.
+
 - El **PDF/Word del entregable** correspondiente (su contenido exacto).
 - La **AAA** del curso (tabla "Nombre del entregable" → da el subtítulo).
 - La **rúbrica** asociada al momento (para el enlace de evaluación).

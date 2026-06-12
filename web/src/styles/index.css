@@ -154,6 +154,26 @@ body {
   z-index: 100;
 }
 
+/* En Electron (titleBarStyle oculto) la toolbar ES la barra de título:
+   zona de arrastre de la ventana, con los controles excluidos. */
+body.is-electron .toolbar {
+  -webkit-app-region: drag;
+}
+body.is-electron .toolbar button,
+body.is-electron .toolbar input,
+body.is-electron .toolbar select,
+body.is-electron .toolbar a,
+body.is-electron .toolbar .changes-badge,
+body.is-electron .toolbar__history {
+  -webkit-app-region: no-drag;
+}
+
+/* macOS: los semáforos (cerrar/minimizar/zoom) flotan sobre la esquina
+   superior izquierda — el logo arranca después de ellos. */
+body.platform-darwin .toolbar {
+  padding-left: 84px;
+}
+
 .toolbar__logo {
   display: flex;
   align-items: center;

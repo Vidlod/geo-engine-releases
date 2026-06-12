@@ -18,6 +18,10 @@ Lee `references/reglas-transversales.md` (regla de oro, FLAGS, enlaces y linter)
 
 ## Insumos
 
+> **Insumo principal: la AAA del curso (.docx).** En el flujo de la app este
+> segmento se construye SOLO con la AAA + `curso.yaml`; no leas otros archivos
+> de `insumos/` salvo que la instrucción los liste explícitamente.
+
 - El número de **avances** del curso (de la AAA).
 - El **enlace de destino** de cada avance (en los cursos actuales apunta a la tarea de
   Moodle `mod/assign/view.php?id=...` del avance).

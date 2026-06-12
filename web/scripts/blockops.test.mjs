@@ -13,6 +13,8 @@ import {
   toggleBrBetweenLis,
   toggleBrAfterList,
   removeInlineMargin,
+  insertBlockAfter,
+  removeBoldInBlock,
 } from '../src/editor/BlockOps.js';
 
 let failures = 0;
@@ -96,6 +98,50 @@ console.log('— removeInlineMargin —');
 
   const clean = '<p>Sin estilos en absoluto.</p>';
   check('no aplica si no hay margin', removeInlineMargin(clean, 'Sin estilos en absoluto.', 'p', 0) === null);
+}
+
+console.log('— insertBlockAfter —');
+{
+  const html = '<p>Primer párrafo del texto.</p>\n<p>Segundo párrafo.</p>';
+  const p1 = insertBlockAfter(html, 'Primer párrafo del texto.', 'p', 0, 'p');
+  check('inserta párrafo nuevo debajo',
+    apply(html, p1) === '<p>Primer párrafo del texto.</p>\n<p>Nuevo párrafo.</p>\n<p>Segundo párrafo.</p>');
+
+  const p2 = insertBlockAfter(html, 'Primer párrafo del texto.', 'p', 0, 'ul');
+  const conLista = apply(html, p2);
+  check('inserta lista <ul> con viñetas iniciales',
+    conLista.includes('<ul>') && conLista.includes('<li>Nuevo elemento de lista.</li>') &&
+    conLista.indexOf('<ul>') > conLista.indexOf('Primer párrafo'));
+  check('lista insertada sin estilos inline', !/style=/.test(conLista));
+
+  const indented = '<div>\n    <p>Texto con sangría aquí.</p>\n</div>';
+  const p3 = insertBlockAfter(indented, 'Texto con sangría aquí.', 'p', 0, 'p');
+  check('respeta la indentación original',
+    apply(indented, p3).includes('\n    <p>Nuevo párrafo.</p>'));
+
+  const lis = '<ul>\n<li>Viñeta existente aquí.</li>\n</ul>';
+  const p4 = insertBlockAfter(lis, 'Viñeta existente aquí.', 'li', 0, 'li');
+  check('inserta viñeta hermana dentro de la lista',
+    apply(lis, p4).includes('</li>\n<li>Nueva viñeta.</li>'));
+  check('no inserta <li> junto a un párrafo',
+    insertBlockAfter(html, 'Primer párrafo del texto.', 'p', 0, 'li') === null);
+}
+
+console.log('— removeBoldInBlock —');
+{
+  const html = '<p><strong>Título.</strong> Texto con <b>negrilla</b> mixta.</p>';
+  const p1 = removeBoldInBlock(html, 'Título. Texto con negrilla mixta.', 'p', 0);
+  check('quita <strong> y <b> conservando el texto',
+    apply(html, p1) === '<p>Título. Texto con negrilla mixta.</p>');
+
+  const attrs = '<p class="x"><strong class="y">Solo strong aquí.</strong></p>';
+  const p2 = removeBoldInBlock(attrs, 'Solo strong aquí.', 'p', 0);
+  check('conserva atributos del bloque y quita strong con atributos',
+    apply(attrs, p2) === '<p class="x">Solo strong aquí.</p>');
+
+  const plain = '<p>Sin negrilla en absoluto.</p>';
+  check('no aplica si no hay negrilla',
+    removeBoldInBlock(plain, 'Sin negrilla en absoluto.', 'p', 0) === null);
 }
 
 console.log(failures === 0 ? '\nBLOCKOPS OK' : `\nBLOCKOPS FALLÓ: ${failures} aserciones`);

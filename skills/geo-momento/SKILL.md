@@ -20,6 +20,11 @@ citas, "Producto Final" y uso del linter).
 
 ## Insumos
 
+> **Insumo principal: la AAA del curso (.docx).** En el flujo de la app este
+> segmento se construye SOLO con la AAA + `curso.yaml`; no leas otros archivos
+> de `insumos/` (rúbricas, PDFs de entregables…) salvo que la instrucción los
+> liste explícitamente.
+
 - La **AAA** del curso: tabla de resumen (avances, cuestionarios, semanas, pesos) y el
   contenido por semana/actividad.
 - Los **PDF de los entregables** del momento y la **rúbrica** del momento.

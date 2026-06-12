@@ -12,7 +12,7 @@
  */
 
 import { InlineEditor } from './InlineEditor.js';
-import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph, swapBlocks } from './BlockOps.js';
+import { splitBlock, mergeBlocks, findBlock, splitAtBreaks, getBlockDisplay, getSpacingContext, toggleBrBetweenLis, toggleBrAfterList, removeInlineMargin, removeFollowerSpacer, wrapStrongInParagraph, swapBlocks, insertBlockAfter, removeBoldInBlock } from './BlockOps.js';
 import { showToast } from '../ui/Toast.js';
 
 /** Tags whose text content must NOT be wrapped. */
@@ -508,6 +508,10 @@ export class Preview {
       else if (action === 'clean-margin')  this._doCleanMargin(blockEl);
       else if (action === 'remove-spacer') this._doRemoveSpacer(blockEl);
       else if (action === 'wrap-in-p')   this._doWrapInParagraph(blockEl);
+      else if (action === 'insert-p')    this._doInsert(blockEl, 'p');
+      else if (action === 'insert-ul')   this._doInsert(blockEl, 'ul');
+      else if (action === 'insert-li')   this._doInsert(blockEl, 'li');
+      else if (action === 'remove-bold') this._doRemoveBold(blockEl);
     });
 
     // ── Click outside → close menu ──
@@ -593,6 +597,19 @@ export class Preview {
 
     // ── Split ──
     html += `<button class="block-menu__item" data-action="split"><span class="block-menu__icon">✂</span>Separar en un punto</button>`;
+    html += '<div class="block-menu__sep"></div>';
+
+    // ── Insertar contenido nuevo (HTML limpio, sin estilos inline) ──
+    if (block.tagName === 'LI') {
+      html += `<button class="block-menu__item" data-action="insert-li"><span class="block-menu__icon">＋</span>Insertar viñeta debajo</button>`;
+    } else {
+      html += `<button class="block-menu__item" data-action="insert-p"><span class="block-menu__icon">＋</span>Insertar párrafo debajo</button>`;
+      html += `<button class="block-menu__item" data-action="insert-ul"><span class="block-menu__icon">≔</span>Insertar lista debajo</button>`;
+    }
+    // ── Quitar negrilla del bloque (solo si la hay) ──
+    if (block.querySelector('strong, b')) {
+      html += `<button class="block-menu__item" data-action="remove-bold"><span class="block-menu__icon">𝐁</span>Quitar negrilla del bloque</button>`;
+    }
     html += '<div class="block-menu__sep"></div>';
 
     // ── Spacing (consciente de las reglas GEO) ──────────────
@@ -1113,6 +1130,40 @@ export class Preview {
     );
 
     this._applyPatch(patch, direction === 'prev' ? 'Subir bloque' : 'Bajar bloque');
+  }
+
+  /**
+   * Insertar un bloque nuevo (párrafo, lista o viñeta) debajo del bloque.
+   * El contenido placeholder se edita después con un clic sobre el texto.
+   * @private
+   * @param {HTMLElement} blockEl
+   * @param {'p'|'ul'|'li'} kind
+   */
+  _doInsert(blockEl, kind) {
+    const labels = { p: 'Insertar párrafo', ul: 'Insertar lista', li: 'Insertar viñeta' };
+    this._applyPatch(
+      insertBlockAfter(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        blockEl.tagName.toLowerCase(),
+        this._getBlockIndex(blockEl),
+        kind
+      ),
+      labels[kind] || 'Insertar bloque'
+    );
+  }
+
+  /** Quitar todas las negrillas (<strong>/<b>) del bloque. @private */
+  _doRemoveBold(blockEl) {
+    this._applyPatch(
+      removeBoldInBlock(
+        this._engine.getResult(),
+        this._norm(blockEl.textContent),
+        blockEl.tagName.toLowerCase(),
+        this._getBlockIndex(blockEl)
+      ),
+      'Quitar negrilla'
+    );
   }
 
   /**

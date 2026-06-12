@@ -261,8 +261,9 @@ export class CoursePanel {
   _agentStatusLabel(a) {
     if (a.kind === 'cli') {
       if (!a.available) return 'CLI no detectado';
-      if (!a.hasCredential) return '⚠️ Sin sesión — inicia sesión en el IDE';
-      return 'CLI detectado';
+      if (!a.sessionChecked) return 'Sin verificar';
+      if (!a.hasCredential) return '⚠️ Sin sesión';
+      return '✓ Sesión activa';
     }
     if (!a.available) return 'Motor no disponible';
     if (!a.hasCredential) return 'Sin cuenta conectada';
@@ -315,32 +316,67 @@ export class CoursePanel {
           ${!a.available ? '<span class="agent-action__warn">No se encontró en el PATH</span>' : ''}
         </div>`;
 
-      // Banner de sesión: si el CLI está disponible pero sin sesión, lo advertimos prominentemente
-      const sessionBanner = a.available && !a.hasCredential ? `
-        <div class="agent-action__session-warning" style="
-          background: rgba(234,88,12,0.12);
-          border: 1px solid rgba(234,88,12,0.4);
-          border-radius: 8px;
-          padding: 10px 14px;
-          margin-top: 6px;
-          font-size: 12px;
-          color: #ea580c;
-          line-height: 1.5;
+      if (!a.available) {
+        return `<div class="agent-action__grid">${cmdRow}</div>`;
+      }
+
+      // Estado 1: sin verificar aún (primer arranque)
+      if (!a.sessionChecked) {
+        const uncheckedBanner = `
+          <div style="
+            background: rgba(99,102,241,0.08);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px; padding: 12px 14px; margin-top: 6px;
+            font-size: 12px; color: #6366f1; line-height: 1.6;
+          ">
+            <strong>🔑 Sesión sin verificar</strong><br>
+            Pulsa <em>Verificar sesión</em> para comprobar si el CLI está autenticado,
+            o pulsa <em>Conectar</em> para iniciar sesión directamente dentro de la app
+            sin necesitar el Antigravity IDE.
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <button type="button" class="btn btn--primary btn--sm" id="geo-agy-login">Conectar con Google</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
+            </div>
+          </div>`;
+        return `<div class="agent-action__grid">${cmdRow}${uncheckedBanner}</div>`;
+      }
+
+      // Estado 2: verificado pero sin sesión
+      if (!a.hasCredential) {
+        const noBanner = `
+          <div style="
+            background: rgba(234,88,12,0.1);
+            border: 1px solid rgba(234,88,12,0.4);
+            border-radius: 8px; padding: 12px 14px; margin-top: 6px;
+            font-size: 12px; color: #ea580c; line-height: 1.6;
+          ">
+            <strong>⚠️ Antigravity CLI no tiene sesión activa</strong><br>
+            Inicia sesión directamente aquí — no necesitas el Antigravity IDE:
+            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn btn--primary btn--sm" id="geo-agy-login">🔑 Conectar con Google</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
+            </div>
+          </div>`;
+        return `<div class="agent-action__grid">${cmdRow}${noBanner}</div>`;
+      }
+
+      // Estado 3: autenticado ✓
+      const okBanner = `
+        <div style="
+          background: rgba(34,197,94,0.08);
+          border: 1px solid rgba(34,197,94,0.3);
+          border-radius: 8px; padding: 8px 14px; margin-top: 6px;
+          font-size: 12px; color: #16a34a; display:flex; align-items:center; gap:10px;
         ">
-          <strong>⚠️ Antigravity CLI no tiene sesión activa</strong><br>
-          El CLI usa credenciales independientes del IDE. Para poder generar:<br>
-          <ol style="margin: 6px 0 0 16px; padding:0;">
-            <li>Abre el <strong>Antigravity IDE</strong> (app de escritorio)</li>
-            <li>Inicia sesión con tu cuenta Google</li>
-            <li>Vuelve aquí y presiona Generar</li>
-          </ol>
-        </div>` : '';
+          <span>✓ Sesión activa</span>
+          <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight" style="margin-left:auto;">Reverificar</button>
+        </div>`;
 
       return `
         <div class="agent-action__grid">
           ${cmdRow}
-          ${sessionBanner}
-          ${a.available && a.hasCredential ? selectHtml : ''}
+          ${okBanner}
+          ${selectHtml}
         </div>`;
     }
 
@@ -380,6 +416,12 @@ export class CoursePanel {
     const command = this._el.querySelector('#geo-agent-command');
     if (command) command.addEventListener('click', () => this._commandDialog());
 
+    // Botones de Antigravity
+    const agyLogin = this._el.querySelector('#geo-agy-login');
+    if (agyLogin) agyLogin.addEventListener('click', () => this._agyLogin());
+    const agyPreflight = this._el.querySelector('#geo-agy-preflight');
+    if (agyPreflight) agyPreflight.addEventListener('click', () => this._agyPreflight());
+
     const modelSelect = this._el.querySelector('#geo-agent-model-select');
     if (modelSelect) {
       modelSelect.addEventListener('change', async (e) => {
@@ -402,6 +444,56 @@ export class CoursePanel {
     const customBtn = this._el.querySelector('#geo-agent-model-custom-btn');
     if (customBtn) {
       customBtn.addEventListener('click', () => this._customModelDialog());
+    }
+  }
+
+  /** @private — Preflight: verifica sesión del CLI de Antigravity */
+  async _agyPreflight() {
+    const api = projectApi();
+    if (!api || !api.agent || !api.agent.preflightAuth) {
+      showToast('preflightAuth no disponible en esta versión', 'error');
+      return;
+    }
+    showToast('Verificando sesión de Antigravity (≤6 s)…', 'info');
+    try {
+      const res = await api.agent.preflightAuth();
+      if (res.loggedIn) {
+        showToast('✓ Sesión de Antigravity activa', 'success');
+      } else {
+        showToast('⚠️ Sin sesión — usa el botón Conectar', 'error');
+      }
+      // Refresca el estado del agente para que la UI refleje el resultado
+      const statusRes = await api.agent.status();
+      if (statusRes.ok) { this._agentStatus = statusRes.data; this._renderProject(); }
+    } catch (err) {
+      showToast('Error al verificar: ' + (err && err.message), 'error');
+    }
+  }
+
+  /** @private — Abre el login OAuth de Antigravity dentro de la app */
+  async _agyLogin() {
+    const api = projectApi();
+    if (!api || !api.agent || !api.agent.loginAgy) {
+      showToast('loginAgy no disponible en esta versión', 'error');
+      return;
+    }
+    showToast('🔑 Iniciando flujo de login… (puede tardar ~10 s)', 'info');
+    try {
+      const res = await api.agent.loginAgy();
+      if (res.ok) {
+        showToast('✓ ' + (res.message || 'Sesión iniciada'), 'success');
+      } else if (res.fallback) {
+        showToast('🌐 ' + res.message, 'info');
+      } else if (res.cancelled) {
+        showToast('Login cancelado.', 'info');
+      } else {
+        showToast('⚠️ ' + (res.message || res.error || 'Error en el login'), 'error');
+      }
+      // Refresca el estado del agente
+      const statusRes = await api.agent.status();
+      if (statusRes.ok) { this._agentStatus = statusRes.data; this._renderProject(); }
+    } catch (err) {
+      showToast('Error: ' + (err && err.message), 'error');
     }
   }
 

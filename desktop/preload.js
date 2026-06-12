@@ -39,6 +39,8 @@ const VALID_CHANNELS = [
   'agent:setCommand',
   'agent:setModel',
   'agent:generate',
+  'agent:preflightAuth',
+  'agent:loginAgy',
 ];
 
 // ─── API expuesta al renderer ────────────────────────────────────────
@@ -210,6 +212,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
      */
     generate: (projectPath, structure) =>
       ipcRenderer.invoke('agent:generate', projectPath, structure),
+
+    /**
+     * Verifica si el CLI de Antigravity tiene sesión activa (corre agy ~6 s).
+     * @returns {Promise<{ ok: boolean, loggedIn: boolean, reason: string }>}
+     */
+    preflightAuth: () => ipcRenderer.invoke('agent:preflightAuth'),
+
+    /**
+     * Inicia el flujo de login de Antigravity directamente dentro de la app.
+     * Abre un BrowserWindow con la URL OAuth de Google; cuando el callback
+     * redirige a localhost, la ventana se cierra sola y el token queda guardado.
+     * @returns {Promise<{ ok: boolean, message?: string, fallback?: boolean, cancelled?: boolean, error?: string }>}
+     */
+    loginAgy: () => ipcRenderer.invoke('agent:loginAgy'),
 
     /**
      * Suscribe a los eventos de progreso de la generación.

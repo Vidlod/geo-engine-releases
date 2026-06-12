@@ -6,7 +6,9 @@ publish:
   provider: github
   owner: Vidlod
   repo: geo-engine-releases   # Apunta al repositorio público de releases
-  releaseType: draft
+  # release (no draft): los borradores son invisibles para electron-updater,
+  # por eso el aviso de actualización nunca llegaba a la app.
+  releaseType: release
 
 directories:
   output: release

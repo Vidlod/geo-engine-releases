@@ -18,6 +18,10 @@ Lee `references/reglas-transversales.md` (regla de oro, FLAGS, enlaces y linter)
 
 ## Insumos
 
+> **Insumo principal: la Rúbrica (.xlsx).** En el flujo de la app el glosario
+> se construye SOLO con la rúbrica + `curso.yaml`; no leas otros archivos de
+> `insumos/` salvo que la instrucción los liste explícitamente.
+
 - El **Excel de rúbrica** con los verbos, dimensiones y, si aplica, fuentes.
 - Las definiciones oficiales (RAE u otra fuente indicada en el Excel).
 

@@ -121,6 +121,15 @@ class App {
     }
     app.className = 'view-home';
 
+    // Marcas de plataforma para CSS: en Electron la barra superior es la zona
+    // de arrastre de la ventana, y en macOS el logo debe librar los semáforos.
+    if (window.electronAPI && typeof window.electronAPI.getAppInfo === 'function') {
+      document.body.classList.add('is-electron');
+      window.electronAPI.getAppInfo().then((info) => {
+        if (info && info.platform) document.body.classList.add(`platform-${info.platform}`);
+      }).catch(() => { /* sin info de plataforma */ });
+    }
+
     // ── Build the app shell ──────────────────────────────────
     //  <header.toolbar>
     //  <main.main>
@@ -365,7 +374,7 @@ class App {
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.9.4 · Moodle Builder</span>
+        <span class="home__badge">v1.9.6 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>

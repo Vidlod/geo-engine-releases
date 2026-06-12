@@ -242,45 +242,158 @@ function hasCliSession() {
   return !acc._none;
 }
 
+/* ── Verificación de sesión del CLI de Antigravity ───────────────── */
+
+/** Caché del resultado del preflight: evita correr agy en cada refresh de UI. */
+const _preflightCache = new Map(); // key → { ts: number, result: object }
+const PREFLIGHT_TTL = 90_000; // 90 segundos
+
 /**
- * Comprueba si el CLI de Antigravity (agy) tiene sesión activa en esta máquina.
- *
- * agy almacena sus credenciales como tokens de Electron/gcloud en la carpeta de
- * soporte de la aplicación del IDE de Antigravity. La señal más fiable es la
- * presencia de cookies de sesión o de un archivo de credenciales de aplicación.
- * Como método rápido y sin red, se verifica si existe ese directorio y tiene
- * contenido de sesión (Cookies, Local Storage, etc.).
- *
- * Si no podemos determinarlo con certeza, devolvemos `unknown` para no bloquear
- * al usuario pero sí advertirle.
- *
- * @returns {{ loggedIn: boolean, reason: string }}
+ * Invalida la caché de preflight para forzar una nueva verificación.
+ * Llamar cuando el usuario completa el login o cambia el comando.
+ * @param {string} [key]
  */
-function checkAgySession() {
-  const home = os.homedir();
-  const appSupport = process.platform === 'darwin'
-    ? path.join(home, 'Library', 'Application Support', 'Antigravity')
-    : process.platform === 'win32'
-      ? path.join(home, 'AppData', 'Roaming', 'Antigravity')
-      : path.join(home, '.config', 'Antigravity');
+function invalidateAgyAuthCache(key) {
+  if (key) _preflightCache.delete(key);
+  else _preflightCache.clear();
+}
 
-  // 1. La carpeta de soporte ni siquiera existe → nunca se instaló el IDE
-  if (!fs.existsSync(appSupport)) {
-    return { loggedIn: false, reason: 'no_install' };
+/**
+ * Verifica si el CLI de Antigravity tiene sesión activa ejecutando una prueba
+ * con timeout corto (5 s). Si el CLI responde con texto → autenticado.
+ * Si se cuelga (intenta abrir navegador para OAuth) → NO autenticado.
+ *
+ * NOTA: Las cookies del IDE de Antigravity pertenecen al Chromium del IDE
+ * y NO indican si el CLI tiene credenciales. Esta función es la única forma
+ * fiable de saberlo sin acceso al Keychain.
+ *
+ * @param {string} [command]  Comando completo (p. ej. 'antigravity' o ruta absoluta)
+ * @returns {Promise<{ loggedIn: boolean, reason: string }>}
+ */
+async function preflightAgyAuth(command) {
+  const key = command || 'default';
+  const cached = _preflightCache.get(key);
+  if (cached && Date.now() - cached.ts < PREFLIGHT_TTL) return cached.result;
+
+  const bin = module.exports.findOnPath(command || 'antigravity');
+  if (!bin) {
+    const r = { loggedIn: false, reason: 'no_cli' };
+    _preflightCache.set(key, { ts: Date.now(), result: r });
+    return r;
   }
 
-  // 2. Verificar Cookies (archivo que crea el IDE cuando tiene sesión Google)
-  const cookiesFile = path.join(appSupport, 'Cookies');
-  if (fs.existsSync(cookiesFile)) {
-    try {
-      const stat = fs.statSync(cookiesFile);
-      // Archivo de cookies no vacío → hay sesión activa
-      if (stat.size > 1024) return { loggedIn: true, reason: 'cookies' };
-    } catch { /* sin acceso */ }
+  const result = await new Promise((resolve) => {
+    let output = '';
+    let errOutput = '';
+    let done = false;
+
+    // Ejecutar con un prompt mínimo y timeout de impresión corto.
+    // Si el CLI tiene auth devuelve algo en segundos; si no tiene auth
+    // se cuelga intentando abrir el navegador para OAuth.
+    const child = spawn(bin, [
+      '--dangerously-skip-permissions',
+      '-p', '.',
+      '--print-timeout', '4s',
+    ], {
+      cwd: os.tmpdir(),
+      env: { ...process.env },
+    });
+
+    const finish = (loggedIn, reason) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { child.kill('SIGKILL'); } catch { /* ya terminó */ }
+      resolve({ loggedIn, reason });
+    };
+
+    // Cualquier respuesta de texto = CLI autenticado
+    child.stdout.on('data', (d) => {
+      output += d.toString();
+      if (output.trim().length > 2) finish(true, 'response');
+    });
+
+    child.stderr.on('data', (d) => {
+      errOutput += d.toString();
+      // Patrones de error de auth detectados en logs reales del CLI
+      if (/not logged|no token|unauthenticated|please.*log|require.*auth|error getting token/i.test(errOutput)) {
+        finish(false, 'auth_error');
+      }
+    });
+
+    // 6 s de espera total: si no responde = necesita auth (se quedó colgado)
+    const timer = setTimeout(() => finish(false, 'timeout'), 6000);
+
+    child.on('close', (code) => { if (!done) finish(code === 0, `exit_${code}`); });
+    child.on('error', () => finish(false, 'spawn_error'));
+  });
+
+  _preflightCache.set(key, { ts: Date.now(), result });
+  return result;
+}
+
+/**
+ * Captura la URL OAuth que agy intenta abrir en el navegador.
+ *
+ * Funciona interponiendo un script falso de `open` (macOS) / `xdg-open` (Linux)
+ * en el PATH antes de lanzar agy. En lugar de abrir el browser, el script
+ * escribe la URL en un archivo temporal que este proceso lee.
+ *
+ * Devuelve { url, child, tmpDir } donde `child` es el proceso de agy que
+ * DEBE mantenerse vivo mientras dure el login (tiene el servidor OAuth local).
+ * La carpeta `tmpDir` debe limpiarse al terminar.
+ *
+ * @param {string} [command]
+ * @returns {Promise<{ url: string, child: import('child_process').ChildProcess, tmpDir: string } | null>}
+ */
+async function captureAgyLoginUrl(command) {
+  const bin = module.exports.findOnPath(command || 'antigravity');
+  if (!bin) return null;
+
+  const tmpDir = path.join(os.tmpdir(), `geo-agy-login-${Date.now()}`);
+  fs.mkdirSync(tmpDir, { recursive: true });
+  const urlFile = path.join(tmpDir, 'auth-url.txt');
+
+  // Script que captura la URL en vez de abrir el browser
+  const captureScript = `#!/bin/sh\nprintf '%s' "$1" > "${urlFile}"\n`;
+  for (const name of ['open', 'xdg-open']) {
+    const p = path.join(tmpDir, name);
+    fs.writeFileSync(p, captureScript, { mode: 0o755 });
   }
 
-  // 3. Sin señal clara → asumimos no logueado para proteger al usuario
-  return { loggedIn: false, reason: 'no_token' };
+  const child = spawn(bin, [
+    '--dangerously-skip-permissions',
+    '-p', 'auth',
+  ], {
+    cwd: os.tmpdir(),
+    env: {
+      ...process.env,
+      // Poner nuestro directorio primero en PATH para interceptar 'open'
+      PATH: `${tmpDir}:${process.env.PATH || ''}`,
+      BROWSER: path.join(tmpDir, 'open'), // fallback para Linux
+    },
+  });
+
+  // Leer el archivo cada 400 ms (max 12 s = 30 intentos)
+  const url = await new Promise((resolve) => {
+    let attempts = 0;
+    const iv = setInterval(() => {
+      attempts++;
+      try {
+        const content = fs.readFileSync(urlFile, 'utf-8').trim();
+        if (content && content.startsWith('http')) { clearInterval(iv); resolve(content); return; }
+      } catch { /* aún no existe */ }
+      if (attempts >= 30) { clearInterval(iv); resolve(null); }
+    }, 400);
+  });
+
+  if (!url) {
+    try { child.kill('SIGKILL'); } catch { /* ya terminó */ }
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { }
+    return null;
+  }
+
+  return { url, child, tmpDir };
 }
 
 /**
@@ -353,7 +466,10 @@ async function getStatus(userDataPath, safeStorage) {
   // Antigravity (CLI)
   const agCommand = cfg.antigravity.command;
   const agResolved = module.exports.findOnPath(agCommand);
-  const agSession = agResolved ? module.exports.checkAgySession() : { loggedIn: false, reason: 'no_cli' };
+  // Usar caché del preflight si existe (el preflight corre agy con timeout real)
+  const agCached = _preflightCache.get(agCommand || 'default');
+  // loggedIn: null = todavía no se ha hecho preflight (UI muestra "Verificar")
+  const agLoggedIn = agCached ? agCached.result.loggedIn : null;
 
   const agents = [
     {
@@ -371,11 +487,11 @@ async function getStatus(userDataPath, safeStorage) {
       label: 'Antigravity',
       kind: 'cli',
       available: agResolved !== null,
-      // El CLI necesita sesión propia (login con cuenta Google en el IDE).
-      // Si no tiene token, la generación se colgaría indefinidamente.
-      hasCredential: agResolved !== null && agSession.loggedIn,
-      credentialSource: agResolved ? (agSession.loggedIn ? 'cli' : null) : null,
-      sessionStatus: agSession,
+      // null = sin verificar aún; false = sin sesión; true = OK
+      hasCredential: agLoggedIn === true,
+      sessionChecked: agLoggedIn !== null,
+      sessionLoggedIn: agLoggedIn,
+      credentialSource: agLoggedIn === true ? 'cli' : null,
       command: agCommand,
       resolvedPath: agResolved,
       model: cfg.antigravity.model,
@@ -795,14 +911,24 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
     emit({ type: 'error', message: error });
     return { ok: false, error };
   }
-  if (!selected.hasCredential) {
-    // Para el CLI de Antigravity damos un mensaje específico y accionable
-    const isAgy = selected.id === 'antigravity';
-    const error = isAgy
-      ? 'Antigravity CLI no tiene sesión iniciada. ' +
-        'Abre el Antigravity IDE (aplicación de escritorio), inicia sesión con tu cuenta Google y vuelve a intentarlo. ' +
-        'El CLI usa credenciales independientes del IDE — el login dentro del IDE no se transfiere automáticamente al CLI.'
-      : `No hay una cuenta conectada para ${selected.label}. Conéctala desde el panel del agente.`;
+
+  // ── Verificación de sesión ANTES de empezar (evita colgarse 20 min) ──
+  if (selected.kind === 'cli' && selected.id === 'antigravity') {
+    emit({ type: 'status', message: 'Verificando sesión de Antigravity CLI (≤6 s)…' });
+    const authCheck = await module.exports.preflightAgyAuth(selected.command);
+    if (!authCheck.loggedIn) {
+      const hint = authCheck.reason === 'timeout'
+        ? 'El CLI no respondió (se colgó esperando autenticación).'
+        : `Razón: ${authCheck.reason}.`;
+      const error =
+        `Antigravity CLI no tiene sesión activa. ${hint} ` +
+        'Usa el botón "Conectar" en el panel del agente para iniciar sesión sin salir de GEO Engine.';
+      emit({ type: 'error', message: error });
+      return { ok: false, error };
+    }
+    emit({ type: 'status', message: 'Sesión de Antigravity verificada ✓' });
+  } else if (!selected.hasCredential) {
+    const error = `No hay una cuenta conectada para ${selected.label}. Conéctala desde el panel del agente.`;
     emit({ type: 'error', message: error });
     return { ok: false, error };
   }
@@ -895,6 +1021,7 @@ function describeTool(block) {
 module.exports = {
   SKILL_DIRS,
   AGENTS,
+  readConfig,
   getStatus,
   selectAgent,
   setModel,
@@ -904,11 +1031,13 @@ module.exports = {
   syncSkills,
   buildInstruction,
   generate,
-  // expuestos para tests
+  // expuestos para tests y para main.js
   describeTool,
   parseCommand,
   findOnPath,
-  checkAgySession,
+  preflightAgyAuth,
+  captureAgyLoginUrl,
+  invalidateAgyAuthCache,
   relevantInsumos,
   listInsumos,
 };

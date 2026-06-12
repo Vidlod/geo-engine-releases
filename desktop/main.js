@@ -93,7 +93,8 @@ function createMainWindow(port) {
     show: false,
     backgroundColor: '#0a0a0f',
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 16, y: 16 },
+    // Centrados verticalmente en la toolbar de 56px (los botones miden ~12px).
+    trafficLightPosition: { x: 16, y: 22 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -339,11 +340,209 @@ function registerIpcHandlers() {
       return { ok: false, error: error.message };
     }
   });
+
+  // ── Verificación rápida de sesión de Antigravity CLI ────────────────
+  ipcMain.handle('agent:preflightAuth', async () => {
+    try {
+      const cfg = agent.getStatus ? null : null; // solo necesitamos el comando
+      const { readConfig } = require('./server/agent');
+      const cfgData = readConfig(userDataPath);
+      const command = cfgData.antigravity && cfgData.antigravity.command;
+      const result = await agent.preflightAgyAuth(command);
+      return { ok: true, ...result };
+    } catch (err) {
+      return { ok: false, loggedIn: false, reason: String(err && err.message) };
+    }
+  });
+
+  // ── Login integrado de Antigravity: abre BrowserWindow con el flujo OAuth ──
+  ipcMain.handle('agent:loginAgy', async () => {
+    const { BrowserWindow: BW, shell } = require('electron');
+    const fs = require('fs');
+    try {
+      const { readConfig } = require('./server/agent');
+      const cfgData = readConfig(userDataPath);
+      const command = cfgData.antigravity && cfgData.antigravity.command;
+
+      // Invalidar caché para que el estado se refresque tras el login
+      agent.invalidateAgyAuthCache();
+
+      // Intentar capturar la URL OAuth que agy intenta abrir
+      let loginData = null;
+      try { loginData = await agent.captureAgyLoginUrl(command); } catch { /* sin captura */ }
+
+      if (!loginData || !loginData.url) {
+        // Fallback: si no se pudo interceptar la URL, abrir el sitio en el browser
+        shell.openExternal('https://antigravity.dev');
+        return {
+          ok: false,
+          fallback: true,
+          message: 'Se abrió Antigravity en tu navegador. Inicia sesión allí, luego regresa y pulsa "Verificar sesión".',
+        };
+      }
+
+      const { url, child, tmpDir } = loginData;
+
+      // Abrir un BrowserWindow con la URL de OAuth de Google
+      const authWin = new BW({
+        width: 900,
+        height: 660,
+        title: 'Iniciar sesión en Antigravity',
+        modal: false,
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+        },
+      });
+
+      authWin.once('ready-to-show', () => authWin.show());
+      authWin.loadURL(url);
+
+      // Cuando el browser de Google redirige al localhost de agy = auth completado
+      const completed = await new Promise((resolve) => {
+        let done = false;
+
+        const checkUrl = (navUrl) => {
+          if (done) return;
+          if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(navUrl)) {
+            done = true;
+            // Dar 2 s a agy para guardar el token antes de cerrar
+            setTimeout(() => { try { authWin.close(); } catch { } }, 2000);
+          }
+        };
+
+        authWin.webContents.on('will-navigate', (_ev, navUrl) => checkUrl(navUrl));
+        authWin.webContents.on('did-navigate', (_ev, navUrl) => checkUrl(navUrl));
+        authWin.webContents.on('will-redirect', (_ev, navUrl) => checkUrl(navUrl));
+
+        authWin.on('closed', () => resolve(done));
+      });
+
+      // Terminar el proceso de agy y limpiar archivos temporales
+      try { child.kill('SIGTERM'); } catch { }
+      setTimeout(() => {
+        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { }
+      }, 3000);
+
+      // Invalidar caché y forzar nuevo preflight
+      agent.invalidateAgyAuthCache();
+
+      return completed
+        ? { ok: true, message: 'Sesión iniciada correctamente. Ya puedes generar.' }
+        : { ok: false, cancelled: true, message: 'Login cancelado. Inicia sesión y vuelve a intentarlo.' };
+
+    } catch (err) {
+      console.error('[IPC:agent:loginAgy]', err);
+      // Fallback de emergencia
+      try {
+        const { shell: sh } = require('electron');
+        sh.openExternal('https://antigravity.dev');
+      } catch { }
+      return { ok: false, error: String(err && err.message) };
+    }
+  });
 }
 
 // ─── Configuración de Auto-Updater ───────────────────────────────────
+
+/** Repositorio público del que se leen los releases. */
+const UPDATES_REPO = 'Vidlod/geo-engine-releases';
+
 /**
- * Configura el sistema de actualizaciones automáticas.
+ * GET JSON de la API pública de GitHub.
+ * @param {string} apiPath @returns {Promise<any>}
+ */
+function githubGet(apiPath) {
+  return new Promise((resolve, reject) => {
+    const req = require('https').get(
+      `https://api.github.com${apiPath}`,
+      { headers: { 'User-Agent': 'GEO-Engine-Updater', Accept: 'application/vnd.github+json' } },
+      (res) => {
+        let body = '';
+        res.on('data', (chunk) => { body += chunk; });
+        res.on('end', () => {
+          if (res.statusCode !== 200) { reject(new Error(`HTTP ${res.statusCode}`)); return; }
+          try { resolve(JSON.parse(body)); } catch (err) { reject(err); }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.setTimeout(15000, () => req.destroy(new Error('Tiempo de espera agotado')));
+  });
+}
+
+/**
+ * Último release publicado. Usa /releases/latest y, si no resuelve (p. ej.
+ * todos marcados pre-release), cae a la lista completa y toma el primero
+ * que no sea draft.
+ * @returns {Promise<any|null>}
+ */
+async function fetchLatestRelease() {
+  try {
+    return await githubGet(`/repos/${UPDATES_REPO}/releases/latest`);
+  } catch {
+    const list = await githubGet(`/repos/${UPDATES_REPO}/releases`);
+    return Array.isArray(list) ? (list.find((r) => !r.draft) || null) : null;
+  }
+}
+
+/**
+ * ¿`latest` es más nueva que `current`? (comparación numérica por segmentos)
+ * @param {string} latest @param {string} current
+ */
+function isNewerVersion(latest, current) {
+  const pa = String(latest).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(current).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
+/**
+ * Chequeo de actualización para macOS sin firma de código.
+ *
+ * electron-updater en macOS exige una app firmada con Developer ID para poder
+ * INSTALAR (Squirrel.Mac valida la firma del zip y aborta). Sin certificado,
+ * el aviso se hace a mano contra la API de GitHub y la descarga del .dmg se
+ * abre en el navegador para instalarla arrastrándola a Aplicaciones.
+ */
+async function checkForUpdatesMac() {
+  try {
+    const rel = await fetchLatestRelease();
+    if (!rel || rel.draft || rel.prerelease) return;
+    const latest = String(rel.tag_name || '').replace(/^v/, '');
+    if (!latest || !isNewerVersion(latest, app.getVersion())) {
+      console.log(`[Updater] Sin novedades (instalada ${app.getVersion()}, última ${latest || '?'}).`);
+      return;
+    }
+
+    console.log('[Updater] Actualización disponible (macOS, manual):', latest);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update:available', { version: latest, manual: true });
+    }
+
+    const dmg = (rel.assets || []).find((a) => /\.dmg$/i.test(a.name || ''));
+    const downloadUrl = dmg ? dmg.browser_download_url : rel.html_url;
+    const result = await dialog.showMessageBox(mainWindow, {
+      type: 'question',
+      title: 'Actualización disponible',
+      message: `Una nueva versión de GEO Engine (v${latest}) está disponible.`,
+      detail: 'Se abrirá la descarga en tu navegador. Cuando termine, abre el .dmg y arrastra GEO Engine a Aplicaciones para reemplazar la versión actual.',
+      buttons: ['Descargar actualización', 'No, después'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (result.response === 0) await shell.openExternal(downloadUrl);
+  } catch (error) {
+    console.error('[Updater] Chequeo manual (macOS) falló:', error.message);
+  }
+}
+
+/**
+ * Configura el sistema de actualizaciones automáticas (Windows/Linux).
  */
 function setupAutoUpdater() {
   // Desactivar descarga automática para pedir confirmación al usuario primero
@@ -430,11 +629,17 @@ app.whenReady().then(async () => {
     const appMenu = buildMenu(mainWindow);
     Menu.setApplicationMenu(appMenu);
 
-    // 6. Iniciar comprobación de actualizaciones si es producción
+    // 6. Iniciar comprobación de actualizaciones si es producción.
+    //    macOS sin firma → chequeo manual (descarga vía navegador);
+    //    Windows/Linux → electron-updater (descarga e instala solo).
     if (!isDev) {
-      autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-        console.error('[Updater] Falló al iniciar comprobación de actualización:', err.message);
-      });
+      if (process.platform === 'darwin') {
+        checkForUpdatesMac();
+      } else {
+        autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+          console.error('[Updater] Falló al iniciar comprobación de actualización:', err.message);
+        });
+      }
     }
 
     // 7. Manejar la segunda instancia (enfocar la ventana existente)
