@@ -267,10 +267,15 @@ function invalidateAgyAuthCache(key) {
  * y NO indican si el CLI tiene credenciales. Esta función es la única forma
  * fiable de saberlo sin acceso al Keychain.
  *
+/**
+ * Comprueba de forma rápida si el CLI tiene sesión activa ejecutándolo con
+ * un timeout corto.
  * @param {string} [command]  Comando completo (p. ej. 'antigravity' o ruta absoluta)
+ * @param {string} [userDataPath]
+ * @param {any} [safeStorage]
  * @returns {Promise<{ loggedIn: boolean, reason: string }>}
  */
-async function preflightAgyAuth(command) {
+async function preflightAgyAuth(command, userDataPath, safeStorage) {
   const key = command || 'default';
   const cached = _preflightCache.get(key);
   if (cached && Date.now() - cached.ts < PREFLIGHT_TTL) return cached.result;
@@ -287,6 +292,17 @@ async function preflightAgyAuth(command) {
     let errOutput = '';
     let done = false;
 
+    const env = { ...process.env };
+    if (userDataPath) {
+      const stored = readStoredToken(userDataPath, safeStorage, 'antigravity');
+      if (stored) {
+        env.GEO_AGENT_TOKEN = stored;
+        env.GEMINI_API_KEY = stored;
+        env.GOOGLE_API_KEY = stored;
+        env.ANTIGRAVITY_API_KEY = stored;
+      }
+    }
+
     // Ejecutar con un prompt mínimo y timeout de impresión corto.
     // Si el CLI tiene auth devuelve algo en segundos; si no tiene auth
     // se cuelga intentando abrir el navegador para OAuth.
@@ -296,7 +312,7 @@ async function preflightAgyAuth(command) {
       '--print-timeout', '4s',
     ], {
       cwd: os.tmpdir(),
-      env: { ...process.env },
+      env,
     });
 
     const finish = (loggedIn, reason) => {
@@ -357,6 +373,7 @@ async function captureAgyLoginUrl(command) {
   // Script que captura la URL en vez de abrir el browser.
   // Busca en todos los argumentos aquél que comience con http/https.
   const captureScript = `#!/bin/sh
+echo "OPEN CALLED WITH ARGS: $@" >> /Users/buc-cvudes-medios1/.gemini/antigravity-ide/scratch/debug-open.txt
 for arg in "$@"; do
   case "$arg" in
     http*)
@@ -477,10 +494,15 @@ async function getStatus(userDataPath, safeStorage) {
   // Antigravity (CLI)
   const agCommand = cfg.antigravity.command;
   const agResolved = module.exports.findOnPath(agCommand);
+  const agStored = readStoredToken(userDataPath, safeStorage, 'antigravity');
   // Usar caché del preflight si existe (el preflight corre agy con timeout real)
   const agCached = _preflightCache.get(agCommand || 'default');
   // loggedIn: null = todavía no se ha hecho preflight (UI muestra "Verificar")
   const agLoggedIn = agCached ? agCached.result.loggedIn : null;
+
+  let agSource = null;
+  if (agStored) agSource = 'app';
+  else if (agLoggedIn === true) agSource = 'cli';
 
   const agents = [
     {
@@ -499,10 +521,10 @@ async function getStatus(userDataPath, safeStorage) {
       kind: 'cli',
       available: agResolved !== null,
       // null = sin verificar aún; false = sin sesión; true = OK
-      hasCredential: agLoggedIn === true,
-      sessionChecked: agLoggedIn !== null,
-      sessionLoggedIn: agLoggedIn,
-      credentialSource: agLoggedIn === true ? 'cli' : null,
+      hasCredential: agSource !== null,
+      sessionChecked: agSource === 'app' ? true : (agLoggedIn !== null),
+      sessionLoggedIn: agSource === 'app' ? true : agLoggedIn,
+      credentialSource: agSource,
       command: agCommand,
       resolvedPath: agResolved,
       model: cfg.antigravity.model,
@@ -1004,7 +1026,12 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
 
   // CLI (Antigravity)
   const stored = readStoredToken(userDataPath, safeStorage, selected.id);
-  if (stored) env.GEO_AGENT_TOKEN = stored; // disponible por si el CLI lo usa
+  if (stored) {
+    env.GEO_AGENT_TOKEN = stored;
+    env.GEMINI_API_KEY = stored;
+    env.GOOGLE_API_KEY = stored;
+    env.ANTIGRAVITY_API_KEY = stored;
+  }
   env.GEMINI_MODEL = selected.model;
   env.ANTIGRAVITY_MODEL = selected.model;
   return cliGenerate({ command: selected.command, projectPath, env, instruction, emit, structure, model: selected.model });

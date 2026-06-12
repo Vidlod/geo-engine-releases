@@ -348,7 +348,7 @@ function registerIpcHandlers() {
       const { readConfig } = require('./server/agent');
       const cfgData = readConfig(userDataPath);
       const command = cfgData.antigravity && cfgData.antigravity.command;
-      const result = await agent.preflightAgyAuth(command);
+      const result = await agent.preflightAgyAuth(command, userDataPath, safeStorage);
       return { ok: true, ...result };
     } catch (err) {
       return { ok: false, loggedIn: false, reason: String(err && err.message) };

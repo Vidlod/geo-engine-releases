@@ -263,6 +263,7 @@ export class CoursePanel {
       if (!a.available) return 'CLI no detectado';
       if (!a.sessionChecked) return 'Sin verificar';
       if (!a.hasCredential) return '⚠️ Sin sesión';
+      if (a.credentialSource === 'app') return '✓ API Key guardada';
       return '✓ Sesión activa';
     }
     if (!a.available) return 'Motor no disponible';
@@ -330,11 +331,10 @@ export class CoursePanel {
             font-size: 12px; color: #6366f1; line-height: 1.6;
           ">
             <strong>🔑 Sesión sin verificar</strong><br>
-            Pulsa <em>Verificar sesión</em> para comprobar si el CLI está autenticado,
-            o pulsa <em>Conectar</em> para iniciar sesión directamente dentro de la app
-            sin necesitar el Antigravity IDE.
-            <div style="margin-top:8px; display:flex; gap:8px;">
-              <button type="button" class="btn btn--primary btn--sm" id="geo-agy-login">Conectar con Google</button>
+            Comprueba si el CLI está autenticado o ingresa una API Key directamente:
+            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">🔑 Ingresar API Key</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-login">Conectar con Google</button>
               <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
             </div>
           </div>`;
@@ -351,9 +351,10 @@ export class CoursePanel {
             font-size: 12px; color: #ea580c; line-height: 1.6;
           ">
             <strong>⚠️ Antigravity CLI no tiene sesión activa</strong><br>
-            Inicia sesión directamente aquí — no necesitas el Antigravity IDE:
+            Ingresa una API Key directamente aquí (sin navegadores) o inicia sesión:
             <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="btn btn--primary btn--sm" id="geo-agy-login">🔑 Conectar con Google</button>
+              <button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">🔑 Ingresar API Key</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-login">Conectar con Google</button>
               <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
             </div>
           </div>`;
@@ -368,8 +369,9 @@ export class CoursePanel {
           border-radius: 8px; padding: 8px 14px; margin-top: 6px;
           font-size: 12px; color: #16a34a; display:flex; align-items:center; gap:10px;
         ">
-          <span>✓ Sesión activa</span>
-          <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight" style="margin-left:auto;">Reverificar</button>
+          <span>✓ Sesión activa (${a.credentialSource === 'app' ? 'API Key guardada' : 'Keyring/CLI'})</span>
+          ${a.credentialSource === 'app' ? '<button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect" style="margin-left:auto;">Desconectar</button>' : ''}
+          <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight" style="${a.credentialSource === 'app' ? '' : 'margin-left:auto;'}">Reverificar</button>
         </div>`;
 
       return `
@@ -666,22 +668,31 @@ export class CoursePanel {
 
   /** @private */
   async _connectDialog() {
+    const isAgy = this._agentStatus.selected === 'antigravity';
+    const title = isAgy ? 'Conectar Antigravity' : 'Conectar Claude';
+    const label = isAgy ? 'Gemini API Key' : 'Token de Claude o API key';
+    const placeholder = isAgy ? 'AIzaSy… (API Key de Google AI Studio)' : 'sk-ant-… o token de claude setup-token';
+    const hint = isAgy
+      ? 'Cómo obtenerlo: ve a Google AI Studio (aistudio.google.com), crea una API Key gratuita y pégala aquí. ' +
+        'El CLI de Antigravity usará esta clave para autenticar todas sus peticiones de forma directa sin usar navegadores.'
+      : 'Cómo obtenerlo: en una terminal ejecuta «claude setup-token», inicia sesión ' +
+        'en el navegador y copia el token resultante. También sirve una API key de ' +
+        'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.';
+
     const token = await this._askText({
-      title: 'Conectar Claude',
-      label: 'Token de Claude o API key',
-      placeholder: 'sk-ant-… o token de claude setup-token',
+      title,
+      label,
+      placeholder,
       confirmLabel: 'Conectar',
       password: true,
-      hint: 'Cómo obtenerlo: en una terminal ejecuta «claude setup-token», inicia sesión ' +
-        'en el navegador y copia el token resultante. También sirve una API key de ' +
-        'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.',
+      hint,
     });
     if (!token) return;
-    const res = await projectApi().agent.setToken('claude', token);
+    const res = await projectApi().agent.setToken(this._agentStatus.selected, token);
     if (res.ok) {
       this._agentStatus = res.data;
       this._renderProject();
-      showToast('Cuenta de Claude conectada', 'success');
+      showToast(isAgy ? 'API Key de Gemini conectada' : 'Cuenta de Claude conectada', 'success');
     } else {
       showToast(res.error || 'No se pudo guardar el token', 'error');
     }
