@@ -354,11 +354,22 @@ async function captureAgyLoginUrl(command) {
   fs.mkdirSync(tmpDir, { recursive: true });
   const urlFile = path.join(tmpDir, 'auth-url.txt');
 
-  // Script que captura la URL en vez de abrir el browser
-  const captureScript = `#!/bin/sh\nprintf '%s' "$1" > "${urlFile}"\n`;
+  // Script que captura la URL en vez de abrir el browser.
+  // Busca en todos los argumentos aquél que comience con http/https.
+  const captureScript = `#!/bin/sh
+for arg in "$@"; do
+  case "$arg" in
+    http*)
+      printf '%s' "$arg" > "${urlFile}"
+      exit 0
+      ;;
+  esac
+done
+`;
   for (const name of ['open', 'xdg-open']) {
     const p = path.join(tmpDir, name);
     fs.writeFileSync(p, captureScript, { mode: 0o755 });
+    try { fs.chmodSync(p, 0o755); } catch (e) { /* ignore */ }
   }
 
   const child = spawn(bin, [

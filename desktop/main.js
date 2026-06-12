@@ -373,7 +373,7 @@ function registerIpcHandlers() {
 
       if (!loginData || !loginData.url) {
         // Fallback: si no se pudo interceptar la URL, abrir el sitio en el browser
-        shell.openExternal('https://antigravity.dev');
+        shell.openExternal('https://antigravity.google');
         return {
           ok: false,
           fallback: true,
@@ -438,7 +438,7 @@ function registerIpcHandlers() {
       // Fallback de emergencia
       try {
         const { shell: sh } = require('electron');
-        sh.openExternal('https://antigravity.dev');
+        sh.openExternal('https://antigravity.google');
       } catch { }
       return { ok: false, error: String(err && err.message) };
     }
