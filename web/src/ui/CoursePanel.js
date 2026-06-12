@@ -260,7 +260,9 @@ export class CoursePanel {
   /** @private @param {any} a @returns {string} */
   _agentStatusLabel(a) {
     if (a.kind === 'cli') {
-      return a.available ? 'CLI detectado' : 'CLI no detectado';
+      if (!a.available) return 'CLI no detectado';
+      if (!a.hasCredential) return '⚠️ Sin sesión — inicia sesión en el IDE';
+      return 'CLI detectado';
     }
     if (!a.available) return 'Motor no disponible';
     if (!a.hasCredential) return 'Sin cuenta conectada';
@@ -274,9 +276,10 @@ export class CoursePanel {
 
     const modelOptions = a.id === 'claude'
       ? [
-          { value: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet (Recomendado)' },
-          { value: 'claude-3-7-haiku-latest', label: 'Claude 3.7 Haiku' },
-          { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet v2' },
+          { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Recomendado)' },
+          { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (El más rápido)' },
+          { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (Máxima calidad)' },
+          { value: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet' },
           { value: 'custom', label: 'Otro modelo (Personalizado)...' }
         ]
       : [
@@ -311,10 +314,33 @@ export class CoursePanel {
           <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-command">Cambiar</button>
           ${!a.available ? '<span class="agent-action__warn">No se encontró en el PATH</span>' : ''}
         </div>`;
+
+      // Banner de sesión: si el CLI está disponible pero sin sesión, lo advertimos prominentemente
+      const sessionBanner = a.available && !a.hasCredential ? `
+        <div class="agent-action__session-warning" style="
+          background: rgba(234,88,12,0.12);
+          border: 1px solid rgba(234,88,12,0.4);
+          border-radius: 8px;
+          padding: 10px 14px;
+          margin-top: 6px;
+          font-size: 12px;
+          color: #ea580c;
+          line-height: 1.5;
+        ">
+          <strong>⚠️ Antigravity CLI no tiene sesión activa</strong><br>
+          El CLI usa credenciales independientes del IDE. Para poder generar:<br>
+          <ol style="margin: 6px 0 0 16px; padding:0;">
+            <li>Abre el <strong>Antigravity IDE</strong> (app de escritorio)</li>
+            <li>Inicia sesión con tu cuenta Google</li>
+            <li>Vuelve aquí y presiona Generar</li>
+          </ol>
+        </div>` : '';
+
       return `
         <div class="agent-action__grid">
           ${cmdRow}
-          ${a.available ? selectHtml : ''}
+          ${sessionBanner}
+          ${a.available && a.hasCredential ? selectHtml : ''}
         </div>`;
     }
 
@@ -609,11 +635,11 @@ export class CoursePanel {
     const model = await this._askText({
       title: 'Especificar modelo personalizado',
       label: 'Nombre del modelo en la API / CLI',
-      placeholder: current.id === 'claude' ? 'claude-3-7-sonnet-latest' : 'gemini-2.5-flash',
+      placeholder: current.id === 'claude' ? 'claude-sonnet-4-6' : 'gemini-2.5-flash',
       confirmLabel: 'Guardar',
       hint: 'Introduce el identificador exacto del modelo. Por ejemplo, ' +
-        (current.id === 'claude' 
-          ? '«claude-3-7-sonnet-latest» o «claude-3-7-haiku-latest».' 
+        (current.id === 'claude'
+          ? '«claude-sonnet-4-6» o «claude-haiku-4-5».'
           : '«gemini-2.5-flash» o «gemini-2.5-pro».')
     });
     if (!model) {

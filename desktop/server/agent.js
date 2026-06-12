@@ -60,10 +60,13 @@ function configPath(userDataPath) {
 }
 
 const DEFAULT_MODELS = {
-  claude: 'claude-3-7-sonnet-latest',
+  claude: 'claude-sonnet-4-6',
   // Gemini 3 Flash (effort medium): el más rápido para maquetación headless.
   antigravity: 'gemini-3-flash-medium',
 };
+
+/** Defaults antiguos que se migran automáticamente al default vigente. */
+const LEGACY_CLAUDE_DEFAULTS = ['claude-3-7-sonnet-latest'];
 
 /**
  * @param {string} userDataPath
@@ -80,7 +83,12 @@ function readConfig(userDataPath) {
     return {
       selected: AGENTS.some((a) => a.id === raw.selected) ? raw.selected : 'claude',
       claude: {
-        model: (raw.claude && raw.claude.model) || DEFAULT_MODELS.claude
+        // Migra defaults viejos guardados en disco al modelo vigente (más rápido).
+        model: (() => {
+          const m = raw.claude && raw.claude.model;
+          if (!m || LEGACY_CLAUDE_DEFAULTS.includes(m)) return DEFAULT_MODELS.claude;
+          return m;
+        })()
       },
       antigravity: {
         command: (raw.antigravity && raw.antigravity.command) || DEFAULT_ANTIGRAVITY_COMMAND,
@@ -235,6 +243,47 @@ function hasCliSession() {
 }
 
 /**
+ * Comprueba si el CLI de Antigravity (agy) tiene sesión activa en esta máquina.
+ *
+ * agy almacena sus credenciales como tokens de Electron/gcloud en la carpeta de
+ * soporte de la aplicación del IDE de Antigravity. La señal más fiable es la
+ * presencia de cookies de sesión o de un archivo de credenciales de aplicación.
+ * Como método rápido y sin red, se verifica si existe ese directorio y tiene
+ * contenido de sesión (Cookies, Local Storage, etc.).
+ *
+ * Si no podemos determinarlo con certeza, devolvemos `unknown` para no bloquear
+ * al usuario pero sí advertirle.
+ *
+ * @returns {{ loggedIn: boolean, reason: string }}
+ */
+function checkAgySession() {
+  const home = os.homedir();
+  const appSupport = process.platform === 'darwin'
+    ? path.join(home, 'Library', 'Application Support', 'Antigravity')
+    : process.platform === 'win32'
+      ? path.join(home, 'AppData', 'Roaming', 'Antigravity')
+      : path.join(home, '.config', 'Antigravity');
+
+  // 1. La carpeta de soporte ni siquiera existe → nunca se instaló el IDE
+  if (!fs.existsSync(appSupport)) {
+    return { loggedIn: false, reason: 'no_install' };
+  }
+
+  // 2. Verificar Cookies (archivo que crea el IDE cuando tiene sesión Google)
+  const cookiesFile = path.join(appSupport, 'Cookies');
+  if (fs.existsSync(cookiesFile)) {
+    try {
+      const stat = fs.statSync(cookiesFile);
+      // Archivo de cookies no vacío → hay sesión activa
+      if (stat.size > 1024) return { loggedIn: true, reason: 'cookies' };
+    } catch { /* sin acceso */ }
+  }
+
+  // 3. Sin señal clara → asumimos no logueado para proteger al usuario
+  return { loggedIn: false, reason: 'no_token' };
+}
+
+/**
  * Localiza un comando: ruta absoluta existente o búsqueda en el PATH.
  * @param {string} command
  * @returns {string|null} ruta resuelta o null
@@ -304,6 +353,7 @@ async function getStatus(userDataPath, safeStorage) {
   // Antigravity (CLI)
   const agCommand = cfg.antigravity.command;
   const agResolved = module.exports.findOnPath(agCommand);
+  const agSession = agResolved ? module.exports.checkAgySession() : { loggedIn: false, reason: 'no_cli' };
 
   const agents = [
     {
@@ -321,11 +371,11 @@ async function getStatus(userDataPath, safeStorage) {
       label: 'Antigravity',
       kind: 'cli',
       available: agResolved !== null,
-      // El CLI gestiona su propia sesión (login con cuenta Google); si está
-      // en el PATH lo damos por usable. Si no estuviera logueado, el error
-      // de generación lo dirá.
-      hasCredential: agResolved !== null,
-      credentialSource: agResolved ? 'cli' : null,
+      // El CLI necesita sesión propia (login con cuenta Google en el IDE).
+      // Si no tiene token, la generación se colgaría indefinidamente.
+      hasCredential: agResolved !== null && agSession.loggedIn,
+      credentialSource: agResolved ? (agSession.loggedIn ? 'cli' : null) : null,
+      sessionStatus: agSession,
       command: agCommand,
       resolvedPath: agResolved,
       model: cfg.antigravity.model,
@@ -339,11 +389,18 @@ async function getStatus(userDataPath, safeStorage) {
 
 /**
  * Copia (o actualiza) las skills geo-* dentro de `<proyecto>/.claude/skills/` y `<proyecto>/.agent/skills/`.
+ *
+ * Si se indica `only`, instala SOLO esa skill y elimina las demás del
+ * proyecto: así el agente no carga descripciones de skills que no va a usar
+ * (menos contexto = generación más rápida y precisa).
+ *
  * @param {string} projectPath @param {string} skillsSrcPath
+ * @param {string} [only] - nombre de la única skill a instalar (p. ej. 'geo-momento')
  * @returns {string[]} skills sincronizadas
  */
-function syncSkills(projectPath, skillsSrcPath) {
+function syncSkills(projectPath, skillsSrcPath, only) {
   const synced = [];
+  const wanted = only ? SKILL_DIRS.filter((n) => n === only) : SKILL_DIRS;
   const roots = [
     path.join(projectPath, '.claude', 'skills'),
     path.join(projectPath, '.agent', 'skills')
@@ -351,10 +408,11 @@ function syncSkills(projectPath, skillsSrcPath) {
 
   for (const dstRoot of roots) {
     for (const name of SKILL_DIRS) {
-      const src = path.join(skillsSrcPath, name);
-      if (!fs.existsSync(path.join(src, 'SKILL.md'))) continue;
       const dst = path.join(dstRoot, name);
       fs.rmSync(dst, { recursive: true, force: true });
+      if (!wanted.includes(name)) continue;
+      const src = path.join(skillsSrcPath, name);
+      if (!fs.existsSync(path.join(src, 'SKILL.md'))) continue;
       fs.cpSync(src, dst, { recursive: true });
       if (!synced.includes(name)) {
         synced.push(name);
@@ -362,6 +420,77 @@ function syncSkills(projectPath, skillsSrcPath) {
     }
   }
   return synced;
+}
+
+/**
+ * Fecha de última modificación del SKILL.md fuente (verificación visible de
+ * que la skill que se le pasa al agente es la versión actual).
+ * @param {string} skillsSrcPath @param {string} skillName
+ * @returns {string|null} fecha legible o null
+ */
+function skillSourceDate(skillsSrcPath, skillName) {
+  try {
+    const st = fs.statSync(path.join(skillsSrcPath, skillName, 'SKILL.md'));
+    return st.mtime.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+  } catch {
+    return null;
+  }
+}
+
+/* ── Insumos relevantes por segmento ──────────────────────────────── */
+
+/**
+ * Qué insumo alimenta cada skill (regla del flujo GEO):
+ *   • AAA (.docx)                → Momentos, Introducción al curso, Línea de tiempo
+ *   • "Introducción al Curso" PDF → Entregables
+ *   • Rúbrica (.xlsx)            → Glosario
+ * Pasarle al agente solo su insumo evita saturarlo con archivos de más.
+ * @type {Record<string, RegExp[]>}
+ */
+const INSUMO_RULES = {
+  'geo-momento': [/(^|[^a-z])aaa([^a-z]|$)/i],
+  'geo-introduccion': [/(^|[^a-z])aaa([^a-z]|$)/i],
+  'geo-linea-tiempo': [/(^|[^a-z])aaa([^a-z]|$)/i],
+  'geo-entregable': [/introducci[oó]n/i],
+  'geo-glosario': [/r[uú]brica/i],
+};
+
+/**
+ * Filtra los insumos del proyecto dejando solo los que corresponden a la
+ * skill del segmento. Si ninguno coincide, devuelve la lista completa
+ * (mejor pasar de más que dejar al agente sin material).
+ * @param {string} skillName
+ * @param {string[]} insumos - nombres de archivo en insumos/
+ * @returns {{ files: string[], matched: boolean }}
+ */
+function relevantInsumos(skillName, insumos) {
+  const rules = INSUMO_RULES[skillName];
+  if (!rules || !insumos.length) return { files: insumos, matched: false };
+  const files = insumos.filter((name) => rules.some((re) => re.test(name)));
+  return files.length ? { files, matched: true } : { files: insumos, matched: false };
+}
+
+/**
+ * Lista los archivos de insumos/ del proyecto (incluye subcarpetas de 1 nivel).
+ * @param {string} projectPath
+ * @returns {string[]}
+ */
+function listInsumos(projectPath) {
+  const dir = path.join(projectPath, 'insumos');
+  /** @type {string[]} */
+  const out = [];
+  try {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue;
+      if (entry.isFile()) out.push(entry.name);
+      else if (entry.isDirectory()) {
+        for (const sub of fs.readdirSync(path.join(dir, entry.name), { withFileTypes: true })) {
+          if (sub.isFile() && !sub.name.startsWith('.')) out.push(path.join(entry.name, sub.name));
+        }
+      }
+    }
+  } catch { /* sin carpeta insumos */ }
+  return out.sort((a, b) => a.localeCompare(b, 'es'));
 }
 
 /* ── Prompt de generación (agnóstico al agente) ───────────────────── */
@@ -373,18 +502,30 @@ function syncSkills(projectPath, skillsSrcPath) {
  * @param {{ id: string, skill: string, file: string, label: string, numero?: number }} structure
  * @returns {string}
  */
-function buildInstruction(structure) {
+function buildInstruction(structure, insumoFiles) {
   const numero = structure.numero ? ` ${structure.numero}` : '';
+  const files = Array.isArray(insumoFiles) ? insumoFiles : [];
+  const insumosLine = files.length
+    ? [
+        'Insumos a leer (ÚNICAMENTE estos; los demás archivos de insumos/ NO',
+        `corresponden a este segmento y leerlos solo te hará más lento):`,
+        ...files.map((f) => `  - insumos/${f}`),
+      ]
+    : ['Insumos del curso: carpeta insumos/ (la AAA es la fuente autoritativa).'];
   return [
     `Tarea: generar "${structure.label}" del curso.`,
     `Sigue al pie de la letra la skill en .claude/skills/${structure.skill}/SKILL.md`,
     'y sus archivos de referencia (reglas-transversales y genéricos).',
-    'Insumos del curso: carpeta insumos/ (la AAA es la fuente autoritativa).',
+    ...insumosLine,
     'Configuración e IDs de Moodle: curso.yaml en la raíz del proyecto',
     '(incluye el MAPA DE ARCHIVOS en la clave files: — usa esos nombres exactos,',
     'no inventes nombres de archivo).',
     `Número de la estructura:${numero || ' n/a'}.`,
     `Escribe el HTML final en generadas/${structure.file} (sobrescribe si existe).`,
+    'Ve directo al grano: no explores el proyecto con búsquedas; lee la skill,',
+    'los insumos indicados y curso.yaml, y escribe el resultado.',
+    'No ejecutes comandos externos (no hay cli.py aquí): la app pasa su propio',
+    'linter después de generar.',
     'Si faltan datos, usa el protocolo de FLAGS de la skill y continúa.',
     'Al final, deja la lista de FLAGS y la lista CORRECCIONES: como comentario',
     `HTML al inicio de generadas/${structure.file}.`,
@@ -531,11 +672,57 @@ function cliGenerate({ command, projectPath, env, instruction, emit, structure, 
       child.stdin.end();
     }
 
+    let resolved = false;
+    const finish = (result) => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(hardTimeout);
+      resolve(result);
+    };
+
+    // Timeout máximo: si el CLI no termina en 12 minutos, lo matamos.
+    // Esto evita el cuelgue indefinido cuando agy no tiene sesión activa.
+    const TIMEOUT_MS = 12 * 60 * 1000;
+    const hardTimeout = setTimeout(() => {
+      if (resolved) return;
+      try { child.kill('SIGTERM'); } catch { /* ya terminó */ }
+      const error =
+        'El CLI de Antigravity superó el tiempo límite (12 min) sin responder. ' +
+        'Causa más probable: el CLI no tiene sesión iniciada. ' +
+        'Abre el Antigravity IDE, inicia sesión con tu cuenta Google y vuelve a intentarlo.';
+      emit({ type: 'error', message: error });
+      finish({ ok: false, error });
+    }, TIMEOUT_MS);
+
+    // Frases que el CLI emite cuando NO tiene sesión (detectadas en logs reales)
+    const AUTH_ERROR_PATTERNS = [
+      /not logged into antigravity/i,
+      /you are not logged/i,
+      /no token found/i,
+      /error getting token source/i,
+      /unauthenticated/i,
+      /please log in/i,
+      /login required/i,
+      /authentication required/i,
+    ];
+
     /** Vuelca líneas de salida y detecta llamadas a herramientas del CLI */
     const pump = (buf) => {
       for (const line of String(buf).split(/\r?\n/)) {
         const t = line.trim();
         if (!t) continue;
+
+        // Detectar errores de autenticación en tiempo real y cancelar inmediatamente
+        if (AUTH_ERROR_PATTERNS.some((re) => re.test(t))) {
+          try { child.kill('SIGTERM'); } catch { /* ya terminó */ }
+          const error =
+            'Antigravity CLI no tiene sesión iniciada. ' +
+            'Abre el Antigravity IDE, inicia sesión con tu cuenta Google y vuelve a intentarlo. ' +
+            `(Detalle: ${t.slice(0, 200)})`;
+          emit({ type: 'error', message: error });
+          finish({ ok: false, error });
+          return;
+        }
 
         // Detectar si la línea de salida del CLI hace referencia a herramientas comunes
         let matchedTool = null;
@@ -550,10 +737,8 @@ function cliGenerate({ command, projectPath, env, instruction, emit, structure, 
         }
 
         if (matchedTool) {
-          // Emitimos como herramienta para que la UI muestre iconos y estados dedicados
           emit({ type: 'tool', message: matchedTool });
         } else {
-          // Si es un log ordinario, lo enviamos como progreso de texto normal
           emit({ type: 'text', message: t.slice(0, 400) });
         }
       }
@@ -564,22 +749,23 @@ function cliGenerate({ command, projectPath, env, instruction, emit, structure, 
     child.on('error', (err) => {
       const error = `Error del CLI: ${err && err.message}`;
       emit({ type: 'error', message: error });
-      resolve({ ok: false, error });
+      finish({ ok: false, error });
     });
 
     child.on('close', (code) => {
+      if (resolved) return; // ya cancelado por timeout o auth-error
       const outFile = path.join(projectPath, 'generadas', structure.file);
       if (code === 0 && fs.existsSync(outFile)) {
         emit({ type: 'done', message: 'Generación terminada.', file: structure.file });
-        resolve({ ok: true, file: structure.file });
+        finish({ ok: true, file: structure.file });
       } else if (code === 0) {
         const error = `El CLI terminó pero no se encontró generadas/${structure.file}. Revisa el comando configurado.`;
         emit({ type: 'error', message: error });
-        resolve({ ok: false, error });
+        finish({ ok: false, error });
       } else {
         const error = `El CLI terminó con código ${code}.`;
         emit({ type: 'error', message: error });
-        resolve({ ok: false, error });
+        finish({ ok: false, error });
       }
     });
   });
@@ -610,17 +796,60 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
     return { ok: false, error };
   }
   if (!selected.hasCredential) {
-    const error = `No hay una cuenta conectada para ${selected.label}. Conéctala desde el panel del agente.`;
+    // Para el CLI de Antigravity damos un mensaje específico y accionable
+    const isAgy = selected.id === 'antigravity';
+    const error = isAgy
+      ? 'Antigravity CLI no tiene sesión iniciada. ' +
+        'Abre el Antigravity IDE (aplicación de escritorio), inicia sesión con tu cuenta Google y vuelve a intentarlo. ' +
+        'El CLI usa credenciales independientes del IDE — el login dentro del IDE no se transfiere automáticamente al CLI.'
+      : `No hay una cuenta conectada para ${selected.label}. Conéctala desde el panel del agente.`;
     emit({ type: 'error', message: error });
     return { ok: false, error };
   }
 
   emit({ type: 'status', message: 'Preparando skills en el proyecto…' });
-  const synced = syncSkills(projectPath, skillsSrcPath);
-  emit({ type: 'status', message: `Skills listas: ${synced.join(', ') || 'ninguna (revisa la instalación)'}` });
+  // Solo la skill del segmento: el agente no carga las otras cuatro.
+  const synced = syncSkills(projectPath, skillsSrcPath, structure.skill);
+  if (!synced.length) {
+    const error = `La skill ${structure.skill} no está en la instalación de la app.`;
+    emit({ type: 'error', message: error });
+    return { ok: false, error };
+  }
+  const srcDate = skillSourceDate(skillsSrcPath, structure.skill);
+  emit({
+    type: 'status',
+    message: `Skill ${structure.skill} sincronizada${srcDate ? ` (versión del ${srcDate})` : ''}.`,
+  });
+
+  // Regenerar = sobrescribir: la versión anterior se respalda en .geo/backups
+  // y se elimina de generadas/, así el agente siempre escribe desde cero.
+  const outFile = path.join(projectPath, 'generadas', structure.file);
+  if (fs.existsSync(outFile)) {
+    try {
+      const backupDir = path.join(projectPath, '.geo', 'backups');
+      fs.mkdirSync(backupDir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const backupName = structure.file.replace(/\.html?$/i, '') + `.${stamp}.html`;
+      fs.copyFileSync(outFile, path.join(backupDir, backupName));
+      fs.unlinkSync(outFile);
+      emit({ type: 'status', message: `Versión anterior respaldada (.geo/backups/${backupName}); se regenera desde cero.` });
+    } catch (err) {
+      emit({ type: 'status', message: `No se pudo respaldar la versión anterior: ${err && err.message}` });
+    }
+  }
+
+  // Solo los insumos del segmento (AAA → momentos/introducción/línea de tiempo,
+  // Introducción PDF → entregables, Rúbrica → glosario).
+  const allInsumos = listInsumos(projectPath);
+  const { files: insumoFiles, matched } = relevantInsumos(structure.skill, allInsumos);
+  if (matched) {
+    emit({ type: 'status', message: `Insumos del segmento: ${insumoFiles.join(', ')}` });
+  } else if (allInsumos.length) {
+    emit({ type: 'status', message: 'Sin insumo específico para este segmento; se pasa la lista completa.' });
+  }
 
   const env = { ...process.env };
-  const instruction = buildInstruction(structure);
+  const instruction = buildInstruction(structure, matched ? insumoFiles : allInsumos);
   emit({ type: 'status', message: `Generando ${structure.label} con ${selected.label}…` });
 
   if (selected.kind === 'sdk') {
@@ -679,4 +908,7 @@ module.exports = {
   describeTool,
   parseCommand,
   findOnPath,
+  checkAgySession,
+  relevantInsumos,
+  listInsumos,
 };
