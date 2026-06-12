@@ -130,7 +130,7 @@
                         <br><!-- saliendo de una lista hacia un <p>: un <br> -->
                         <p style="text-align: justify;">[Párrafo de contextualización del curso / problemática, si aplica.]</p>
                         <p style="text-align: justify;">[Párrafo de REDs generales del momento, si aplica.]</p>
-                        <h4 class="mb-4"><br>Condiciones Particulares de Entrega</h4>
+                        <h4 class="mb-4">Condiciones Particulares de Entrega</h4>
                         <!-- Copia el contenido EXACTO del Word convertido a HTML. Si el Word tiene UN solo
                              párrafo (aunque mencione varios entregables), va en UN solo <p>. Los <br>                             internos del Word se conservan pero NO crees <p> extras. -->
                         <p style="text-align: justify;">[Texto exacto del Word. Si menciona un entregable, enlázalo: <strong><a href="@@PLUGINFILE@@/[Entregable_1].docx" target="_blank" rel="noopener">[Entregable 1]</a></strong>. Si en el mismo párrafo menciona otro, también: <strong><a href="@@PLUGINFILE@@/[Entregable_2].docx" target="_blank" rel="noopener">[Entregable 2]</a></strong>.]</p>
@@ -206,6 +206,13 @@
                                         Semana 3 <small class="d-block" style="text-align: center;">Avance [N]</small>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana4-tab" data-toggle="tab"
+                                        href="#semana4" role="tab" aria-controls="semana4"
+                                        aria-selected="false" tabindex="-1">
+                                        Semana 4 <small class="d-block" style="text-align: center;">Avance [N]</small>
+                                    </a>
+                                </li>
                                 <!-- Repite <li class="nav-item"> por cada semana del momento (una por semana, no por avance) -->
                             </ul>
 
@@ -240,7 +247,11 @@
                                     </div>
                                 </div>
 
-                                <!-- PANEL SEMANA 3 — CON botón: es la última semana del Avance 1 -->
+                                <!-- PANEL SEMANA 3 — SIN botón: NO es la última semana del Avance 1
+                                     ⚠️ IMPORTANTE: Que el esqueleto solo muestre 3-4 semanas NO significa
+                                     que el botón vaya en la semana 3. El botón va en la ÚLTIMA semana
+                                     del rango de cada avance según la AAA. Si Avance 1 = semanas 1-4,
+                                     el botón va en semana 4, NO en la 3. -->
                                 <div class="tab-pane fade" id="semana3"
                                     role="tabpanel" aria-labelledby="semana3-tab">
                                     <div class="card-body">
@@ -248,7 +259,21 @@
                                         <ul>
                                             <li>[Recurso / cita.]</li>
                                         </ul>
-                                        <br><!-- saliendo de una lista hacia un <p>: un <br> -->
+                                        <!-- SIN botón: NO es la última semana del Avance 1 -->
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 4 — CON botón: es la ÚLTIMA semana del Avance 1
+                                     (determinado por la AAA: rango 1-4 → botón en semana 4)
+                                     ⚠️ El número de la semana varía por curso. Siempre usa el
+                                     número MAYOR del rango "Duración Semana" de la tabla de la AAA. -->
+                                <div class="tab-pane fade" id="semana4"
+                                    role="tabpanel" aria-labelledby="semana4-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">[Texto de la semana 4. Exacto de la AAA.]</p>
+                                        <ul>
+                                            <li>[Recurso / cita.]</li>
+                                        </ul>
                                         <p style="text-align: justify;">[Párrafo de envío: "Realice la entrega del entregable en la plataforma..."]</p>
                                         <div style="text-align: center;">
                                             <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
@@ -261,7 +286,13 @@
                                 </div>
 
                                 <!-- Repite <div class="tab-pane fade"> por cada semana adicional.
-                                     Recuerda: botón y párrafo de envío SOLO en la última semana de cada avance. -->
+                                     ⚠️ ALGORITMO PARA BOTONES:
+                                     1. Lee la tabla "Resumen de Entregas" → columna "Duración Semana".
+                                     2. Por cada avance, identifica el rango (ej: 1-4, 5-7).
+                                     3. El botón va SOLO en la semana del número MAYOR del rango.
+                                     4. Las demás semanas del avance NO llevan botón.
+                                     Ejemplo: Avance 1 = semanas 1-4 → botón en semana 4.
+                                              Avance 2 = semanas 5-7 → botón en semana 7. -->
 
                             </div><!-- /tab-content -->
                         </div>

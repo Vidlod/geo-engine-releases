@@ -61,12 +61,14 @@ function configPath(userDataPath) {
 
 const DEFAULT_MODELS = {
   claude: 'claude-sonnet-4-6',
-  // Gemini 3 Flash (effort medium): el más rápido para maquetación headless.
-  antigravity: 'gemini-3-flash-medium',
+  // Vacío = usar el modelo por defecto del CLI de Antigravity. Los IDs reales
+  // se obtienen de `agy models` cuando hay sesión; no se inventan.
+  antigravity: '',
 };
 
 /** Defaults antiguos que se migran automáticamente al default vigente. */
 const LEGACY_CLAUDE_DEFAULTS = ['claude-3-7-sonnet-latest'];
+const LEGACY_ANTIGRAVITY_DEFAULTS = ['gemini-3-flash-medium'];
 
 /**
  * @param {string} userDataPath
@@ -92,7 +94,11 @@ function readConfig(userDataPath) {
       },
       antigravity: {
         command: (raw.antigravity && raw.antigravity.command) || DEFAULT_ANTIGRAVITY_COMMAND,
-        model: (raw.antigravity && raw.antigravity.model) || DEFAULT_MODELS.antigravity
+        model: (() => {
+          const m = raw.antigravity && raw.antigravity.model;
+          if (!m || LEGACY_ANTIGRAVITY_DEFAULTS.includes(m)) return DEFAULT_MODELS.antigravity;
+          return m;
+        })()
       },
     };
   } catch {
@@ -209,28 +215,58 @@ function loadSdk() {
 /**
  * Cuenta de Claude con la que el CLI/SDK está logueado en esta máquina, si la hay.
  *
- * El marcador fiable de "sesión iniciada" en todas las plataformas es el objeto
- * `oauthAccount` de `~/.claude.json` (Claude Code lo escribe al hacer login y
- * guarda ahí el email de la cuenta; en macOS el token en sí va al Llavero, pero
- * la cuenta queda registrada en este archivo). Como respaldo, en Linux/WSL
- * existe `~/.claude/.credentials.json`.
+ * La señal fiable es la CREDENCIAL real, no `oauthAccount` de `~/.claude.json`:
+ * ese objeto puede quedar como residuo de un login viejo o de la app de
+ * escritorio de Claude, y el runtime del SDK responde "Not logged in" aunque
+ * exista (falso positivo que terminaba en generaciones vacías → ENOENT).
  *
- * NO se usa `~/.claude/settings.json`: es mera configuración y existe aunque no
- * haya login (daba un falso positivo que reventaba recién al generar).
+ *   - macOS:      ítem del Llavero "Claude Code-credentials"
+ *   - Linux/WSL/Windows: ~/.claude/.credentials.json
  *
- * @returns {{ email: string|null }} email de la cuenta, o null si no hay sesión
+ * El email se toma de `oauthAccount` solo como dato informativo.
+ *
+ * @returns {{ email: string|null, _none?: boolean }}
  */
 function readClaudeAccount() {
   const home = os.homedir();
-  // 1) ~/.claude.json → oauthAccount.emailAddress (señal principal, multiplataforma)
+  let hasCredential = false;
+
+  if (process.platform === 'darwin') {
+    try {
+      const r = spawnSync('security', ['find-generic-password', '-s', 'Claude Code-credentials'],
+        { timeout: 8000, stdio: 'ignore' });
+      hasCredential = r.status === 0;
+    } catch { /* security no disponible */ }
+  }
+  if (!hasCredential) {
+    hasCredential = fs.existsSync(path.join(home, '.claude', '.credentials.json'));
+  }
+  if (!hasCredential) return { email: null, _none: true };
+
+  let email = null;
   try {
     const data = JSON.parse(fs.readFileSync(path.join(home, '.claude.json'), 'utf-8'));
-    const email = data && data.oauthAccount && data.oauthAccount.emailAddress;
-    if (email) return { email: String(email) };
-  } catch { /* sin archivo o ilegible */ }
-  // 2) Respaldo: credencial en disco (Linux/WSL)
-  if (fs.existsSync(path.join(home, '.claude', '.credentials.json'))) return { email: null };
-  return { email: null, _none: true };
+    email = (data && data.oauthAccount && data.oauthAccount.emailAddress) || null;
+  } catch { /* sin archivo */ }
+  return { email };
+}
+
+/**
+ * Binario `claude` empaquetado con el Agent SDK (mismo runtime que usa la app
+ * para generar): permite iniciar sesión sin instalar Claude Code aparte.
+ * @returns {string|null}
+ */
+function findBundledClaude() {
+  try {
+    const req = createRequire(__filename);
+    const pkg = `@anthropic-ai/claude-agent-sdk-${process.platform}-${process.arch}`;
+    const bin = path.join(
+      path.dirname(req.resolve(`${pkg}/package.json`)),
+      process.platform === 'win32' ? 'claude.exe' : 'claude'
+    );
+    if (fs.existsSync(bin)) return bin;
+  } catch { /* paquete de plataforma no instalado */ }
+  return null;
 }
 
 /**
@@ -259,170 +295,60 @@ function invalidateAgyAuthCache(key) {
 }
 
 /**
- * Verifica si el CLI de Antigravity tiene sesión activa ejecutando una prueba
- * con timeout corto (5 s). Si el CLI responde con texto → autenticado.
- * Si se cuelga (intenta abrir navegador para OAuth) → NO autenticado.
+ * Comprueba si el CLI de Antigravity tiene sesión activa con `agy models`:
+ * es rápido, NUNCA abre el navegador (a diferencia del modo -p, que sin
+ * sesión dispara el flujo OAuth y abría pestañas de login en cada chequeo) y,
+ * cuando hay sesión, devuelve además los IDs reales de modelos disponibles.
  *
  * NOTA: Las cookies del IDE de Antigravity pertenecen al Chromium del IDE
  * y NO indican si el CLI tiene credenciales. Esta función es la única forma
  * fiable de saberlo sin acceso al Keychain.
  *
-/**
- * Comprueba de forma rápida si el CLI tiene sesión activa ejecutándolo con
- * un timeout corto.
  * @param {string} [command]  Comando completo (p. ej. 'antigravity' o ruta absoluta)
- * @param {string} [userDataPath]
- * @param {any} [safeStorage]
- * @returns {Promise<{ loggedIn: boolean, reason: string }>}
+ * @param {boolean} [force]   Ignorar la caché (tras login/logout)
+ * @returns {Promise<{ loggedIn: boolean, reason: string, models: string[] }>}
  */
-async function preflightAgyAuth(command, userDataPath, safeStorage) {
+async function preflightAgyAuth(command, force = false) {
   const key = command || 'default';
   const cached = _preflightCache.get(key);
-  if (cached && Date.now() - cached.ts < PREFLIGHT_TTL) return cached.result;
+  if (!force && cached && Date.now() - cached.ts < PREFLIGHT_TTL) return cached.result;
 
   const bin = module.exports.findOnPath(command || 'antigravity');
   if (!bin) {
-    const r = { loggedIn: false, reason: 'no_cli' };
+    const r = { loggedIn: false, reason: 'no_cli', models: [] };
     _preflightCache.set(key, { ts: Date.now(), result: r });
     return r;
   }
 
-  const result = await new Promise((resolve) => {
-    let output = '';
-    let errOutput = '';
-    let done = false;
-
-    const env = { ...process.env };
-    if (userDataPath) {
-      const stored = readStoredToken(userDataPath, safeStorage, 'antigravity');
-      if (stored) {
-        env.GEO_AGENT_TOKEN = stored;
-        env.GEMINI_API_KEY = stored;
-        env.GOOGLE_API_KEY = stored;
-        env.ANTIGRAVITY_API_KEY = stored;
-      }
-    }
-
-    // Ejecutar con un prompt mínimo y timeout de impresión corto.
-    // Si el CLI tiene auth devuelve algo en segundos; si no tiene auth
-    // se cuelga intentando abrir el navegador para OAuth.
-    const child = spawn(bin, [
-      '--dangerously-skip-permissions',
-      '-p', '.',
-      '--print-timeout', '4s',
-    ], {
+  /** @type {{ loggedIn: boolean, reason: string, models: string[] }} */
+  let result;
+  try {
+    const r = spawnSync(bin, ['models'], {
+      encoding: 'utf-8',
+      timeout: 15000,
       cwd: os.tmpdir(),
-      env,
+      env: { ...process.env },
     });
-
-    const finish = (loggedIn, reason) => {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      try { child.kill('SIGKILL'); } catch { /* ya terminó */ }
-      resolve({ loggedIn, reason });
-    };
-
-    // Cualquier respuesta de texto = CLI autenticado
-    child.stdout.on('data', (d) => {
-      output += d.toString();
-      if (output.trim().length > 2) finish(true, 'response');
-    });
-
-    child.stderr.on('data', (d) => {
-      errOutput += d.toString();
-      // Patrones de error de auth detectados en logs reales del CLI
-      if (/not logged|no token|unauthenticated|please.*log|require.*auth|error getting token/i.test(errOutput)) {
-        finish(false, 'auth_error');
-      }
-    });
-
-    // 6 s de espera total: si no responde = necesita auth (se quedó colgado)
-    const timer = setTimeout(() => finish(false, 'timeout'), 6000);
-
-    child.on('close', (code) => { if (!done) finish(code === 0, `exit_${code}`); });
-    child.on('error', () => finish(false, 'spawn_error'));
-  });
+    const out = `${r.stdout || ''}\n${r.stderr || ''}`;
+    if (r.status === 0 && !/sign in|log ?in/i.test(out)) {
+      // Con sesión: cada línea de la salida lista un modelo disponible.
+      const models = [...new Set(
+        out.split(/\r?\n/)
+          .map((l) => (l.trim().match(/^([a-z0-9][a-z0-9._-]{2,})/i) || [])[1])
+          .filter((m) => m && !/^(available|usage|model|models|error|name)$/i.test(m))
+      )];
+      result = { loggedIn: true, reason: 'models', models };
+    } else {
+      result = { loggedIn: false, reason: 'auth_required', models: [] };
+    }
+  } catch {
+    result = { loggedIn: false, reason: 'spawn_error', models: [] };
+  }
 
   _preflightCache.set(key, { ts: Date.now(), result });
   return result;
 }
 
-/**
- * Captura la URL OAuth que agy intenta abrir en el navegador.
- *
- * Funciona interponiendo un script falso de `open` (macOS) / `xdg-open` (Linux)
- * en el PATH antes de lanzar agy. En lugar de abrir el browser, el script
- * escribe la URL en un archivo temporal que este proceso lee.
- *
- * Devuelve { url, child, tmpDir } donde `child` es el proceso de agy que
- * DEBE mantenerse vivo mientras dure el login (tiene el servidor OAuth local).
- * La carpeta `tmpDir` debe limpiarse al terminar.
- *
- * @param {string} [command]
- * @returns {Promise<{ url: string, child: import('child_process').ChildProcess, tmpDir: string } | null>}
- */
-async function captureAgyLoginUrl(command) {
-  const bin = module.exports.findOnPath(command || 'antigravity');
-  if (!bin) return null;
-
-  const tmpDir = path.join(os.tmpdir(), `geo-agy-login-${Date.now()}`);
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const urlFile = path.join(tmpDir, 'auth-url.txt');
-
-  // Script que captura la URL en vez de abrir el browser.
-  // Busca en todos los argumentos aquél que comience con http/https.
-  const captureScript = `#!/bin/sh
-echo "OPEN CALLED WITH ARGS: $@" >> /Users/buc-cvudes-medios1/.gemini/antigravity-ide/scratch/debug-open.txt
-for arg in "$@"; do
-  case "$arg" in
-    http*)
-      printf '%s' "$arg" > "${urlFile}"
-      exit 0
-      ;;
-  esac
-done
-`;
-  for (const name of ['open', 'xdg-open']) {
-    const p = path.join(tmpDir, name);
-    fs.writeFileSync(p, captureScript, { mode: 0o755 });
-    try { fs.chmodSync(p, 0o755); } catch (e) { /* ignore */ }
-  }
-
-  const child = spawn(bin, [
-    '--dangerously-skip-permissions',
-    '-p', 'auth',
-  ], {
-    cwd: os.tmpdir(),
-    env: {
-      ...process.env,
-      // Poner nuestro directorio primero en PATH para interceptar 'open'
-      PATH: `${tmpDir}:${process.env.PATH || ''}`,
-      BROWSER: path.join(tmpDir, 'open'), // fallback para Linux
-    },
-  });
-
-  // Leer el archivo cada 400 ms (max 12 s = 30 intentos)
-  const url = await new Promise((resolve) => {
-    let attempts = 0;
-    const iv = setInterval(() => {
-      attempts++;
-      try {
-        const content = fs.readFileSync(urlFile, 'utf-8').trim();
-        if (content && content.startsWith('http')) { clearInterval(iv); resolve(content); return; }
-      } catch { /* aún no existe */ }
-      if (attempts >= 30) { clearInterval(iv); resolve(null); }
-    }, 400);
-  });
-
-  if (!url) {
-    try { child.kill('SIGKILL'); } catch { /* ya terminó */ }
-    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { }
-    return null;
-  }
-
-  return { url, child, tmpDir };
-}
 
 /**
  * Localiza un comando: ruta absoluta existente o búsqueda en el PATH.
@@ -473,6 +399,119 @@ function findOnPath(command) {
   return null;
 }
 
+/* ── Login / Logout (flujo de una sola vez, como una app normal) ──── */
+
+/**
+ * Abre un comando en la terminal del sistema (visible para el usuario).
+ * Necesario para los flujos OAuth interactivos de los CLI.
+ * @param {string} commandPath - ruta del binario a ejecutar (sin argumentos)
+ */
+function openInTerminal(commandPath) {
+  if (process.platform === 'darwin') {
+    const child = spawn('osascript', [
+      '-e', `tell application "Terminal" to do script ${JSON.stringify(commandPath)}`,
+      '-e', 'tell application "Terminal" to activate',
+    ], { detached: true, stdio: 'ignore' });
+    child.unref();
+  } else if (process.platform === 'win32') {
+    const child = spawn('cmd.exe', ['/c', 'start', 'GEO Engine - Iniciar sesion', 'cmd', '/k', commandPath],
+      { detached: true, stdio: 'ignore', windowsVerbatimArguments: false });
+    child.unref();
+  } else {
+    const child = spawn('x-terminal-emulator', ['-e', commandPath], { detached: true, stdio: 'ignore' });
+    child.unref();
+  }
+}
+
+/**
+ * Inicia el flujo de sesión del agente. Abre UNA terminal con el CLI: el CLI
+ * redirige al navegador una sola vez y la sesión queda guardada en el equipo.
+ *
+ * @param {string} userDataPath @param {any} safeStorage @param {string} agentId
+ * @returns {Promise<{ opened: boolean, message: string }>}
+ */
+async function login(userDataPath, safeStorage, agentId) {
+  if (agentId === 'antigravity') {
+    const cfg = readConfig(userDataPath);
+    const bin = module.exports.findOnPath(cfg.antigravity.command)
+      || module.exports.findOnPath('agy')
+      || module.exports.findOnPath('antigravity');
+    if (!bin) {
+      throw new Error('No se encontró el CLI de Antigravity en este equipo. Instálalo primero.');
+    }
+    invalidateAgyAuthCache();
+    openInTerminal(bin);
+    return {
+      opened: true,
+      message: 'Se abrió una terminal con Antigravity. Inicia sesión con tu cuenta (una sola vez) y luego pulsa «Ya inicié sesión».',
+    };
+  }
+  if (agentId === 'claude') {
+    // Preferir el binario que la app trae embebida (no requiere instalación);
+    // como respaldo, un claude instalado por el usuario.
+    const bin = findBundledClaude()
+      || module.exports.findOnPath('claude')
+      || module.exports.findOnPath(path.join(os.homedir(), '.claude', 'local', 'claude'));
+    if (bin) {
+      openInTerminal(`${JSON.stringify(bin)} /login`);
+      return {
+        opened: true,
+        message: 'Se abrió una terminal con Claude. Completa el inicio de sesión en el navegador (una sola vez) y luego pulsa «Ya inicié sesión».',
+      };
+    }
+    throw new Error(
+      'No se encontró el runtime de Claude. Reinstala la app o pega un token en «Usar token/API key…».'
+    );
+  }
+  throw new Error(`Agente desconocido: ${agentId}`);
+}
+
+/**
+ * Cierra la sesión del agente.
+ *
+ * - claude con token de la app → se borra el token cifrado.
+ * - claude con sesión de Claude Code → se elimina la sesión del equipo
+ *   (oauthAccount de ~/.claude.json + credencial del Llavero/credentials.json).
+ * - antigravity → su CLI no expone logout por comando; se abre el CLI para
+ *   cerrarla desde ahí.
+ *
+ * @param {string} userDataPath @param {any} safeStorage @param {string} agentId
+ * @returns {Promise<{ message: string }>}
+ */
+async function logout(userDataPath, safeStorage, agentId) {
+  if (agentId === 'claude') {
+    const stored = readStoredToken(userDataPath, safeStorage, 'claude');
+    if (stored) {
+      await clearToken(userDataPath, safeStorage, 'claude');
+      return { message: 'Se eliminó el token guardado en la app.' };
+    }
+    const home = os.homedir();
+    try {
+      const file = path.join(home, '.claude.json');
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      delete data.oauthAccount;
+      fs.writeFileSync(file, JSON.stringify(data, null, 2));
+    } catch { /* sin archivo */ }
+    if (process.platform === 'darwin') {
+      try {
+        spawnSync('security', ['delete-generic-password', '-s', 'Claude Code-credentials'], { timeout: 8000 });
+      } catch { /* sin entrada en el Llavero */ }
+    }
+    try { fs.unlinkSync(path.join(home, '.claude', '.credentials.json')); } catch { /* no existía */ }
+    return { message: 'Sesión de Claude Code cerrada en este equipo.' };
+  }
+  if (agentId === 'antigravity') {
+    const cfg = readConfig(userDataPath);
+    const bin = module.exports.findOnPath(cfg.antigravity.command);
+    invalidateAgyAuthCache();
+    if (bin) openInTerminal(bin);
+    return {
+      message: 'Antigravity gestiona su sesión desde el CLI: en la terminal que se abrió usa el comando de cierre de sesión.',
+    };
+  }
+  throw new Error(`Agente desconocido: ${agentId}`);
+}
+
 /**
  * Estado de todos los agentes + cuál está seleccionado.
  * @param {string} userDataPath @param {any} safeStorage
@@ -491,18 +530,14 @@ async function getStatus(userDataPath, safeStorage) {
   else if (process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY) claudeSource = 'env';
   else if (!claudeAccount._none) { claudeSource = 'cli'; claudeAccountEmail = claudeAccount.email; }
 
-  // Antigravity (CLI)
+  // Antigravity (CLI): la sesión se sondea siempre con `agy models` — es
+  // seguro (nunca abre navegador), rápido y queda cacheado 90 s, así que la
+  // UI ya no necesita un estado "sin verificar" ni botón de verificación.
   const agCommand = cfg.antigravity.command;
   const agResolved = module.exports.findOnPath(agCommand);
-  const agStored = readStoredToken(userDataPath, safeStorage, 'antigravity');
-  // Usar caché del preflight si existe (el preflight corre agy con timeout real)
-  const agCached = _preflightCache.get(agCommand || 'default');
-  // loggedIn: null = todavía no se ha hecho preflight (UI muestra "Verificar")
-  const agLoggedIn = agCached ? agCached.result.loggedIn : null;
-
-  let agSource = null;
-  if (agStored) agSource = 'app';
-  else if (agLoggedIn === true) agSource = 'cli';
+  const agProbe = agResolved
+    ? await module.exports.preflightAgyAuth(agCommand)
+    : { loggedIn: false, reason: 'no_cli', models: [] };
 
   const agents = [
     {
@@ -520,14 +555,15 @@ async function getStatus(userDataPath, safeStorage) {
       label: 'Antigravity',
       kind: 'cli',
       available: agResolved !== null,
-      // null = sin verificar aún; false = sin sesión; true = OK
-      hasCredential: agSource !== null,
-      sessionChecked: agSource === 'app' ? true : (agLoggedIn !== null),
-      sessionLoggedIn: agSource === 'app' ? true : agLoggedIn,
-      credentialSource: agSource,
+      hasCredential: agProbe.loggedIn,
+      sessionChecked: true,
+      sessionLoggedIn: agProbe.loggedIn,
+      credentialSource: agProbe.loggedIn ? 'cli' : null,
       command: agCommand,
       resolvedPath: agResolved,
       model: cfg.antigravity.model,
+      // IDs reales que reporta el CLI (vacío sin sesión)
+      models: agProbe.models,
     },
   ];
 
@@ -653,12 +689,20 @@ function listInsumos(projectPath) {
  */
 function buildInstruction(structure, insumoFiles) {
   const numero = structure.numero ? ` ${structure.numero}` : '';
-  const files = Array.isArray(insumoFiles) ? insumoFiles : [];
+  // Acepta nombres simples ('AAA.docx') o entradas de extract.js
+  // ({ original, text, converted }) con la ruta del texto ya extraído.
+  const files = (Array.isArray(insumoFiles) ? insumoFiles : []).map((f) =>
+    typeof f === 'string'
+      ? { original: `insumos/${f}`, text: `insumos/${f}`, converted: false }
+      : f
+  );
   const insumosLine = files.length
     ? [
         'Insumos a leer (ÚNICAMENTE estos; los demás archivos de insumos/ NO',
-        `corresponden a este segmento y leerlos solo te hará más lento):`,
-        ...files.map((f) => `  - insumos/${f}`),
+        'corresponden a este segmento y leerlos solo te hará más lento):',
+        ...files.map((f) => f.converted
+          ? `  - ${f.text}  (texto ya extraído de ${f.original}; lee SOLO el .md, no abras el original)`
+          : `  - ${f.text}`),
       ]
     : ['Insumos del curso: carpeta insumos/ (la AAA es la fuente autoritativa).'];
   return [
@@ -719,8 +763,19 @@ async function claudeGenerate({ sdk, projectPath, env, instruction, emit, struct
         }
       } else if (message.type === 'result') {
         if (message.subtype === 'success') {
-          emit({ type: 'done', message: 'Generación terminada.', file: structure.file });
-          return { ok: true, file: structure.file };
+          // "success" del SDK solo significa que la conversación terminó:
+          // verificar que el HTML realmente se escribió (antes esto producía
+          // un ENOENT al abrir un archivo que nunca existió).
+          const outFile = path.join(projectPath, 'generadas', structure.file);
+          if (fs.existsSync(outFile)) {
+            emit({ type: 'done', message: 'Generación terminada.', file: structure.file });
+            return { ok: true, file: structure.file };
+          }
+          const error =
+            `El agente terminó pero no escribió generadas/${structure.file}. ` +
+            'Suele indicar que no pudo leer los insumos; revisa el registro de actividad.';
+          emit({ type: 'error', message: error });
+          return { ok: false, error };
         }
         const error = `El agente terminó sin éxito (${message.subtype}).`;
         emit({ type: 'error', message: error });
@@ -752,14 +807,19 @@ function parseCommand(command, instruction, model) {
   const hasModelFlag = parts.includes('-m') || parts.includes('--model') || parts.includes('{model}');
   const hasDangerFlag = parts.includes('--dangerously-skip-permissions');
   const isAgy = parts[0] && (parts[0] === 'antigravity' || parts[0] === 'agy' || parts[0].endsWith('/antigravity') || parts[0].endsWith('/agy'));
-  
+  // Modelo vacío = usar el modelo por defecto del CLI (no se inyecta --model;
+  // pasar un ID inventado hace que el CLI lo descarte o falle).
+  const withModel = Boolean(model && String(model).trim());
+
   // Si el comando es exactamente el binario de Antigravity sin más argumentos,
   // auto-completamos con las banderas de modelo, permisos y prompt por defecto.
   if (isAgy && parts.length === 1) {
-    parts.push('--dangerously-skip-permissions', '--model', '{model}', '-p', '{prompt}');
+    parts.push('--dangerously-skip-permissions');
+    if (withModel) parts.push('--model', '{model}');
+    parts.push('-p', '{prompt}');
   } else if (isAgy) {
     // Si tiene argumentos pero no bandera de modelo, la insertamos antes de -p o {prompt} si existen
-    if (!hasModelFlag) {
+    if (!hasModelFlag && withModel) {
       const pIdx = parts.indexOf('-p');
       if (pIdx !== -1) {
         parts.splice(pIdx, 0, '--model', '{model}');
@@ -773,6 +833,16 @@ function parseCommand(command, instruction, model) {
     // Auto-inyectar --dangerously-skip-permissions si ejecuta en modo print/headless y no la tiene
     if (!hasDangerFlag && (parts.includes('-p') || parts.includes('{prompt}'))) {
       parts.splice(1, 0, '--dangerously-skip-permissions');
+    }
+  }
+
+  // Sin modelo: retirar cualquier par "--model {model}" que viniera escrito
+  // en el comando configurado.
+  if (!withModel) {
+    const idx = parts.indexOf('{model}');
+    if (idx !== -1) {
+      const start = (idx > 0 && /^(-m|--model)$/.test(parts[idx - 1])) ? idx - 1 : idx;
+      parts.splice(start, idx - start + 1);
     }
   }
 
@@ -818,6 +888,8 @@ function cliGenerate({ command, projectPath, env, instruction, emit, structure, 
 
     if (promptViaStdin && child.stdin) {
       child.stdin.write(instruction);
+      child.stdin.end();
+    } else if (child.stdin) {
       child.stdin.end();
     }
 
@@ -932,7 +1004,7 @@ function cliGenerate({ command, projectPath, env, instruction, emit, structure, 
  * @param {(event: {type:string, [k:string]:any}) => void} opts.onEvent
  * @returns {Promise<{ ok: boolean, file?: string, error?: string }>}
  */
-async function generate({ projectPath, structure, skillsSrcPath, userDataPath, safeStorage, onEvent }) {
+async function generate({ projectPath, structure, skillsSrcPath, userDataPath, safeStorage, convertCtx, onEvent }) {
   const emit = typeof onEvent === 'function' ? onEvent : () => {};
   const status = await getStatus(userDataPath, safeStorage);
   const selected = status.agents.find((a) => a.id === status.selected);
@@ -982,17 +1054,21 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
 
   // Regenerar = sobrescribir: la versión anterior se respalda en .geo/backups
   // y se elimina de generadas/, así el agente siempre escribe desde cero.
+  // Si la generación falla, el respaldo se restaura (no se pierde nada).
   const outFile = path.join(projectPath, 'generadas', structure.file);
+  let backupPath = null;
   if (fs.existsSync(outFile)) {
     try {
       const backupDir = path.join(projectPath, '.geo', 'backups');
       fs.mkdirSync(backupDir, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
       const backupName = structure.file.replace(/\.html?$/i, '') + `.${stamp}.html`;
-      fs.copyFileSync(outFile, path.join(backupDir, backupName));
+      backupPath = path.join(backupDir, backupName);
+      fs.copyFileSync(outFile, backupPath);
       fs.unlinkSync(outFile);
       emit({ type: 'status', message: `Versión anterior respaldada (.geo/backups/${backupName}); se regenera desde cero.` });
     } catch (err) {
+      backupPath = null;
       emit({ type: 'status', message: `No se pudo respaldar la versión anterior: ${err && err.message}` });
     }
   }
@@ -1001,15 +1077,45 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
   // Introducción PDF → entregables, Rúbrica → glosario).
   const allInsumos = listInsumos(projectPath);
   const { files: insumoFiles, matched } = relevantInsumos(structure.skill, allInsumos);
+  const useFiles = matched ? insumoFiles : allInsumos;
   if (matched) {
     emit({ type: 'status', message: `Insumos del segmento: ${insumoFiles.join(', ')}` });
   } else if (allInsumos.length) {
     emit({ type: 'status', message: 'Sin insumo específico para este segmento; se pasa la lista completa.' });
   }
 
+  // Los agentes no pueden leer .docx/.pdf/.xlsx binarios (causa del clásico
+  // "terminó sin escribir el archivo"): se convierten a texto antes.
+  let insumoEntries = useFiles;
+  if (useFiles.length && convertCtx) {
+    emit({ type: 'status', message: 'Convirtiendo insumos a texto para el agente…' });
+    try {
+      const { extractInsumos } = require('./extract');
+      const extracted = await extractInsumos(projectPath, useFiles, convertCtx, (m) =>
+        emit({ type: 'status', message: m }));
+      insumoEntries = extracted.entries;
+      for (const w of extracted.warnings) {
+        emit({ type: 'status', message: `⚠ No se pudo convertir ${w}` });
+      }
+    } catch (err) {
+      emit({ type: 'status', message: `⚠ Conversión de insumos no disponible: ${err && err.message}` });
+    }
+  }
+
   const env = { ...process.env };
-  const instruction = buildInstruction(structure, matched ? insumoFiles : allInsumos);
+  const instruction = buildInstruction(structure, insumoEntries);
   emit({ type: 'status', message: `Generando ${structure.label} con ${selected.label}…` });
+
+  /** Restaura el respaldo si el agente no dejó archivo nuevo. @param {{ok:boolean}} result */
+  const restoreOnFailure = (result) => {
+    if (!result.ok && backupPath && !fs.existsSync(outFile)) {
+      try {
+        fs.copyFileSync(backupPath, outFile);
+        emit({ type: 'status', message: 'Se restauró la versión anterior desde el respaldo.' });
+      } catch { /* el respaldo sigue en .geo/backups */ }
+    }
+    return result;
+  };
 
   if (selected.kind === 'sdk') {
     const sdk = await loadSdk();
@@ -1021,20 +1127,17 @@ async function generate({ projectPath, structure, skillsSrcPath, userDataPath, s
     }
     env.CLAUDE_MODEL = selected.model;
     env.ANTHROPIC_MODEL = selected.model;
-    return claudeGenerate({ sdk, projectPath, env, instruction, emit, structure, model: selected.model });
+    const result = await claudeGenerate({ sdk, projectPath, env, instruction, emit, structure, model: selected.model });
+    return restoreOnFailure(result);
   }
 
-  // CLI (Antigravity)
-  const stored = readStoredToken(userDataPath, safeStorage, selected.id);
-  if (stored) {
-    env.GEO_AGENT_TOKEN = stored;
-    env.GEMINI_API_KEY = stored;
-    env.GOOGLE_API_KEY = stored;
-    env.ANTIGRAVITY_API_KEY = stored;
+  // CLI (Antigravity) — modelo vacío = el por defecto del CLI
+  if (selected.model) {
+    env.GEMINI_MODEL = selected.model;
+    env.ANTIGRAVITY_MODEL = selected.model;
   }
-  env.GEMINI_MODEL = selected.model;
-  env.ANTIGRAVITY_MODEL = selected.model;
-  return cliGenerate({ command: selected.command, projectPath, env, instruction, emit, structure, model: selected.model });
+  const result = await cliGenerate({ command: selected.command, projectPath, env, instruction, emit, structure, model: selected.model });
+  return restoreOnFailure(result);
 }
 
 /**
@@ -1069,12 +1172,13 @@ module.exports = {
   syncSkills,
   buildInstruction,
   generate,
+  login,
+  logout,
   // expuestos para tests y para main.js
   describeTool,
   parseCommand,
   findOnPath,
   preflightAgyAuth,
-  captureAgyLoginUrl,
   invalidateAgyAuthCache,
   relevantInsumos,
   listInsumos,

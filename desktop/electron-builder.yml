@@ -19,6 +19,7 @@ files:
   - "menu.js"
   - "server/**/*"
   - "!server/convert_pdf.py"
+  - "!server/convert_xlsx.py"
   - "node_modules/**/*"
   - "package.json"
 
@@ -42,6 +43,8 @@ extraResources:
       - "!install.py"
   - from: "server/convert_pdf.py"
     to: "scripts/convert_pdf.py"
+  - from: "server/convert_xlsx.py"
+    to: "scripts/convert_xlsx.py"
 
 mac:
   category: public.app-category.developer-tools

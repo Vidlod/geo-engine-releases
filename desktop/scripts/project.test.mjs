@@ -151,6 +151,21 @@ console.log('— Agentes —');
   const viaArg = agent.parseCommand('ag --prompt {prompt}', 'HOLA');
   check('parseCommand con {prompt} → argumento', viaArg.promptViaStdin === false && viaArg.tokens.includes('HOLA'));
 
+  // parseCommand: modelo vacío = no inyectar --model (usa el default del CLI)
+  const sinModelo = agent.parseCommand('antigravity', 'HOLA', '');
+  check('parseCommand sin modelo no inyecta --model',
+    !sinModelo.tokens.includes('--model') && sinModelo.tokens.includes('HOLA'));
+  const conModelo = agent.parseCommand('antigravity', 'HOLA', 'gemini-3-flash');
+  check('parseCommand con modelo inyecta --model',
+    conModelo.tokens.includes('--model') && conModelo.tokens.includes('gemini-3-flash'));
+  const plantillaSinModelo = agent.parseCommand('agy --model {model} -p {prompt}', 'HOLA', '');
+  check('parseCommand retira "--model {model}" si no hay modelo',
+    !plantillaSinModelo.tokens.includes('--model') && !plantillaSinModelo.tokens.includes(''));
+
+  // login/logout expuestos para la UI
+  check('login y logout exportados',
+    typeof agent.login === 'function' && typeof agent.logout === 'function');
+
   // syncSkills desde el repo real
   const projDir = mkdtempSync(path.join(tmpdir(), 'geo-proj-'));
   const skillsSrc = path.resolve(new URL('.', import.meta.url).pathname, '..', '..', 'skills');
@@ -196,6 +211,13 @@ console.log('— Agentes —');
   );
   check('instrucción limita los insumos al del segmento',
     instrIns.includes('ÚNICAMENTE') && instrIns.includes('insumos/Rúbrica M1.xlsx'));
+
+  const instrConv = agent.buildInstruction(
+    { id: 'momento-1', skill: 'geo-momento', file: 'momento-1.html', label: 'Momento 1', numero: 1 },
+    [{ original: 'insumos/AAA.docx', text: '.geo/insumos-texto/AAA.md', converted: true }]
+  );
+  check('instrucción apunta al texto extraído del insumo',
+    instrConv.includes('.geo/insumos-texto/AAA.md') && instrConv.includes('no abras el original'));
 
   check('describeTool legible',
     agent.describeTool({ name: 'Write', input: { file_path: '/x/momento-1.html' } }).includes('momento-1.html'));

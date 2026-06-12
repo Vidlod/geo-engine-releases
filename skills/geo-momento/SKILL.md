@@ -57,6 +57,18 @@ citas, "Producto Final" y uso del linter).
    de semanas del momento (tomado de la AAA). No fusiones ni agrupes.
 3. **Botón de envío** centrado al final de la **última semana de cada avance**
    (formato estándar de Moodle, con `mod/assign/view.php?id=...`).
+
+   > ⚠️ **REGLA CRÍTICA — ubicación del botón**: La semana donde va el botón se
+   > determina EXCLUSIVAMENTE por la tabla de la AAA / `course.yaml`, NO por el
+   > esqueleto de ejemplo. El esqueleto muestra solo 4 semanas de muestra; en un
+   > curso real el Avance 1 puede abarcar 3, 4, 5 o más semanas. **El botón va en la
+   > ÚLTIMA semana del rango del avance.** Ejemplo:
+   > - Avance 1: semanas 1-4 → botón en Semana **4** (no en la 3).
+   > - Avance 2: semanas 5-7 → botón en Semana **7**.
+   > Algoritmo: lee el rango `Duración Semana` de la tabla de resumen para cada
+   > avance; el número mayor es la semana donde colocas el botón y el párrafo de
+   > envío. **NUNCA copies los números del esqueleto literalmente.**
+
 4. **Pestaña "Instrumento para Enviar Entregable"**: tantos botones como avances tenga
    el momento (p. ej. Momento con 3 avances → 3 botones).
 

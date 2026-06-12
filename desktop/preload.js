@@ -40,7 +40,8 @@ const VALID_CHANNELS = [
   'agent:setModel',
   'agent:generate',
   'agent:preflightAuth',
-  'agent:loginAgy',
+  'agent:login',
+  'agent:logout',
 ];
 
 // ─── API expuesta al renderer ────────────────────────────────────────
@@ -214,18 +215,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('agent:generate', projectPath, structure),
 
     /**
-     * Verifica si el CLI de Antigravity tiene sesión activa (corre agy ~6 s).
-     * @returns {Promise<{ ok: boolean, loggedIn: boolean, reason: string }>}
+     * Verifica si el CLI de Antigravity tiene sesión activa (sonda `agy models`,
+     * cacheada; nunca abre el navegador). @param {boolean} [force] ignora la caché.
+     * @returns {Promise<{ ok: boolean, loggedIn: boolean, reason: string, models?: string[] }>}
      */
-    preflightAuth: () => ipcRenderer.invoke('agent:preflightAuth'),
+    preflightAuth: (force) => ipcRenderer.invoke('agent:preflightAuth', force),
 
     /**
-     * Inicia el flujo de login de Antigravity directamente dentro de la app.
-     * Abre un BrowserWindow con la URL OAuth de Google; cuando el callback
-     * redirige a localhost, la ventana se cierra sola y el token queda guardado.
-     * @returns {Promise<{ ok: boolean, message?: string, fallback?: boolean, cancelled?: boolean, error?: string }>}
+     * Abre el inicio de sesión del agente en una terminal del sistema: el CLI
+     * (agy / claude) dirige su propio OAuth y guarda el token (flujo de una
+     * sola vez). @param {string} agentId
      */
-    loginAgy: () => ipcRenderer.invoke('agent:loginAgy'),
+    login: (agentId) => ipcRenderer.invoke('agent:login', agentId),
+
+    /**
+     * Cierra la sesión del agente en este equipo. @param {string} agentId
+     */
+    logout: (agentId) => ipcRenderer.invoke('agent:logout', agentId),
 
     /**
      * Suscribe a los eventos de progreso de la generación.

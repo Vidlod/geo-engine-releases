@@ -259,41 +259,37 @@ export class CoursePanel {
 
   /** @private @param {any} a @returns {string} */
   _agentStatusLabel(a) {
-    if (a.kind === 'cli') {
-      if (!a.available) return 'CLI no detectado';
-      if (!a.sessionChecked) return 'Sin verificar';
-      if (!a.hasCredential) return '⚠️ Sin sesión';
-      if (a.credentialSource === 'app') return '✓ API Key guardada';
-      return '✓ Sesión activa';
-    }
-    if (!a.available) return 'Motor no disponible';
-    if (!a.hasCredential) return 'Sin cuenta conectada';
-    if (a.credentialSource === 'cli' && a.account) return `Sesión: ${a.account}`;
-    return { app: 'token guardado', env: 'variable de entorno', cli: 'sesión de Claude Code' }[a.credentialSource] || 'conectado';
+    if (!a.available) return a.kind === 'cli' ? 'CLI no instalado' : 'Motor no disponible';
+    if (!a.hasCredential) return 'Sin sesión';
+    if (a.account) return `Conectado · ${a.account}`;
+    return 'Conectado';
   }
 
   /** Acción contextual del agente seleccionado. @private @returns {string} */
   _agentActionHtml() {
     const a = this._selectedAgent();
 
-    const modelOptions = a.id === 'claude'
-      ? [
-          { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Recomendado)' },
-          { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (El más rápido)' },
-          { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (Máxima calidad)' },
-          { value: 'claude-3-7-sonnet-latest', label: 'Claude 3.7 Sonnet' },
-          { value: 'custom', label: 'Otro modelo (Personalizado)...' }
-        ]
-      : [
-          { value: 'gemini-3-flash-medium', label: 'Gemini 3 Flash · Medium (Rápido, recomendado)' },
-          { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-          { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-          { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-          { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
-          { value: 'custom', label: 'Otro modelo (Personalizado)...' }
-        ];
+    // ── Selector de modelo ──
+    // Para Antigravity las opciones son los IDs REALES que reporta el CLI
+    // (`agy models`); la opción vacía usa el modelo por defecto del CLI.
+    let modelOptions;
+    if (a.id === 'claude') {
+      modelOptions = [
+        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Recomendado)' },
+        { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (El más rápido)' },
+        { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (Máxima calidad)' },
+        { value: 'custom', label: 'Otro modelo…' },
+      ];
+    } else {
+      const reales = (Array.isArray(a.models) ? a.models : []).map((m) => ({ value: m, label: m }));
+      modelOptions = [
+        { value: '', label: 'Modelo por defecto del CLI (recomendado)' },
+        ...reales,
+        { value: 'custom', label: 'Otro modelo…' },
+      ];
+    }
 
-    const isCustomModel = a.model && !modelOptions.slice(0, -1).some(opt => opt.value === a.model);
+    const isCustomModel = Boolean(a.model) && !modelOptions.slice(0, -1).some((opt) => opt.value === a.model);
     const selectedModelVal = isCustomModel ? 'custom' : (a.model || modelOptions[0].value);
 
     const selectHtml = `
@@ -303,82 +299,57 @@ export class CoursePanel {
           ${modelOptions.map(opt => `<option value="${opt.value}" ${opt.value === selectedModelVal ? 'selected' : ''}>${esc(opt.label)}</option>`).join('')}
         </select>
         ${isCustomModel ? `<span class="agent-action__model-val">(${esc(a.model)})</span>` : ''}
-        <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-model-custom-btn" style="margin-left: 8px;">Especificar...</button>
       </div>
     `;
 
+    // Fila estándar de sesión activa: estado + Cerrar sesión (igual en ambos)
+    const okRow = (detalle) => `
+      <div class="agent-action__row">
+        <span class="agent-action__ok">✓ ${esc(detalle)}</span>
+        <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-logout">Cerrar sesión</button>
+      </div>`;
+
     if (a.kind === 'cli') {
       const cmd = a.command || 'antigravity';
-      const cmdRow = `
-        <div class="agent-action__row">
-          <span class="agent-action__label">Comando</span>
-          <code class="agent-action__cmd">${esc(cmd)}</code>
-          <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-command">Cambiar</button>
-          ${!a.available ? '<span class="agent-action__warn">No se encontró en el PATH</span>' : ''}
-        </div>`;
+      const advanced = `
+        <details class="agent-action__advanced">
+          <summary>Opciones avanzadas</summary>
+          <div class="agent-action__row">
+            <span class="agent-action__label">Comando</span>
+            <code class="agent-action__cmd">${esc(cmd)}</code>
+            <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-command">Cambiar</button>
+          </div>
+        </details>`;
 
       if (!a.available) {
-        return `<div class="agent-action__grid">${cmdRow}</div>`;
-      }
-
-      // Estado 1: sin verificar aún (primer arranque)
-      if (!a.sessionChecked) {
-        const uncheckedBanner = `
-          <div style="
-            background: rgba(99,102,241,0.08);
-            border: 1px solid rgba(99,102,241,0.3);
-            border-radius: 8px; padding: 12px 14px; margin-top: 6px;
-            font-size: 12px; color: #6366f1; line-height: 1.6;
-          ">
-            <strong>🔑 Sesión sin verificar</strong><br>
-            Comprueba si el CLI está autenticado o ingresa una API Key directamente:
-            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">🔑 Ingresar API Key</button>
-              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-login">Conectar con Google</button>
-              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
-            </div>
+        return `
+          <div class="agent-action__grid">
+            <span class="agent-action__warn">El CLI de Antigravity no está instalado en este equipo.</span>
+            ${advanced}
           </div>`;
-        return `<div class="agent-action__grid">${cmdRow}${uncheckedBanner}</div>`;
       }
 
-      // Estado 2: verificado pero sin sesión
       if (!a.hasCredential) {
-        const noBanner = `
-          <div style="
-            background: rgba(234,88,12,0.1);
-            border: 1px solid rgba(234,88,12,0.4);
-            border-radius: 8px; padding: 12px 14px; margin-top: 6px;
-            font-size: 12px; color: #ea580c; line-height: 1.6;
-          ">
-            <strong>⚠️ Antigravity CLI no tiene sesión activa</strong><br>
-            Ingresa una API Key directamente aquí (sin navegadores) o inicia sesión:
-            <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">🔑 Ingresar API Key</button>
-              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-login">Conectar con Google</button>
-              <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight">Verificar sesión</button>
+        return `
+          <div class="agent-action__grid">
+            <div class="agent-banner agent-banner--warn">
+              <strong>Antigravity no tiene sesión en este equipo</strong><br>
+              Pulsa <em>Iniciar sesión</em>: se abre una terminal con Antigravity que te
+              llevará a Google una sola vez. Al terminar, vuelve y pulsa <em>Ya inicié sesión</em>.
+              <div class="agent-banner__actions">
+                <button type="button" class="btn btn--primary btn--sm" id="geo-agy-login">Iniciar sesión con Google</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-refresh">Ya inicié sesión ↻</button>
+              </div>
             </div>
+            ${advanced}
           </div>`;
-        return `<div class="agent-action__grid">${cmdRow}${noBanner}</div>`;
       }
-
-      // Estado 3: autenticado ✓
-      const okBanner = `
-        <div style="
-          background: rgba(34,197,94,0.08);
-          border: 1px solid rgba(34,197,94,0.3);
-          border-radius: 8px; padding: 8px 14px; margin-top: 6px;
-          font-size: 12px; color: #16a34a; display:flex; align-items:center; gap:10px;
-        ">
-          <span>✓ Sesión activa (${a.credentialSource === 'app' ? 'API Key guardada' : 'Keyring/CLI'})</span>
-          ${a.credentialSource === 'app' ? '<button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect" style="margin-left:auto;">Desconectar</button>' : ''}
-          <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-preflight" style="${a.credentialSource === 'app' ? '' : 'margin-left:auto;'}">Reverificar</button>
-        </div>`;
 
       return `
         <div class="agent-action__grid">
-          ${cmdRow}
-          ${okBanner}
+          ${okRow('Conectado · sesión del CLI')}
           ${selectHtml}
+          ${advanced}
         </div>`;
     }
 
@@ -387,21 +358,31 @@ export class CoursePanel {
       return `<span class="agent-action__warn">El motor no cargó. Reinicia la app; si persiste, reinstala.</span>`;
     }
     if (!a.hasCredential) {
-      return `<button type="button" class="btn btn--primary btn--sm" id="geo-agent-connect">Conectar Claude</button>`;
+      return `
+        <div class="agent-action__grid">
+          <div class="agent-banner agent-banner--info">
+            <strong>Sin cuenta de Claude conectada</strong><br>
+            Inicia sesión una sola vez con tu cuenta de Claude; la app la detecta sola.
+            <div class="agent-banner__actions">
+              <button type="button" class="btn btn--primary btn--sm" id="geo-agent-login-cc">Iniciar sesión (Claude Code)</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-refresh">Ya inicié sesión ↻</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="geo-agent-connect">Usar token/API key…</button>
+            </div>
+          </div>
+        </div>`;
     }
 
-    const discBtn = a.credentialSource === 'app'
-      ? `<button type="button" class="btn btn--ghost btn--sm" id="geo-agent-disconnect">Desconectar</button>`
-      : '';
-    const credentialsRow = `
-      <div class="agent-action__row">
-        <span class="agent-action__ok">Conectado vía ${esc(this._agentStatusLabel(a))}</span>
-        ${discBtn}
-      </div>`;
+    const detalle = a.account
+      ? `Conectado · ${a.account}`
+      : a.credentialSource === 'app'
+        ? 'Conectado · token guardado en la app'
+        : a.credentialSource === 'env'
+          ? 'Conectado · variable de entorno'
+          : 'Conectado';
 
     return `
       <div class="agent-action__grid">
-        ${credentialsRow}
+        ${okRow(detalle)}
         ${selectHtml}
       </div>`;
   }
@@ -413,16 +394,18 @@ export class CoursePanel {
     }
     const connect = this._el.querySelector('#geo-agent-connect');
     if (connect) connect.addEventListener('click', () => this._connectDialog());
-    const disconnect = this._el.querySelector('#geo-agent-disconnect');
-    if (disconnect) disconnect.addEventListener('click', () => this._disconnect());
     const command = this._el.querySelector('#geo-agent-command');
     if (command) command.addEventListener('click', () => this._commandDialog());
 
-    // Botones de Antigravity
+    // Sesión: iniciar (Google / Claude Code), reverificar y cerrar
     const agyLogin = this._el.querySelector('#geo-agy-login');
     if (agyLogin) agyLogin.addEventListener('click', () => this._agyLogin());
-    const agyPreflight = this._el.querySelector('#geo-agy-preflight');
-    if (agyPreflight) agyPreflight.addEventListener('click', () => this._agyPreflight());
+    const ccLogin = this._el.querySelector('#geo-agent-login-cc');
+    if (ccLogin) ccLogin.addEventListener('click', () => this._claudeCodeLogin());
+    const refresh = this._el.querySelector('#geo-agent-refresh');
+    if (refresh) refresh.addEventListener('click', () => this._refreshAgents(true));
+    const logoutBtn = this._el.querySelector('#geo-agent-logout');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => this._logout());
 
     const modelSelect = this._el.querySelector('#geo-agent-model-select');
     if (modelSelect) {
@@ -449,51 +432,74 @@ export class CoursePanel {
     }
   }
 
-  /** @private — Preflight: verifica sesión del CLI de Antigravity */
-  async _agyPreflight() {
+  /**
+   * Reverifica las sesiones (forzando la sonda del CLI si `force`) y repinta.
+   * @private @param {boolean} [force]
+   */
+  async _refreshAgents(force = false) {
     const api = projectApi();
-    if (!api || !api.agent || !api.agent.preflightAuth) {
-      showToast('preflightAuth no disponible en esta versión', 'error');
-      return;
-    }
-    showToast('Verificando sesión de Antigravity (≤6 s)…', 'info');
     try {
-      const res = await api.agent.preflightAuth();
-      if (res.loggedIn) {
-        showToast('✓ Sesión de Antigravity activa', 'success');
-      } else {
-        showToast('⚠️ Sin sesión — usa el botón Conectar', 'error');
+      if (force && api.agent.preflightAuth) await api.agent.preflightAuth(true);
+      const res = await api.agent.status();
+      if (!res.ok) {
+        showToast(res.error || 'No se pudo refrescar el estado', 'error');
+        return;
       }
-      // Refresca el estado del agente para que la UI refleje el resultado
-      const statusRes = await api.agent.status();
-      if (statusRes.ok) { this._agentStatus = statusRes.data; this._renderProject(); }
+      this._agentStatus = res.data;
+      this._renderProject();
+      if (force) {
+        const a = this._selectedAgent();
+        showToast(a.hasCredential ? '✓ Sesión detectada' : 'Aún no se detecta la sesión',
+          a.hasCredential ? 'success' : 'info');
+      }
     } catch (err) {
-      showToast('Error al verificar: ' + (err && err.message), 'error');
+      showToast('No se pudo refrescar el estado: ' + (err && err.message), 'error');
     }
   }
 
-  /** @private — Abre el login OAuth de Antigravity dentro de la app */
+  /** Cierra la sesión del agente activo. @private */
+  async _logout() {
+    const a = this._selectedAgent();
+    if (a.id === 'claude' && a.credentialSource === 'cli') {
+      const ok = window.confirm(
+        'Esta es la sesión de Claude Code de tu equipo: cerrarla aquí también la cierra en la terminal. ¿Cerrar sesión?'
+      );
+      if (!ok) return;
+    }
+    const res = await projectApi().agent.logout(a.id);
+    if (res.ok) showToast((res.data && res.data.message) || 'Sesión cerrada', 'success');
+    else showToast(res.error || 'No se pudo cerrar la sesión', 'error');
+    await this._refreshAgents(a.kind === 'cli');
+  }
+
+  /** Abre el inicio de sesión de Claude Code (terminal, una sola vez). @private */
+  async _claudeCodeLogin() {
+    const res = await projectApi().agent.login('claude');
+    if (res.ok) showToast((res.data && res.data.message) || 'Se abrió la terminal de inicio de sesión.', 'info');
+    else showToast(res.error || 'No se pudo abrir el inicio de sesión', 'error');
+  }
+
+  /**
+   * Inicia sesión en Antigravity abriendo el CLI en una terminal. El propio
+   * `agy` dirige el OAuth en el navegador (una sola vez) y guarda el token;
+   * no intentamos interceptar la URL (eso terminaba en antigravity.google
+   * sin login). Al volver, el usuario pulsa «Ya inicié sesión».
+   * @private
+   */
   async _agyLogin() {
     const api = projectApi();
-    if (!api || !api.agent || !api.agent.loginAgy) {
-      showToast('loginAgy no disponible en esta versión', 'error');
+    if (!api || !api.agent || !api.agent.login) {
+      showToast('Inicio de sesión no disponible en esta versión', 'error');
       return;
     }
-    showToast('🔑 Iniciando flujo de login… (puede tardar ~10 s)', 'info');
     try {
-      const res = await api.agent.loginAgy();
+      const res = await api.agent.login('antigravity');
       if (res.ok) {
-        showToast('✓ ' + (res.message || 'Sesión iniciada'), 'success');
-      } else if (res.fallback) {
-        showToast('🌐 ' + res.message, 'info');
-      } else if (res.cancelled) {
-        showToast('Login cancelado.', 'info');
+        showToast((res.data && res.data.message) ||
+          'Se abrió una terminal con Antigravity. Inicia sesión y pulsa «Ya inicié sesión».', 'info');
       } else {
-        showToast('⚠️ ' + (res.message || res.error || 'Error en el login'), 'error');
+        showToast(res.error || 'No se pudo abrir el inicio de sesión', 'error');
       }
-      // Refresca el estado del agente
-      const statusRes = await api.agent.status();
-      if (statusRes.ok) { this._agentStatus = statusRes.data; this._renderProject(); }
     } catch (err) {
       showToast('Error: ' + (err && err.message), 'error');
     }
@@ -668,31 +674,22 @@ export class CoursePanel {
 
   /** @private */
   async _connectDialog() {
-    const isAgy = this._agentStatus.selected === 'antigravity';
-    const title = isAgy ? 'Conectar Antigravity' : 'Conectar Claude';
-    const label = isAgy ? 'Gemini API Key' : 'Token de Claude o API key';
-    const placeholder = isAgy ? 'AIzaSy… (API Key de Google AI Studio)' : 'sk-ant-… o token de claude setup-token';
-    const hint = isAgy
-      ? 'Cómo obtenerlo: ve a Google AI Studio (aistudio.google.com), crea una API Key gratuita y pégala aquí. ' +
-        'El CLI de Antigravity usará esta clave para autenticar todas sus peticiones de forma directa sin usar navegadores.'
-      : 'Cómo obtenerlo: en una terminal ejecuta «claude setup-token», inicia sesión ' +
-        'en el navegador y copia el token resultante. También sirve una API key de ' +
-        'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.';
-
     const token = await this._askText({
-      title,
-      label,
-      placeholder,
+      title: 'Conectar Claude',
+      label: 'Token de Claude o API key',
+      placeholder: 'sk-ant-… o token de claude setup-token',
       confirmLabel: 'Conectar',
       password: true,
-      hint,
+      hint: 'Cómo obtenerlo: en una terminal ejecuta «claude setup-token», inicia sesión ' +
+        'en el navegador y copia el token resultante. También sirve una API key de ' +
+        'Anthropic. Si ya usas Claude Code en esta máquina, tu sesión se detecta sola.',
     });
     if (!token) return;
-    const res = await projectApi().agent.setToken(this._agentStatus.selected, token);
+    const res = await projectApi().agent.setToken('claude', token);
     if (res.ok) {
       this._agentStatus = res.data;
       this._renderProject();
-      showToast(isAgy ? 'API Key de Gemini conectada' : 'Cuenta de Claude conectada', 'success');
+      showToast('Cuenta de Claude conectada', 'success');
     } else {
       showToast(res.error || 'No se pudo guardar el token', 'error');
     }

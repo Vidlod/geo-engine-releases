@@ -60,17 +60,24 @@ const fakeProject = {
   ],
 };
 
-// Estado multi-agente: Claude conectado (sesión CLI), Antigravity sin detectar
-// hasta que se configure un comando (lo que lo vuelve disponible).
+// Estado multi-agente: Claude conectado (sesión CLI). Antigravity arranca sin
+// CLI instalado; configurar el comando lo vuelve disponible (sin sesión) y el
+// login con Google le da la sesión + lista de modelos reales.
 let agentSelected = 'claude';
 let agAvailable = false;
+let agLogged = false;
 let agCommand = 'antigravity';
-let agModel = 'gemini-3-flash-medium';
+let agModel = '';
 const agentState = () => ({
   selected: agentSelected,
   agents: [
     { id: 'claude', label: 'Claude Code', kind: 'sdk', available: true, hasCredential: true, credentialSource: 'cli', account: 'david25geo@gmail.com', model: 'claude-sonnet-4-6' },
-    { id: 'antigravity', label: 'Antigravity', kind: 'cli', available: agAvailable, hasCredential: agAvailable, credentialSource: agAvailable ? 'cli' : null, command: agCommand, model: agModel },
+    {
+      id: 'antigravity', label: 'Antigravity', kind: 'cli',
+      available: agAvailable, hasCredential: agLogged, sessionChecked: true,
+      credentialSource: agLogged ? 'cli' : null, command: agCommand, model: agModel,
+      models: agLogged ? ['gemini-3-pro-high', 'gemini-3-flash'] : [],
+    },
   ],
 });
 
@@ -98,6 +105,14 @@ dom.window.electronAPI = {
     setCommand: async (_id, command) => { agCommand = command; agAvailable = true; return { ok: true, data: agentState() }; },
     setModel: async (_id, model) => { agModel = model; return { ok: true, data: agentState() }; },
     generate: async () => ({ ok: true, data: { ok: true, file: 'momento-1.html' } }),
+    preflightAuth: async () => ({ ok: true, loggedIn: agLogged, reason: agLogged ? 'models' : 'auth_required', models: agLogged ? ['gemini-3-pro-high', 'gemini-3-flash'] : [] }),
+    // login abre una terminal; aquí simulamos que el usuario completa el OAuth
+    // (la sesión real solo aparece al refrescar con "Ya inicié sesión").
+    login: async (id) => { if (id === 'antigravity') agLogged = true; return { ok: true, data: { opened: true, message: 'Terminal abierta.' } }; },
+    logout: async (id) => {
+      if (id === 'antigravity') agLogged = false;
+      return { ok: true, data: { message: 'Sesión cerrada' } };
+    },
     onEvent: () => () => {},
   },
 };
@@ -147,24 +162,26 @@ console.log('— Selector de agentes (Claude / Antigravity) —');
 check('dos tiles de agente', $$('.agent-tile').length === 2);
 check('Claude es el activo', $('.agent-tile--claude').classList.contains('agent-tile--active'));
 check('LED de Claude encendido', !!$('.agent-tile--claude .agent-tile__led--on'));
-check('Antigravity detectable como CLI no detectado',
-  $('.agent-tile--antigravity .agent-tile__status')?.textContent.includes('no detectado'));
-check('acción Claude: conectado vía sesión', $('#geo-agent-action')?.textContent.includes('Conectado'));
+check('Antigravity sin CLI instalado',
+  $('.agent-tile--antigravity .agent-tile__status')?.textContent.includes('CLI no instalado'));
+check('acción Claude: conectado', $('#geo-agent-action')?.textContent.includes('Conectado'));
 check('Claude muestra el email de la cuenta', $('.agent-tile--claude').textContent.includes('david25geo@gmail.com'));
+check('Claude tiene botón Cerrar sesión', !!$('#geo-agent-logout'));
 check('selector de modelo de Claude presente', !!$('#geo-agent-model-select'));
 check('Claude ofrece Sonnet 4.6 como recomendado',
   [...$('#geo-agent-model-select').options].some((o) => o.value === 'claude-sonnet-4-6' && /Recomendado/.test(o.textContent)));
 check('Sonnet 4.6 es el modelo activo de Claude', $('#geo-agent-model-select').value === 'claude-sonnet-4-6');
 
-// Cambiar a Antigravity (aún no configurado → no disponible)
+// Cambiar a Antigravity (CLI no instalado todavía)
 $('.agent-tile--antigravity').click();
 await tick();
 check('Antigravity pasa a activo', $('.agent-tile--antigravity').classList.contains('agent-tile--active'));
-check('acción muestra el comando configurable', !!$('#geo-agent-command') && $('#geo-agent-action').textContent.includes('antigravity'));
+check('comando configurable en Opciones avanzadas',
+  !!$('.agent-action__advanced') && !!$('#geo-agent-command') && $('#geo-agent-action').textContent.includes('antigravity'));
 check('Generar oculto mientras Antigravity no está disponible',
   !$('.course-row[data-id="momento-1"] [data-act="generate"]'));
 
-console.log('— Configurar comando de Antigravity → modelo Gemini 3 —');
+console.log('— Configurar comando → login con Google → modelos reales —');
 $('#geo-agent-command').click();
 await tick();
 const cmdInput = $('#geo-course-modal-input');
@@ -172,14 +189,30 @@ cmdInput.value = 'antigravity';
 cmdInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 $('#geo-course-modal-ok').click();
 await new Promise((r) => setTimeout(r, 220)); // desmontaje del modal
-check('Antigravity disponible tras configurar comando',
-  $('.agent-tile--antigravity .agent-tile__led--on') !== null || $('.agent-tile--antigravity .agent-tile__led--warn') !== null);
+check('CLI detectado pero sin sesión → LED de aviso',
+  !!$('.agent-tile--antigravity .agent-tile__led--warn'));
+check('banner con botón único de Iniciar sesión con Google',
+  !!$('#geo-agy-login') && $('#geo-agy-login').textContent.includes('Google'));
+check('botón "Ya inicié sesión" disponible', !!$('#geo-agent-refresh'));
+check('sin selector de modelo hasta tener sesión', !$('#geo-agent-model-select'));
+
+// Paso 1: abrir el login (terminal). La UI NO cambia todavía: la sesión solo
+// se confirma al refrescar con "Ya inicié sesión".
+$('#geo-agy-login').click();
+await new Promise((r) => setTimeout(r, 60));
+check('tras abrir login sigue el botón "Ya inicié sesión"', !!$('#geo-agent-refresh'));
+// Paso 2: confirmar la sesión.
+$('#geo-agent-refresh').click();
+await new Promise((r) => setTimeout(r, 60));
+check('login deja a Antigravity conectado (LED on)',
+  !!$('.agent-tile--antigravity .agent-tile__led--on'));
+check('fila Conectado con botón Cerrar sesión', !!$('#geo-agent-logout'));
 const agSelect = $('#geo-agent-model-select');
-check('selector de modelo de Antigravity aparece', !!agSelect);
-check('opción Gemini 3 Flash medium disponible',
-  !!agSelect && [...agSelect.options].some((o) => o.value === 'gemini-3-flash-medium' && /Gemini 3 Flash/.test(o.textContent)));
-check('Gemini 3 Flash medium es el modelo activo',
-  !!agSelect && agSelect.value === 'gemini-3-flash-medium');
+check('selector de modelo de Antigravity aparece tras login', !!agSelect);
+check('opción por defecto del CLI seleccionada',
+  !!agSelect && agSelect.value === '' && /por defecto del CLI/i.test(agSelect.options[agSelect.selectedIndex].textContent));
+check('modelos REALES del CLI listados (agy models)',
+  !!agSelect && [...agSelect.options].some((o) => o.value === 'gemini-3-pro-high'));
 
 // Volver a Claude para el resto del flujo
 $('.agent-tile--claude').click();

@@ -320,6 +320,12 @@ function registerIpcHandlers() {
   ipcMain.handle('agent:setModel', (_e, agentId, model) =>
     safeAsync(() => agent.setModel(userDataPath, safeStorage, agentId, model)));
 
+  ipcMain.handle('agent:login', (_e, agentId) =>
+    safeAsync(() => agent.login(userDataPath, safeStorage, agentId)));
+
+  ipcMain.handle('agent:logout', (_e, agentId) =>
+    safeAsync(() => agent.logout(userDataPath, safeStorage, agentId)));
+
   ipcMain.handle('agent:generate', async (_e, projectPath, structure) => {
     try {
       const result = await agent.generate({
@@ -328,6 +334,9 @@ function registerIpcHandlers() {
         skillsSrcPath: SKILLS_SRC_PATH,
         userDataPath,
         safeStorage,
+        // Para convertir insumos binarios (.docx/.pdf/.xlsx) a texto con los
+        // motores embebidos (pandoc / scripts Python).
+        convertCtx: { resourcesPath: process.resourcesPath || __dirname, isDev },
         onEvent: (event) => {
           if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('agent:event', { structureId: structure.id, ...event });
@@ -342,107 +351,21 @@ function registerIpcHandlers() {
   });
 
   // ── Verificación rápida de sesión de Antigravity CLI ────────────────
-  ipcMain.handle('agent:preflightAuth', async () => {
+  ipcMain.handle('agent:preflightAuth', async (_e, force = false) => {
     try {
-      const cfg = agent.getStatus ? null : null; // solo necesitamos el comando
-      const { readConfig } = require('./server/agent');
-      const cfgData = readConfig(userDataPath);
+      const cfgData = agent.readConfig(userDataPath);
       const command = cfgData.antigravity && cfgData.antigravity.command;
-      const result = await agent.preflightAgyAuth(command, userDataPath, safeStorage);
+      const result = await agent.preflightAgyAuth(command, Boolean(force));
       return { ok: true, ...result };
     } catch (err) {
       return { ok: false, loggedIn: false, reason: String(err && err.message) };
     }
   });
 
-  // ── Login integrado de Antigravity: abre BrowserWindow con el flujo OAuth ──
-  ipcMain.handle('agent:loginAgy', async () => {
-    const { BrowserWindow: BW, shell } = require('electron');
-    const fs = require('fs');
-    try {
-      const { readConfig } = require('./server/agent');
-      const cfgData = readConfig(userDataPath);
-      const command = cfgData.antigravity && cfgData.antigravity.command;
-
-      // Invalidar caché para que el estado se refresque tras el login
-      agent.invalidateAgyAuthCache();
-
-      // Intentar capturar la URL OAuth que agy intenta abrir
-      let loginData = null;
-      try { loginData = await agent.captureAgyLoginUrl(command); } catch { /* sin captura */ }
-
-      if (!loginData || !loginData.url) {
-        // Fallback: si no se pudo interceptar la URL, abrir el sitio en el browser
-        shell.openExternal('https://antigravity.google');
-        return {
-          ok: false,
-          fallback: true,
-          message: 'Se abrió Antigravity en tu navegador. Inicia sesión allí, luego regresa y pulsa "Verificar sesión".',
-        };
-      }
-
-      const { url, child, tmpDir } = loginData;
-
-      // Abrir un BrowserWindow con la URL de OAuth de Google
-      const authWin = new BW({
-        width: 900,
-        height: 660,
-        title: 'Iniciar sesión en Antigravity',
-        modal: false,
-        show: false,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          sandbox: true,
-        },
-      });
-
-      authWin.once('ready-to-show', () => authWin.show());
-      authWin.loadURL(url);
-
-      // Cuando el browser de Google redirige al localhost de agy = auth completado
-      const completed = await new Promise((resolve) => {
-        let done = false;
-
-        const checkUrl = (navUrl) => {
-          if (done) return;
-          if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(navUrl)) {
-            done = true;
-            // Dar 2 s a agy para guardar el token antes de cerrar
-            setTimeout(() => { try { authWin.close(); } catch { } }, 2000);
-          }
-        };
-
-        authWin.webContents.on('will-navigate', (_ev, navUrl) => checkUrl(navUrl));
-        authWin.webContents.on('did-navigate', (_ev, navUrl) => checkUrl(navUrl));
-        authWin.webContents.on('will-redirect', (_ev, navUrl) => checkUrl(navUrl));
-
-        authWin.on('closed', () => resolve(done));
-      });
-
-      // Terminar el proceso de agy y limpiar archivos temporales
-      try { child.kill('SIGTERM'); } catch { }
-      setTimeout(() => {
-        try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { }
-      }, 3000);
-
-      // Invalidar caché y forzar nuevo preflight
-      agent.invalidateAgyAuthCache();
-
-      return completed
-        ? { ok: true, message: 'Sesión iniciada correctamente. Ya puedes generar.' }
-        : { ok: false, cancelled: true, message: 'Login cancelado. Inicia sesión y vuelve a intentarlo.' };
-
-    } catch (err) {
-      console.error('[IPC:agent:loginAgy]', err);
-      // Fallback de emergencia
-      try {
-        const { shell: sh } = require('electron');
-        sh.openExternal('https://antigravity.google');
-      } catch { }
-      return { ok: false, error: String(err && err.message) };
-    }
-  });
+  // El inicio de sesión de Antigravity y Claude se hace por terminal
+  // (agent:login): el propio CLI dirige su OAuth y guarda el token. El antiguo
+  // flujo de captura de URL en un BrowserWindow se retiró porque terminaba en
+  // antigravity.google sin opción de login.
 }
 
 // ─── Configuración de Auto-Updater ───────────────────────────────────

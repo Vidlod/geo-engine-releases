@@ -40,23 +40,23 @@ import { getQuickFix } from './linter/fixes.js';
 function buildLinterConfig(redFiles) {
   return {
     rules: {
-      'max-br':              { enabled: true, max: 1 },
-      'br-before-close':     { enabled: true },
-      'br-between-blocks':   { enabled: true },
-      'br-before-button':    { enabled: true },
-      'max-spaces':          { enabled: true, max: 2 },
-      'terminology-module':  { enabled: true },
-      'emoticon-span':       { enabled: true },
-      'link-target':         { enabled: true },
-      'elibro-proxy':        { enabled: true },
-      'forbidden-source':    { enabled: true },
-      'pluginfile-red':      { enabled: true, redFiles },
+      'max-br': { enabled: true, max: 1 },
+      'br-before-close': { enabled: true },
+      'br-between-blocks': { enabled: true },
+      'br-before-button': { enabled: true },
+      'max-spaces': { enabled: true, max: 2 },
+      'terminology-module': { enabled: true },
+      'emoticon-span': { enabled: true },
+      'link-target': { enabled: true },
+      'elibro-proxy': { enabled: true },
+      'forbidden-source': { enabled: true },
+      'pluginfile-red': { enabled: true, redFiles },
       'tablero-anotaciones': { enabled: true },
-      'no-italics':          { enabled: true },
-      'li-paragraph':        { enabled: true },
-      'li-period':           { enabled: true },
-      'producto-final':      { enabled: true },
-      'strong-heading':      { enabled: true },
+      'no-italics': { enabled: true },
+      'li-paragraph': { enabled: true },
+      'li-period': { enabled: true },
+      'producto-final': { enabled: true },
+      'strong-heading': { enabled: true },
     },
     course: { last_avance: 5 },
   };
@@ -374,7 +374,7 @@ class App {
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.9.6 · Moodle Builder</span>
+        <span class="home__badge">v1.9.7 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
