@@ -633,7 +633,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-surface-2);
   flex-shrink: 0;
@@ -662,8 +662,9 @@
   overflow: auto;
   padding: 12px 0;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
+  background: var(--bg-root);
 }
 
 .diff-view__empty {
@@ -674,43 +675,78 @@
 }
 
 .diff-view__sep {
-  padding: 4px 20px;
+  padding: 6px 20px;
   color: var(--text-muted);
   border-top: 1px dashed var(--border);
   border-bottom: 1px dashed var(--border);
-  margin: 6px 0;
+  margin: 8px 0;
   text-align: center;
+  background: var(--bg-surface-2);
 }
 
 .diff-line {
   display: flex;
-  align-items: baseline;
-  padding: 0 12px;
+  align-items: stretch;
+  padding: 0;
   white-space: pre;
+  min-width: max-content;
+  width: 100%;
 }
-.diff-line--add { background: var(--success-soft); color: var(--success); }
-.diff-line--del { background: var(--error-soft); color: var(--error); }
+.diff-line:hover {
+  background-color: var(--bg-surface-3);
+}
+
+.diff-line--add { background: rgba(63, 185, 80, 0.15); color: #e6edf3; }
+.diff-line--add .diff-line__text { background: rgba(63, 185, 80, 0.05); }
+.diff-line--del { background: rgba(248, 81, 73, 0.15); color: #e6edf3; }
+.diff-line--del .diff-line__text { background: rgba(248, 81, 73, 0.05); }
 .diff-line--ctx { color: var(--text-secondary); }
 
 .diff-line__num {
   flex-shrink: 0;
-  width: 42px;
+  width: 45px;
   text-align: right;
-  padding-right: 8px;
+  padding-right: 12px;
   color: var(--text-muted);
   user-select: none;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface-2);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .diff-line__sign {
   flex-shrink: 0;
-  width: 16px;
+  width: 24px;
   user-select: none;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.02);
 }
+.diff-line--add .diff-line__sign { color: var(--success); }
+.diff-line--del .diff-line__sign { color: var(--error); }
 
 .diff-line__text {
   flex: 1;
-  overflow-x: auto;
+  padding: 1px 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* Word wrap dynamic formatting toggled by Alt+Z */
+.diff-view--word-wrap .diff-line {
+  min-width: 0;
+}
+.diff-view--word-wrap .diff-line__text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  min-width: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════

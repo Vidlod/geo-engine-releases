@@ -248,6 +248,7 @@ export class CoursePanel {
       </div>`;
 
     this._el.querySelector('#geo-course-back').addEventListener('click', () => this._cb.onBack());
+    
     this._el.querySelector('#geo-course-close').addEventListener('click', () => {
       this._project = null;
       this._renderEmpty();

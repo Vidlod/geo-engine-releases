@@ -145,50 +145,46 @@ export class Preview {
      Text-node wrapping (for inline text editing)
      ═══════════════════════════════════════════════════════════ */
 
+  /* ═══════════════════════════════════════════════════════════
+     Block-level wrapping (for inline editing)
+     ═══════════════════════════════════════════════════════════ */
+
   /** @private */
   _wrapTextNodes(root) {
     let index = 0;
 
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-      acceptNode: (node) => {
-        if (!node.textContent || node.textContent.trim().length === 0)
-          return NodeFilter.FILTER_REJECT;
-
-        let ancestor = node.parentElement;
-        while (ancestor && ancestor !== root) {
-          if (SKIP_TAGS.has(ancestor.tagName) || STRUCTURAL_TAGS.has(ancestor.tagName))
-            return NodeFilter.FILTER_REJECT;
-          ancestor = ancestor.parentElement;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    });
-
-    const nodes = [];
-    while (walker.nextNode()) {
-      nodes.push({ node: /** @type {Text} */ (walker.currentNode), text: walker.currentNode.textContent });
-    }
-
-    for (const { node, text } of nodes) {
-      const span = document.createElement('span');
-      span.setAttribute('data-geo-editable', '');
-      span.setAttribute('data-geo-index', String(index));
-      span.textContent = text;
-
-      // Mark text inside links so the editor can handle them specially
-      const parentLink = node.parentElement?.closest('a[href]');
-      if (parentLink && !parentLink.closest('.nav')) {
-        span.setAttribute('data-geo-link', '');
+    // Find all blocks that can be edited: p, li, h1-6, and standalone strong tags
+    const blocks = root.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, strong');
+    
+    blocks.forEach((block) => {
+      // Skip strong if it is inside another block element (since it will be edited as part of that block)
+      if (block.tagName === 'STRONG' && block.closest('p, li, h1, h2, h3, h4, h5, h6')) {
+        return;
+      }
+      
+      // Skip navigation panels/tabs
+      if (block.closest('.nav, .nav-tabs, .nav-pills')) {
+        return;
       }
 
-      node.parentNode?.replaceChild(span, node);
-      this._textNodeMap.set(index, { element: span, originalText: text });
+      // Mark the block element directly as editable
+      block.setAttribute('data-geo-editable', '');
+      block.setAttribute('data-geo-index', String(index));
+
+      const tagName = block.tagName.toLowerCase();
+      const blockIndex = this._getBlockIndex(block);
+
+      this._textNodeMap.set(index, {
+        element: block,
+        tagName,
+        blockIndex
+      });
       index++;
-    }
+    });
   }
 
   /* ═══════════════════════════════════════════════════════════
-     Inline text click handler
+     Inline block click handler
      ═══════════════════════════════════════════════════════════ */
 
   /** @private */
@@ -202,83 +198,47 @@ export class Preview {
 
     if (this._inlineEditor?.isOpen) this._inlineEditor.close();
 
-    const currentText = span.textContent ?? '';
-    const isLinkText = span.hasAttribute('data-geo-link');
+    const tagName = entry.tagName;
+    const blockIndex = entry.blockIndex;
+
+    // Retrieve the exact original HTML content of the block from the engine
+    const html = this._engine.getResult();
+    const textContent = this._norm(span.textContent);
+    const block = findBlock(html, textContent, tagName, blockIndex);
+    
+    if (!block) {
+      console.warn('[Preview] Could not find block in engine HTML:', { tagName, blockIndex, textContent });
+      return;
+    }
+
+    const currentHTML = block.innerHTML;
 
     this._inlineEditor = new InlineEditor(
       this._container,
-      (newText) => {
-        if (newText !== currentText) {
+      (newHTML) => {
+        if (newHTML !== currentHTML) {
           try {
-            const label = `Texto: "${newText.length > 40 ? newText.slice(0, 40) + '…' : newText}"`;
-            if (isLinkText) {
-              this._patchLinkText(currentText, newText, label);
-            } else {
-              this._engine.addPatch(currentText, newText, label);
-            }
+            // Strip tags for a clean history description label
+            const cleanText = newHTML.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            const label = `Texto: "${cleanText.length > 40 ? cleanText.slice(0, 40) + '…' : cleanText}"`;
+
+            // Replace the entire block's outer HTML (fullMatch) to preserve its clean structure
+            const originalFull = block.fullMatch;
+            const replacementFull = `<${tagName}${block.attrs}>${newHTML}</${tagName}>`;
+
+            this._engine.addPatch(originalFull, replacementFull, label);
             this.render();
             this._onEdit();
-          } catch (err) { console.error('[Preview] Patch failed:', err); }
+          } catch (err) {
+            console.error('[Preview] Patch failed:', err);
+            showToast('No se pudo guardar el cambio', 'error');
+          }
         }
       },
       () => { /* cancel */ },
     );
 
-    this._inlineEditor.open(span, currentText);
-  }
-
-  /**
-   * Patch text that lives inside an `<a>` tag.
-   * If text was appended at the end → place it AFTER `</a>`.
-   * If text was prepended at the start → place it BEFORE `<a>`.
-   * Otherwise → normal in-place replacement.
-   * @private
-   */
-  _patchLinkText(originalText, newText, label = 'Texto de enlace') {
-    const html = this._engine.getResult();
-
-    // Find common prefix and suffix between old and new text
-    let prefixLen = 0;
-    const minLen = Math.min(originalText.length, newText.length);
-    while (prefixLen < minLen && originalText[prefixLen] === newText[prefixLen]) prefixLen++;
-
-    let suffixLen = 0;
-    while (
-      suffixLen < minLen - prefixLen &&
-      originalText[originalText.length - 1 - suffixLen] === newText[newText.length - 1 - suffixLen]
-    ) suffixLen++;
-
-    // Case 1: text appended at the end (original text unchanged, extra at end)
-    if (prefixLen === originalText.length) {
-      const appended = newText.substring(originalText.length);
-      // Find the pattern: originalText</a>  →  originalText</a>appended
-      const needle = originalText + '</a>';
-      if (html.includes(needle)) {
-        this._engine.addPatch(needle, originalText + '</a>' + appended, label);
-        return;
-      }
-    }
-
-    // Case 2: text prepended at the start (original text unchanged, extra at start)
-    if (suffixLen === originalText.length) {
-      const prepended = newText.substring(0, newText.length - originalText.length);
-      // Find a link opening tag right before the original text
-      // Pattern: <a ...>originalText  →  prepended<a ...>originalText
-      const re = new RegExp(`(<a\\b[^>]*>)(${this._escRegex(originalText)})`);
-      const match = html.match(re);
-      if (match) {
-        this._engine.addPatch(match[0], prepended + match[0], label);
-        return;
-      }
-    }
-
-    // Default: normal replacement (text changed in the middle)
-    this._engine.addPatch(originalText, newText, label);
-  }
-
-  /** Escape special regex characters in a string. @private */
-  _escRegex(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    this._inlineEditor.open(span, currentHTML);
   }
 
   /* ═══════════════════════════════════════════════════════════

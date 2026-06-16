@@ -137,6 +137,8 @@ export class DiffView {
   constructor(containerEl) {
     /** @private */ this._panel = containerEl;
     /** @private @type {HTMLElement|null} */ this._el = null;
+    /** @private */ this._wordWrap = false;
+    /** @private */ this._handleKeydown = this._onKeydown.bind(this);
   }
 
   get isOpen() { return this._el !== null; }
@@ -151,6 +153,9 @@ export class DiffView {
 
     const el = document.createElement('div');
     el.className = 'diff-view';
+    if (this._wordWrap) {
+      el.classList.add('diff-view--word-wrap');
+    }
     el.id = 'geo-diff-view';
 
     const ops = computeLineDiff(originalHtml, resultHtml);
@@ -164,11 +169,13 @@ export class DiffView {
     head.innerHTML =
       `<span class="diff-view__title">Original → Resultado</span>` +
       `<span class="diff-view__stat diff-view__stat--add">+${added}</span>` +
-      `<span class="diff-view__stat diff-view__stat--del">−${removed}</span>`;
+      `<span class="diff-view__stat diff-view__stat--del">−${removed}</span>` +
+      `<span style="margin-left: auto; font-size: 0.6875rem; color: var(--text-muted); font-family: var(--font-sans)">[Alt + Z] Ajuste de línea</span>`;
     el.appendChild(head);
 
     const body = document.createElement('div');
     body.className = 'diff-view__body';
+    body.setAttribute('tabindex', '-1');
 
     if (hunks.length === 0) {
       const empty = document.createElement('div');
@@ -212,11 +219,32 @@ export class DiffView {
     el.appendChild(body);
     this._panel.appendChild(el);
     this._el = el;
+
+    document.addEventListener('keydown', this._handleKeydown);
+    body.focus();
   }
 
   /** Remove the overlay. */
   close() {
-    this._el?.remove();
+    if (this._el) {
+      document.removeEventListener('keydown', this._handleKeydown);
+      this._el.remove();
+    }
     this._el = null;
+  }
+
+  /** Toggle word wrap state on the visualizer. */
+  toggleWordWrap() {
+    if (!this._el) return;
+    this._wordWrap = !this._wordWrap;
+    this._el.classList.toggle('diff-view--word-wrap', this._wordWrap);
+  }
+
+  /** @private */
+  _onKeydown(e) {
+    if (e.altKey && e.code === 'KeyZ') {
+      e.preventDefault();
+      this.toggleWordWrap();
+    }
   }
 }
