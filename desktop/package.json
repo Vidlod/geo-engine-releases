@@ -1,6 +1,6 @@
 {
   "name": "geo-engine-desktop",
-  "version": "1.9.8",
+  "version": "1.9.9",
   "description": "GEO Engine — App de escritorio para maquetación de cursos Moodle (UDES)",
   "main": "main.js",
   "private": true,

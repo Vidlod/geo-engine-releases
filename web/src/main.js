@@ -383,7 +383,7 @@ class App {
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.9.8 · Moodle Builder</span>
+        <span class="home__badge">v1.9.9 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
