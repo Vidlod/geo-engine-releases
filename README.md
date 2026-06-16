@@ -11,8 +11,8 @@ las partes mecánicas.
 | Fase | Componente | Estado |
 | :---: | --- | :---: |
 | 1 | **Linter determinista** | ✅ Funcional |
-| 2 | Motor de plantillas (parsers + templates) | ⬜ Pendiente |
-| 3 | Skill de Claude (criterio) | ⬜ Pendiente |
+| 2 | Motor de plantillas (parsers + templates) | ✅ Funcional |
+| 3 | Skill de Claude (criterio) | ✅ Funcional |
 | 4 | **Web app — GEO Engine Editor** | ✅ Funcional |
 
 ## Web App (Asistente + Editor Visual)
