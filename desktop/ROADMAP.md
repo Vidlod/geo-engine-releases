@@ -8,8 +8,7 @@
 
 ## 🧩 Gestor de Skills (Skills Manager)
 
-**Prioridad:** 🔴 Alta
-**Estado:** 📋 Planificado
+**Estado:** ✅ Implementado
 
 ### Descripción
 
@@ -71,8 +70,7 @@ aprendizaje y minimizan errores de formato.
 
 ## 📁 Gestión Inteligente de Carpetas y Workspace
 
-**Prioridad:** 🔴 Alta
-**Estado:** 📋 Planificado
+**Estado:** ✅ Implementado
 
 ### Descripción
 
@@ -135,7 +133,7 @@ completo.
 ## 🧹 Automatización del Sistema de Archivos (El Saneador)
 
 **Prioridad:** 🟡 Media
-**Estado:** 📋 Planificado
+**Estado:** 📋 En Proceso
 
 ### Descripción
 
@@ -260,8 +258,7 @@ arrastrar archivos desde el Finder o Explorer directamente al editor.
 
 ## 🔗 Mapeador de Enlaces e IDs (Link Resolver)
 
-**Prioridad:** 🔴 Alta
-**Estado:** 📋 Planificado
+**Estado:** ✅ Implementado
 
 ### Descripción
 
@@ -334,7 +331,7 @@ corrección automática.
 ## ✅ Linter Visual y Validador One-Click
 
 **Prioridad:** 🔴 Alta
-**Estado:** 📋 Planificado
+**Estado:** 📋 En Proceso
 
 ### Descripción
 

@@ -69,9 +69,9 @@ el texto crudo del HTML con expresiones regulares, preservando el formato origin
 
 1. **Linter determinista** ✅ — reglas mecánicas como código + `rules.yaml`.
    Se puede correr sobre `3_paginas_finales/` actual para validar lo ya hecho.
-2. **Skills multi-agente** 🟡 EN CURSO — ver sección 7. (Se adelantó antes que el motor.)
-3. **Motor de plantillas** ⬜ — reutiliza `app.py`/mammoth: parse → llena → output + flags.
-4. **Web app** ⬜ — frente para no técnicos sobre el mismo motor, con reporte de flags.
+2. **Skills multi-agente** ✅ EN CURSO — ver sección 7. (Se adelantó antes que el motor.)
+3. **Motor de plantillas** ✅ — reutiliza `app.py`/mammoth: parse → llena → output + flags.
+4. **Web app** ✅ — frente para no técnicos sobre el mismo motor, con reporte de flags.
 
 ## 6. Decisiones de las Skills (con el usuario)
 
@@ -196,7 +196,7 @@ FLAGS donde corresponde; pendiente de confirmación del usuario.
 ### Reglas que requieren criterio o contexto visual (NO en el linter — van a la Skill / flags)
 
 - Fusión `rowspan` en tablas de resumen (depende de la semántica de filas).
-- `margin-bottom: 10px` por número de renglones (es visual, no medible en texto plano).
+- `<br>` por número de renglones (es visual, no medible en texto plano).
 - Formato completo de citas bibliográficas (requiere identificar autor/enlace).
 - Ubicación "Documento:" vs "Forma de entrega".
 - Emparejar títulos de RED con archivos; títulos de podcast por escucha.
