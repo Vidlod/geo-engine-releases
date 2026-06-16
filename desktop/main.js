@@ -299,6 +299,12 @@ function registerIpcHandlers() {
   ipcMain.handle('project:addInsumos', (_e, projectPath, filePaths) =>
     safe(() => project.addInsumos(projectPath, filePaths)));
 
+  ipcMain.handle('project:deleteInsumo', (_e, projectPath, fileName) =>
+    safe(() => project.deleteInsumo(projectPath, fileName)));
+
+  ipcMain.handle('project:renameInsumo', (_e, projectPath, oldName, newName) =>
+    safe(() => project.renameInsumo(projectPath, oldName, newName)));
+
   // ── Agente (Agent SDK embebido) ────────────────────────────────────
   const userDataPath = app.getPath('userData');
 
@@ -325,6 +331,9 @@ function registerIpcHandlers() {
 
   ipcMain.handle('agent:logout', (_e, agentId) =>
     safeAsync(() => agent.logout(userDataPath, safeStorage, agentId)));
+
+  ipcMain.handle('agent:downloadCli', () =>
+    safeAsync(() => agent.downloadAndInstallCli()));
 
   ipcMain.handle('agent:generate', async (_e, projectPath, structure) => {
     try {

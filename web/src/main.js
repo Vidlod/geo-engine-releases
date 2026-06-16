@@ -223,6 +223,7 @@ class App {
       onRevertTo: (keep) => this._revertTo(keep),
     });
     this.toolbar.render();
+    this.toolbar.setViewLabel('Inicio');
 
     // Dropzone (editor directo) con botón de volver al inicio
     const backBtn = document.createElement('button');
@@ -307,6 +308,15 @@ class App {
       app.className = `view-${view}`;
     }
 
+    const VIEW_LABELS = {
+      home: 'Inicio',
+      wizard: 'Asistente de curso',
+      dropzone: 'Editor directo',
+      course: 'Proyecto de curso',
+      editor: '',
+    };
+    this.toolbar.setViewLabel(VIEW_LABELS[view] || '');
+
     this._homeScreen.classList.toggle('hidden', view !== 'home');
     this._wizardScreen.classList.toggle('hidden', view !== 'wizard');
     this._dropzoneScreen.classList.toggle('hidden', view !== 'dropzone');
@@ -339,8 +349,7 @@ class App {
   _renderHome() {
     // Tarjeta del flujo con agente: solo en la app de escritorio
     const courseCard = projectApi() ? `
-        <div class="home__card home__card--primary home__card--course" id="geo-home-course">
-          <div class="home__card-tag">Nuevo · IA</div>
+        <div class="home__card home__card--secondary home__card--course" id="geo-home-course">
           <span class="home__card-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
           </span>
@@ -364,7 +373,7 @@ class App {
             </div>
           </div>
 
-          <button type="button" class="btn btn--primary home__card-btn">
+          <button type="button" class="btn btn--ghost home__card-btn">
             <span>Abrir Proyecto</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -374,14 +383,13 @@ class App {
       <div class="home__glow-1"></div>
       <div class="home__glow-2"></div>
       <div class="home__hero">
-        <span class="home__badge">v1.9.7 · Moodle Builder</span>
+        <span class="home__badge">v1.9.8 · Moodle Builder</span>
         <h1 class="home__title">GEO Engine</h1>
         <p class="home__subtitle">Maquetación visual inteligente y control de calidad para Moodle UDES</p>
       </div>
       <div class="home__cards ${projectApi() ? 'home__cards--three' : ''}">
         ${courseCard}
-        <div class="home__card home__card--primary" id="geo-home-wizard">
-          <div class="home__card-tag">Recomendado</div>
+        <div class="home__card home__card--secondary" id="geo-home-wizard">
           <span class="home__card-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>
           </span>
@@ -410,7 +418,7 @@ class App {
             </div>
           </div>
 
-          <button type="button" class="btn btn--primary home__card-btn">
+          <button type="button" class="btn btn--ghost home__card-btn">
             <span>Comenzar Flujo</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -442,12 +450,19 @@ class App {
         </div>
       </div>`;
 
-    this._homeScreen.querySelector('#geo-home-wizard')
-      .addEventListener('click', () => this._showView('wizard'));
-    this._homeScreen.querySelector('#geo-home-editor')
-      .addEventListener('click', () => this._showView('dropzone'));
-    const courseEl = this._homeScreen.querySelector('#geo-home-course');
-    if (courseEl) courseEl.addEventListener('click', () => this._showView('course'));
+    const addCardListeners = (selector, view) => {
+      const el = this._homeScreen.querySelector(selector);
+      if (!el) return;
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('role', 'button');
+      el.addEventListener('click', () => this._showView(view));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._showView(view); }
+      });
+    };
+    addCardListeners('#geo-home-wizard', 'wizard');
+    addCardListeners('#geo-home-editor', 'dropzone');
+    addCardListeners('#geo-home-course', 'course');
 
     // Consultar dinámicamente la versión real de la app Electron
     const badge = this._homeScreen.querySelector('.home__badge');

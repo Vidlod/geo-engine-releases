@@ -106,19 +106,180 @@ function toYaml(config, fileMap) {
 }
 
 /**
+ * Normaliza un texto eliminando acentos/diacríticos y pasándolo a minúsculas.
+ * @param {string} str
+ * @returns {string}
+ */
+function normalizeText(str) {
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Convierte un número arábigo a romano de forma simple (para momentos y avances 1-6).
+ * @param {number} num
+ * @returns {string}
+ */
+function toRoman(num) {
+  const map = { 1: 'i', 2: 'ii', 3: 'iii', 4: 'iv', 5: 'v', 6: 'vi' };
+  return map[num] || String(num);
+}
+
+/**
  * Mapa de archivos automático: término legible → nombre exacto.
  * El término se deriva del nombre del archivo (sin extensión, sin guiones).
+ * También genera alias genéricos e inteligentes (syllabus, rúbrica, anexos, etc.)
+ * para que el agente de IA pueda enlazarlos usando las palabras genéricas.
  * @param {string[]} insumos
+ * @param {object} [config]
  * @returns {Record<string,string>}
  */
-function buildFileMap(insumos) {
+function buildFileMap(insumos, config = {}) {
   /** @type {Record<string,string>} */
   const map = {};
+
+  const romanToNum = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6 };
+
   for (const name of insumos) {
     const base = name.replace(/\.[^.]+$/, '');
     const term = base.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
-    if (term) map[term] = name;
+    if (!term) continue;
+
+    // 1. Mapeo del nombre limpio exacto original
+    map[term] = name;
+
+    // 2. Normalización de diacríticos para procesar reglas y agregar alias
+    const norm = normalizeText(term);
+
+    // ── Regla: Syllabus / Sílabo ──
+    if (norm.includes('syllabus') || norm.includes('silabo')) {
+      map['syllabus'] = name;
+      map['sílabo'] = name;
+      map['silabo'] = name;
+      map['syllabus del curso'] = name;
+      map['sílabo del curso'] = name;
+      map['silabo del curso'] = name;
+    }
+
+    // ── Regla: Rúbrica ──
+    if (norm.includes('rubrica')) {
+      const digitMatch = norm.match(/\b\d+\b/);
+      const romanMatch = norm.match(/\b(i|ii|iii|iv|v|vi)\b/);
+      let num = null;
+
+      if (digitMatch) {
+        num = parseInt(digitMatch[0], 10);
+      } else if (romanMatch) {
+        num = romanToNum[romanMatch[1]];
+      }
+
+      // Alias con número/momento
+      if (num !== null) {
+        const rom = toRoman(num);
+        map[`rúbrica ${num}`] = name;
+        map[`rubrica ${num}`] = name;
+        map[`rúbrica momento ${num}`] = name;
+        map[`rubrica momento ${num}`] = name;
+        map[`rúbrica momento ${rom}`] = name;
+        map[`rubrica momento ${rom}`] = name;
+        map[`rúbrica de evaluación ${num}`] = name;
+        map[`rubrica de evaluacion ${num}`] = name;
+        map[`rúbrica de evaluación momento ${num}`] = name;
+        map[`rubrica de evaluacion momento ${num}`] = name;
+      }
+      
+      // Alias genéricos (no sobreescribimos si ya existían para evitar pisar en orden incorrecto)
+      if (!map['rúbrica']) map['rúbrica'] = name;
+      if (!map['rubrica']) map['rubrica'] = name;
+      if (!map['rúbrica de evaluación']) map['rúbrica de evaluación'] = name;
+      if (!map['rubrica de evaluacion']) map['rubrica de evaluacion'] = name;
+    }
+
+    // ── Regla: Anexos ──
+    if (norm.includes('anexo')) {
+      const digitMatch = norm.match(/\b\d+\b/);
+      const romanMatch = norm.match(/\b(i|ii|iii|iv|v|vi)\b/);
+      let num = null;
+
+      if (digitMatch) {
+        num = parseInt(digitMatch[0], 10);
+      } else if (romanMatch) {
+        num = romanToNum[romanMatch[1]];
+      }
+
+      if (num !== null) {
+        map[`anexo ${num}`] = name;
+        map[`anexo${num}`] = name;
+        map[`anexo de aprendizaje ${num}`] = name;
+        map[`anexo de aprendizaje${num}`] = name;
+      }
+      if (!map['anexo']) map['anexo'] = name;
+    }
+
+    // ── Regla: Instrucciones ──
+    if (norm.includes('instruccion')) {
+      map['instrucciones'] = name;
+      map['instrucción'] = name;
+      map['instruccion'] = name;
+      map['instrucciones generales'] = name;
+      map['instruccion general'] = name;
+      map['instrucciones de entregables'] = name;
+    }
+
+    // ── Regla: Mapas ──
+    if (norm.includes('mapa')) {
+      map['mapa'] = name;
+      map['mapa conceptual'] = name;
+      map['mapa mental'] = name;
+      map['mapa del curso'] = name;
+    }
+
+    // ── Regla: Entregables / Plantillas / Formatos / Avances ──
+    if (
+      norm.includes('entregable') ||
+      norm.includes('plantilla') ||
+      norm.includes('formato') ||
+      norm.includes('avance')
+    ) {
+      const digitMatch = norm.match(/\b\d+\b/);
+      const romanMatch = norm.match(/\b(i|ii|iii|iv|v|vi)\b/);
+      let num = null;
+
+      if (digitMatch) {
+        num = parseInt(digitMatch[0], 10);
+      } else if (romanMatch) {
+        num = romanToNum[romanMatch[1]];
+      }
+
+      if (num !== null) {
+        map[`entregable ${num}`] = name;
+        map[`plantilla ${num}`] = name;
+        map[`formato ${num}`] = name;
+        map[`avance ${num}`] = name;
+        map[`plantilla entregable ${num}`] = name;
+        map[`formato entregable ${num}`] = name;
+        map[`plantilla avance ${num}`] = name;
+        map[`formato avance ${num}`] = name;
+
+        // Si es el último avance configurado para el curso, mapeamos alias de "Producto Final"
+        const totalAvances = Number(config.avances) || 0;
+        if (totalAvances > 0 && num === totalAvances) {
+          map['producto final'] = name;
+          map['plantilla producto final'] = name;
+          map['formato producto final'] = name;
+          map['entregable producto final'] = name;
+          map['avance producto final'] = name;
+        }
+      } else {
+        if (!map['entregable']) map['entregable'] = name;
+        if (!map['plantilla']) map['plantilla'] = name;
+        if (!map['formato']) map['formato'] = name;
+      }
+    }
   }
+
   return map;
 }
 
@@ -250,7 +411,7 @@ function openProject(projectPath) {
   const config = { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(configPath, 'utf-8')) };
   const insumos = listFiles(path.join(projectPath, 'insumos'));
   const generadas = listFiles(path.join(projectPath, 'generadas'));
-  const fileMap = buildFileMap(insumos);
+  const fileMap = buildFileMap(insumos, config);
 
   // Regenerar curso.yaml en cada apertura (mapa de archivos al día)
   fs.writeFileSync(path.join(projectPath, 'curso.yaml'), toYaml(config, fileMap));
@@ -278,7 +439,7 @@ function saveConfig(projectPath, config) {
   const merged = { ...DEFAULT_CONFIG, ...current, ...config };
   fs.writeFileSync(configPath, JSON.stringify(merged, null, 2));
   const insumos = listFiles(path.join(projectPath, 'insumos'));
-  fs.writeFileSync(path.join(projectPath, 'curso.yaml'), toYaml(merged, buildFileMap(insumos)));
+  fs.writeFileSync(path.join(projectPath, 'curso.yaml'), toYaml(merged, buildFileMap(insumos, merged)));
   return openProject(projectPath);
 }
 
@@ -379,6 +540,53 @@ function addInsumos(projectPath, filePaths) {
   return openProject(projectPath);
 }
 
+/**
+ * Elimina un archivo de insumos/ del proyecto.
+ * @param {string} projectPath
+ * @param {string} fileName
+ */
+function deleteInsumo(projectPath, fileName) {
+  const filePath = path.join(projectPath, 'insumos', fileName);
+  if (!insideProject(path.join(projectPath, 'insumos'), filePath)) {
+    throw new Error('Ruta fuera de la carpeta de insumos.');
+  }
+  if (exists(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+  return openProject(projectPath);
+}
+
+/**
+ * Renombra un archivo de insumos/ del proyecto.
+ * @param {string} projectPath
+ * @param {string} oldName
+ * @param {string} newName
+ */
+function renameInsumo(projectPath, oldName, newName) {
+  const oldPath = path.join(projectPath, 'insumos', oldName);
+  const newPath = path.join(projectPath, 'insumos', newName);
+
+  if (!insideProject(path.join(projectPath, 'insumos'), oldPath) || 
+      !insideProject(path.join(projectPath, 'insumos'), newPath)) {
+    throw new Error('Ruta fuera de la carpeta de insumos.');
+  }
+
+  // Sanitizar el nuevo nombre de archivo
+  const safeNewName = String(newName).trim().replace(/[\\/:*?"<>|]/g, '_');
+  if (!safeNewName) throw new Error('El nuevo nombre no puede estar vacío.');
+
+  const resolvedNewPath = path.join(projectPath, 'insumos', safeNewName);
+
+  if (exists(resolvedNewPath)) {
+    throw new Error(`Ya existe un archivo llamado ${safeNewName} en insumos.`);
+  }
+
+  if (exists(oldPath)) {
+    fs.renameSync(oldPath, resolvedNewPath);
+  }
+  return openProject(projectPath);
+}
+
 module.exports = {
   PROJECT_EXT,
   createProject,
@@ -387,6 +595,8 @@ module.exports = {
   importPlantilla,
   readGenerated,
   addInsumos,
+  deleteInsumo,
+  renameInsumo,
   // expuestos para tests
   buildFileMap,
   parseFlags,

@@ -74,6 +74,7 @@ export class Toolbar {
     /** @private @type {HTMLButtonElement|null} */ this._redoBtn = null;
     /** @private @type {HTMLButtonElement|null} */ this._diffBtn = null;
     /** @private @type {HTMLElement|null} */ this._historyEl = null;
+    /** @private @type {HTMLElement|null} */ this._viewLabelEl = null;
   }
 
   /* ── Public API ──────────────────────────────────────────── */
@@ -88,6 +89,13 @@ export class Toolbar {
     const logo = document.createElement('div');
     logo.className = 'toolbar__logo';
     logo.innerHTML = `<div class="toolbar__logo-icon">GE</div><span>GEO Engine</span>`;
+
+    // View label (shows current screen name in non-editor views)
+    const viewLabel = document.createElement('span');
+    viewLabel.className = 'toolbar__view-label';
+    viewLabel.id = 'geo-toolbar-view-label';
+    viewLabel.setAttribute('aria-live', 'polite');
+    this._viewLabelEl = viewLabel;
 
     // Separator
     const sep = document.createElement('div');
@@ -144,6 +152,7 @@ export class Toolbar {
     const redoBtn = this._makeBtn('', ICONS.redo, 'btn--ghost btn--icon', 'geo-btn-redo');
     redoBtn.disabled = true;
     redoBtn.title = 'Rehacer (Ctrl+Shift+Z)';
+    redoBtn.setAttribute('aria-label', 'Rehacer');
     redoBtn.addEventListener('click', () => this._cb.onRedo());
     this._redoBtn = redoBtn;
 
@@ -175,16 +184,18 @@ export class Toolbar {
     // Toggle linter panel (icon button)
     const panelBtn = this._makeBtn('', ICONS.panel, 'btn--ghost btn--icon', 'geo-btn-toggle-panel');
     panelBtn.title = 'Panel del Linter';
+    panelBtn.setAttribute('aria-label', 'Mostrar/ocultar panel del Linter');
     panelBtn.addEventListener('click', () => this._cb.onToggleLinter());
 
     // New file / reset (icon button)
     const resetBtn = this._makeBtn('', ICONS.reset, 'btn--ghost btn--icon', 'geo-btn-reset');
     resetBtn.title = 'Nuevo archivo';
+    resetBtn.setAttribute('aria-label', 'Nuevo archivo — volver al inicio');
     resetBtn.addEventListener('click', () => this._cb.onReset());
 
     actions.append(undoBtn, redoBtn, diffBtn, copyBtn, dlBtn, lintBtn, lintBadge, panelBtn, resetBtn);
 
-    this._el.append(logo, sep, filename, changesBadge, history, spacer, actions);
+    this._el.append(logo, viewLabel, sep, filename, changesBadge, history, spacer, actions);
   }
 
   /**
@@ -193,6 +204,14 @@ export class Toolbar {
    */
   setFilename(name) {
     if (this._filenameEl) this._filenameEl.textContent = name;
+  }
+
+  /**
+   * Update the view label shown in non-editor screens.
+   * @param {string} label
+   */
+  setViewLabel(label) {
+    if (this._viewLabelEl) this._viewLabelEl.textContent = label;
   }
 
   /**

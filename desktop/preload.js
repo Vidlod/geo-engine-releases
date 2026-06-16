@@ -32,6 +32,8 @@ const VALID_CHANNELS = [
   'project:import',
   'project:readGenerated',
   'project:addInsumos',
+  'project:deleteInsumo',
+  'project:renameInsumo',
   'agent:status',
   'agent:select',
   'agent:setToken',
@@ -42,6 +44,7 @@ const VALID_CHANNELS = [
   'agent:preflightAuth',
   'agent:login',
   'agent:logout',
+  'agent:downloadCli',
 ];
 
 // ─── API expuesta al renderer ────────────────────────────────────────
@@ -185,6 +188,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     /** Copia archivos a insumos/. @param {string} projectPath @param {string[]} filePaths */
     addInsumos: (projectPath, filePaths) =>
       ipcRenderer.invoke('project:addInsumos', projectPath, filePaths),
+
+    /** Elimina un archivo de insumos/. @param {string} projectPath @param {string} fileName */
+    deleteInsumo: (projectPath, fileName) =>
+      ipcRenderer.invoke('project:deleteInsumo', projectPath, fileName),
+
+    /** Renombra un archivo de insumos/. @param {string} projectPath @param {string} oldName @param {string} newName */
+    renameInsumo: (projectPath, oldName, newName) =>
+      ipcRenderer.invoke('project:renameInsumo', projectPath, oldName, newName),
   },
 
   // ─── Agentes (Claude SDK + Antigravity CLI) ────────────────────────
@@ -232,6 +243,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
      * Cierra la sesión del agente en este equipo. @param {string} agentId
      */
     logout: (agentId) => ipcRenderer.invoke('agent:logout', agentId),
+
+    /**
+     * Descarga e instala el CLI de Antigravity.
+     */
+    downloadCli: () => ipcRenderer.invoke('agent:downloadCli'),
 
     /**
      * Suscribe a los eventos de progreso de la generación.

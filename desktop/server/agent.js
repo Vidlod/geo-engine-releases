@@ -382,10 +382,13 @@ function findOnPath(command) {
         path.join(home, '.local', 'bin', altBinName),
         path.join(home, 'AppData', 'Local', 'Programs', 'antigravity-cli', 'bin', binName),
         path.join(home, 'AppData', 'Local', 'Programs', 'antigravity-cli', 'bin', altBinName),
+        path.join(home, 'AppData', 'Local', 'agy', 'bin', binName),
+        path.join(home, 'AppData', 'Local', 'agy', 'bin', altBinName),
       ]
     : [
         path.join(home, '.local', 'bin', binName),
         path.join(home, '.local', 'bin', altBinName),
+        path.join(home, '..', '.local', 'bin', binName), // Unix dynamic target fallback
         path.join(home, '.gemini', 'antigravity-cli', 'bin', binName),
         path.join(home, '.gemini', 'antigravity-cli', 'bin', altBinName),
       ];
@@ -512,6 +515,169 @@ async function logout(userDataPath, safeStorage, agentId) {
   throw new Error(`Agente desconocido: ${agentId}`);
 }
 
+/* ── Métodos auxiliares para instalador y actualizador de Antigravity ── */
+
+/**
+ * Mapea la plataforma/arquitectura a los identificadores del manifiesto oficial.
+ * @returns {string|null}
+ */
+function getAgyPlatform() {
+  const osPlatform = process.platform;
+  const arch = process.arch;
+
+  if (osPlatform === 'win32') {
+    if (arch === 'x64') return 'windows_amd64';
+    if (arch === 'arm64') return 'windows_arm64';
+  } else if (osPlatform === 'darwin') {
+    if (arch === 'x64') return 'darwin_amd64';
+    if (arch === 'arm64') return 'darwin_arm64';
+  } else if (osPlatform === 'linux') {
+    const isMusl = (() => {
+      try {
+        if (fs.existsSync('/lib/libc.musl-x86_64.so.1') || fs.existsSync('/lib/libc.musl-aarch64.so.1')) {
+          return true;
+        }
+      } catch {}
+      return false;
+    })();
+    const mappedArch = arch === 'x64' ? 'amd64' : (arch === 'arm64' ? 'arm64' : arch);
+    return isMusl ? `linux_${mappedArch}_musl` : `linux_${mappedArch}`;
+  }
+  return null;
+}
+
+/**
+ * Consulta la versión local del CLI ejecutando --version o version.
+ * @param {string} binPath
+ * @returns {string|null}
+ */
+function getLocalCliVersion(binPath) {
+  if (!binPath || !fs.existsSync(binPath)) return null;
+  try {
+    const r = spawnSync(binPath, ['--version'], { encoding: 'utf-8', timeout: 5000 });
+    if (r.status === 0) {
+      const match = r.stdout.match(/(\d+\.\d+\.\d+)/);
+      return match ? match[1] : r.stdout.trim();
+    }
+  } catch (err) {
+    console.error('[agent] Error checking local version with --version:', err.message);
+  }
+  try {
+    const r = spawnSync(binPath, ['version'], { encoding: 'utf-8', timeout: 5000 });
+    if (r.status === 0) {
+      const match = r.stdout.match(/(\d+\.\d+\.\d+)/);
+      return match ? match[1] : r.stdout.trim();
+    }
+  } catch (err) {
+    console.error('[agent] Error checking local version with version:', err.message);
+  }
+  return null;
+}
+
+/**
+ * Obtiene el manifiesto remoto de la versión del CLI de Antigravity.
+ * @param {string} platform
+ * @returns {Promise<{ version: string, url: string, sha512: string }>}
+ */
+function fetchLatestAgyManifest(platform) {
+  return new Promise((resolve, reject) => {
+    if (!platform) {
+      reject(new Error('Plataforma no soportada para Antigravity CLI'));
+      return;
+    }
+    const https = require('https');
+    const url = `https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/${platform}.json`;
+    const req = https.get(url, { headers: { 'User-Agent': 'GEO-Engine' }, timeout: 10000 }, (res) => {
+      let body = '';
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP status ${res.statusCode}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(body));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error('Timeout fetching remote manifest')));
+  });
+}
+
+/**
+ * Compara dos versiones SemVer.
+ * @param {string} latest
+ * @param {string} current
+ * @returns {boolean}
+ */
+function isNewerCliVersion(latest, current) {
+  if (!latest) return false;
+  if (!current) return true;
+  const pa = String(latest).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(current).replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
+/**
+ * Descarga e instala (o actualiza) el CLI de Antigravity utilizando los scripts oficiales.
+ * @returns {Promise<{ version: string }>}
+ */
+async function downloadAndInstallCli() {
+  const osPlatform = process.platform;
+  const isWin = osPlatform === 'win32';
+  
+  let cmd, args;
+  if (isWin) {
+    cmd = 'powershell.exe';
+    args = ['-ExecutionPolicy', 'Bypass', '-Command', 'irm https://antigravity.google/cli/install.ps1 | iex'];
+  } else {
+    cmd = '/bin/bash';
+    args = ['-c', 'curl -fsSL https://antigravity.google/cli/install.sh | bash'];
+  }
+
+  return new Promise((resolve, reject) => {
+    console.log(`[agent] Iniciando descarga e instalación de Antigravity CLI mediante: ${cmd} ${args.join(' ')}`);
+    const child = spawn(cmd, args, {
+      shell: false,
+      env: { ...process.env }
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('close', async (code) => {
+      console.log(`[agent] Script de instalación finalizó con código: ${code}`);
+      if (code !== 0) {
+        reject(new Error(`La instalación falló con código ${code}.\nStdout: ${stdout}\nStderr: ${stderr}`));
+        return;
+      }
+      
+      // Invalidar la caché de autenticación de agy para forzar reverificación
+      invalidateAgyAuthCache();
+      
+      // Intentar obtener la versión recién instalada
+      const resolved = module.exports.findOnPath('agy') || module.exports.findOnPath('antigravity');
+      const installedVersion = getLocalCliVersion(resolved) || 'instalado';
+      
+      resolve({ version: installedVersion });
+    });
+  });
+}
+
 /**
  * Estado de todos los agentes + cuál está seleccionado.
  * @param {string} userDataPath @param {any} safeStorage
@@ -539,6 +705,21 @@ async function getStatus(userDataPath, safeStorage) {
     ? await module.exports.preflightAgyAuth(agCommand)
     : { loggedIn: false, reason: 'no_cli', models: [] };
 
+  // Versiones del CLI de Antigravity
+  const agVersion = getLocalCliVersion(agResolved);
+  let agLatestVersion = null;
+  let agUpdateAvailable = false;
+  try {
+    const platform = getAgyPlatform();
+    if (platform) {
+      const manifest = await fetchLatestAgyManifest(platform);
+      agLatestVersion = manifest.version;
+      agUpdateAvailable = isNewerCliVersion(agLatestVersion, agVersion);
+    }
+  } catch (err) {
+    console.error('[agent] Error fetching remote manifest for version check:', err.message);
+  }
+
   const agents = [
     {
       id: 'claude',
@@ -564,6 +745,9 @@ async function getStatus(userDataPath, safeStorage) {
       model: cfg.antigravity.model,
       // IDs reales que reporta el CLI (vacío sin sesión)
       models: agProbe.models,
+      cliVersion: agVersion,
+      cliLatestVersion: agLatestVersion,
+      cliUpdateAvailable: agUpdateAvailable,
     },
   ];
 
@@ -1174,6 +1358,7 @@ module.exports = {
   generate,
   login,
   logout,
+  downloadAndInstallCli,
   // expuestos para tests y para main.js
   describeTool,
   parseCommand,

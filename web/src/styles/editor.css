@@ -29,8 +29,8 @@
 }
 
 .preview-container [data-geo-editable]:hover {
-  background: rgba(59, 113, 202, 0.08);
-  outline: 1px dashed rgba(59, 113, 202, 0.3);
+  background: rgba(45, 212, 191, 0.06);
+  outline: 1px dashed rgba(45, 212, 191, 0.28);
   outline-offset: 1px;
 }
 
@@ -46,21 +46,24 @@
   outline-color: rgba(234, 88, 12, 0.4);
 }
 .preview-container [data-geo-link]::before {
-  content: '🔗';
-  font-size: 0.55em;
+  content: '↗';
+  font-size: 0.6em;
+  font-family: var(--font-mono, monospace);
+  color: rgba(234, 88, 12, 0.75);
   position: absolute;
   top: -8px;
   left: -2px;
   opacity: 0;
   transition: opacity 0.15s ease;
   pointer-events: none;
+  line-height: 1;
 }
 .preview-container [data-geo-link]:hover::before {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .preview-container [data-geo-editable].geo-editing {
-  background: rgba(59, 113, 202, 0.12);
+  background: rgba(45, 212, 191, 0.07);
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -98,13 +101,13 @@
   padding: 4px 6px;
   resize: vertical;
   outline: none;
-  box-shadow: 0 2px 12px rgba(59, 113, 202, 0.25);
+  box-shadow: 0 2px 12px rgba(45, 212, 191, 0.16);
   min-width: 200px;
 }
 
 .inline-editor__input:focus {
   border-color: var(--accent-light);
-  box-shadow: 0 2px 16px rgba(59, 113, 202, 0.35);
+  box-shadow: 0 2px 16px rgba(45, 212, 191, 0.22);
 }
 
 .inline-editor__actions {
@@ -153,17 +156,17 @@
 /* Subtle hover on paragraphs */
 .preview-container p:hover,
 .preview-container li:not(.nav-item):hover {
-  outline: 1px dashed rgba(59, 113, 202, 0.1);
+  outline: 1px dashed rgba(45, 212, 191, 0.06);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
 /* Selected block highlight */
 .preview-container .block-selected {
-  outline: 2px solid rgba(99, 102, 241, 0.3) !important;
+  outline: 2px solid rgba(200, 132, 50, 0.35) !important;
   outline-offset: 2px;
   border-radius: 3px;
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(200, 132, 50, 0.05);
 }
 
 .block-grip {
@@ -199,7 +202,7 @@
 }
 
 .preview-container:hover .block-grip { opacity: 0.5; }
-.block-grip:hover { opacity: 1 !important; background: var(--accent, #3b71ca); color: #fff; border-color: var(--accent, #3b71ca); }
+.block-grip:hover { opacity: 1 !important; background: var(--accent, #2DD4BF); color: var(--bg-root, #0C0A07); border-color: var(--accent, #2DD4BF); }
 
 /* ═══════════════════════════════════════════════════════════════
    Block Dropdown Menu
@@ -373,7 +376,7 @@
   background: var(--bg-surface-2);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 

@@ -41,6 +41,8 @@ export class CoursePanel {
     this._progressStart = 0;
     /** @private {ReturnType<typeof setInterval>|null} */
     this._progressTimer = null;
+    /** @private {boolean} indica si se está descargando el CLI */
+    this._downloadingCli = false;
   }
 
   /* ── Ciclo de vida ───────────────────────────────────────── */
@@ -170,6 +172,34 @@ export class CoursePanel {
 
     const rows = p.structures.map((s) => this._structureRowHtml(s)).join('');
 
+    const insumosListHtml = p.insumos.map((name) => `
+      <div class="insumo-item" data-name="${esc(name)}">
+        <span class="insumo-item__icon">${getFileIcon(name)}</span>
+        <span class="insumo-item__name" title="${esc(name)}">${esc(name)}</span>
+        <div class="insumo-item__actions">
+          <button type="button" class="btn btn--ghost btn--sm" data-act="rename-insumo">Renombrar</button>
+          <button type="button" class="btn btn--ghost btn--sm btn--danger" data-act="delete-insumo">Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+
+    const insumosPanelHtml = p.insumos.length > 0 
+      ? `
+        <details class="course__insumos-details" id="geo-course-insumos-details">
+          <summary class="course__insumos-summary">
+            <span>Archivos de Insumos (${p.insumos.length})</span>
+          </summary>
+          <div class="course__insumos-list">${insumosListHtml}</div>
+        </details>
+      ` 
+      : `
+        <div class="course__insumos-details">
+          <div class="course__insumos-summary" style="cursor: default;">
+            <span>Sin archivos de insumos. Añade documentos (.docx / .pdf / .xlsx).</span>
+          </div>
+        </div>
+      `;
+
     this._el.innerHTML = `
       <button type="button" class="btn btn--ghost dropzone-view__back" id="geo-course-back">← Inicio</button>
       <div class="course">
@@ -195,6 +225,8 @@ export class CoursePanel {
           </button>
           <button type="button" class="btn btn--ghost course__meta-btn" id="geo-course-close">Cerrar proyecto</button>
         </div>
+
+        ${insumosPanelHtml}
 
         <div class="course__list" id="geo-course-list">${rows}</div>
 
@@ -228,6 +260,7 @@ export class CoursePanel {
 
     this._bindAgentBar();
     this._bindStructureRows();
+    this._bindInsumos();
   }
 
   /* ── Barra de agentes (Claude / Antigravity) ─────────────── */
@@ -321,10 +354,31 @@ export class CoursePanel {
           </div>
         </details>`;
 
+      if (this._downloadingCli) {
+        return `
+          <div class="agent-action__grid">
+            <div class="agent-banner agent-banner--info">
+              <strong>Instalando Antigravity CLI...</strong><br>
+              Descargando y configurando el CLI en segundo plano. Por favor, no cierres la aplicación.
+              <div class="agent-banner__actions" style="margin-top: 8px; align-items: center; display: flex; gap: 8px;">
+                <span class="course__progress-orb"></span>
+                <span>Instalando... esto puede tomar unos segundos.</span>
+              </div>
+            </div>
+          </div>`;
+      }
+
       if (!a.available) {
         return `
           <div class="agent-action__grid">
-            <span class="agent-action__warn">El CLI de Antigravity no está instalado en este equipo.</span>
+            <div class="agent-banner agent-banner--warn">
+              <strong>El CLI de Antigravity no está instalado en este equipo</strong><br>
+              Puedes descargarlo e instalarlo automáticamente para habilitar este motor, o buscarlo si ya lo tienes.
+              <div class="agent-banner__actions">
+                <button type="button" class="btn btn--primary btn--sm" id="geo-agy-download">Descargar e Instalar CLI</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="geo-agy-select-file">Buscar en mi equipo…</button>
+              </div>
+            </div>
             ${advanced}
           </div>`;
       }
@@ -345,9 +399,20 @@ export class CoursePanel {
           </div>`;
       }
 
+      const updateBtn = a.cliUpdateAvailable
+        ? `<div class="agent-banner agent-banner--info" style="margin-bottom: 8px;">
+             <strong>¡Actualización disponible para Antigravity CLI! (v${esc(a.cliLatestVersion)})</strong><br>
+             Tienes instalada la versión v${esc(a.cliVersion)}. Te recomendamos actualizar para obtener mejoras y correcciones.
+             <div class="agent-banner__actions" style="margin-top: 6px;">
+               <button type="button" class="btn btn--primary btn--sm" id="geo-agy-update">Actualizar ahora</button>
+             </div>
+           </div>`
+        : '';
+
       return `
         <div class="agent-action__grid">
-          ${okRow('Conectado · sesión del CLI')}
+          ${updateBtn}
+          ${okRow(`Conectado · sesión del CLI (v${esc(a.cliVersion)})`)}
           ${selectHtml}
           ${advanced}
         </div>`;
@@ -400,6 +465,12 @@ export class CoursePanel {
     // Sesión: iniciar (Google / Claude Code), reverificar y cerrar
     const agyLogin = this._el.querySelector('#geo-agy-login');
     if (agyLogin) agyLogin.addEventListener('click', () => this._agyLogin());
+    const agyDownload = this._el.querySelector('#geo-agy-download');
+    if (agyDownload) agyDownload.addEventListener('click', () => this._downloadCli());
+    const agyUpdate = this._el.querySelector('#geo-agy-update');
+    if (agyUpdate) agyUpdate.addEventListener('click', () => this._downloadCli());
+    const agySelectFile = this._el.querySelector('#geo-agy-select-file');
+    if (agySelectFile) agySelectFile.addEventListener('click', () => this._selectCliFile());
     const ccLogin = this._el.querySelector('#geo-agent-login-cc');
     if (ccLogin) ccLogin.addEventListener('click', () => this._claudeCodeLogin());
     const refresh = this._el.querySelector('#geo-agent-refresh');
@@ -505,6 +576,47 @@ export class CoursePanel {
     }
   }
 
+  /** Descarga e instala el CLI de Antigravity en segundo plano. @private */
+  async _downloadCli() {
+    if (this._downloadingCli) return;
+    this._downloadingCli = true;
+    this._renderProject(); // Repintar para mostrar el spinner
+
+    try {
+      showToast('Iniciando descarga e instalación del CLI de Antigravity...', 'info');
+      const res = await projectApi().agent.downloadCli();
+      if (res.ok) {
+        showToast(`Antigravity CLI instalado con éxito (${res.data.version})`, 'success');
+      } else {
+        showToast(res.error || 'La instalación del CLI falló', 'error');
+      }
+    } catch (err) {
+      showToast('Error en la instalación: ' + (err && err.message), 'error');
+    } finally {
+      this._downloadingCli = false;
+      await this._refreshAgents(true); // Refrescar y forzar preflightAuth
+    }
+  }
+
+  /** Permite al usuario seleccionar manualmente el ejecutable del CLI. @private */
+  async _selectCliFile() {
+    const api = projectApi();
+    const result = await api.openFile({
+      title: 'Selecciona el binario de Antigravity (agy.exe, agy, etc.)',
+      properties: ['openFile']
+    });
+    if (result.canceled || !result.filePaths.length) return;
+    const filePath = result.filePaths[0];
+    const res = await api.agent.setCommand('antigravity', filePath);
+    if (res.ok) {
+      this._agentStatus = res.data;
+      this._renderProject();
+      showToast('Comando/Ruta del CLI actualizada', 'success');
+    } else {
+      showToast(res.error || 'No se pudo guardar la ruta', 'error');
+    }
+  }
+
   /** @private @param {string} agentId */
   async _selectAgent(agentId) {
     if (agentId === this._agentStatus.selected) return;
@@ -576,6 +688,63 @@ export class CoursePanel {
       if (flagsBtn) flagsBtn.addEventListener('click', () => {
         row.querySelector('.course-row__detail').classList.toggle('hidden');
       });
+    }
+  }
+
+  /** @private */
+  _bindInsumos() {
+    for (const item of this._el.querySelectorAll('.insumo-item')) {
+      const name = item.getAttribute('data-name');
+      const renameBtn = item.querySelector('[data-act="rename-insumo"]');
+      const deleteBtn = item.querySelector('[data-act="delete-insumo"]');
+
+      if (renameBtn) {
+        renameBtn.addEventListener('click', () => this._renameInsumo(name));
+      }
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => this._deleteInsumo(name));
+      }
+    }
+  }
+
+  /** @private @param {string} name */
+  async _renameInsumo(name) {
+    const ext = name.split('.').pop();
+    const base = name.replace(/\.[^.]+$/, '');
+    const newBase = await this._askText({
+      title: 'Renombrar insumo',
+      label: 'Nuevo nombre (sin extensión)',
+      placeholder: base,
+      confirmLabel: 'Renombrar',
+      hint: `El archivo se renombrará conservando la extensión .${ext}. La IA recibirá el nuevo nombre automáticamente.`
+    });
+    if (!newBase) return;
+    const newName = `${newBase.trim()}.${ext}`;
+
+    const api = projectApi();
+    const res = await api.project.renameInsumo(this._project.path, name, newName);
+    if (res.ok) {
+      this._project = res.data;
+      this._renderProject();
+      showToast(`Archivo renombrado a: ${newName}`, 'success');
+    } else {
+      showToast(res.error || 'No se pudo renombrar el archivo', 'error');
+    }
+  }
+
+  /** @private @param {string} name */
+  async _deleteInsumo(name) {
+    const ok = window.confirm(`¿Estás seguro de que deseas eliminar el insumo "${name}"? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+
+    const api = projectApi();
+    const res = await api.project.deleteInsumo(this._project.path, name);
+    if (res.ok) {
+      this._project = res.data;
+      this._renderProject();
+      showToast(`Archivo "${name}" eliminado`, 'success');
+    } else {
+      showToast(res.error || 'No se pudo eliminar el archivo', 'error');
     }
   }
 
@@ -892,4 +1061,19 @@ function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * Devuelve un emoji según la extensión del archivo.
+ * @param {string} name
+ */
+function getFileIcon(name) {
+  const ext = String(name).split('.').pop().toLowerCase();
+  if (ext === 'pdf') return '📕';
+  if (ext === 'docx' || ext === 'doc') return '📄';
+  if (ext === 'xlsx' || ext === 'xls') return '📊';
+  if (ext === 'html' || ext === 'htm') return '🌐';
+  if (ext === 'mp4' || ext === 'mkv' || ext === 'avi') return '🎬';
+  if (ext === 'mp3' || ext === 'wav') return '🎵';
+  return '📦';
 }
