@@ -6,8 +6,13 @@
 
 ## 0. Regla de oro
 
-- **No inventar, no parafrasear.** El texto debe coincidir exactamente con los
-  documentos fuente (Word/PDF/Excel).
+- **No inventar, no parafrasear, NO AGREGAR.** El texto debe coincidir exactamente
+  con los documentos fuente (Word/PDF/Excel). No agregues frases, párrafos,
+  actividades, recursos, viñetas ni negritas que el origen no tenga. No reescribas
+  ni "mejores" la redacción del origen.
+- **No cambies** lo que el origen dice: ni puntuación, ni mayúsculas, ni palabras
+  (salvo las correcciones tipográficas tasadas de la §17, que SIEMPRE se reportan).
+- **La negrita es espejo del origen** (ver §9): no añadas negrita por tu cuenta.
 - Si algo **no se encuentra** o requiere una decisión que no puedes resolver con
   los insumos, **no asumas**: emite un FLAG (sección 1) y continúa con lo demás.
 
@@ -204,6 +209,27 @@ La regla es **trasplante 1:1**: cada `<p>` del origen = exactamente un `<p>` en 
   guion (`-Portada.`, `-Introducción.`, `-Investiguen un caso...`) se convierte en
   `<ul>` con un `<li>` por ítem, **quitando el guion** y conservando el texto intacto.
   Nunca dejes guiones literales como viñetas. Sub-ítems → `<ul>` anidada.
+- **Enumeraciones con marcador de letra** (`a.`, `b.`, `c.`, `a)`, `A.`, `A)`,
+  etc.) → `<ul>` con un `<li>` por ítem, **QUITANDO la letra** (la viñeta la
+  reemplaza), igual que con los guiones. Ej.: `a. Realice el diagrama...` →
+  `<li>Realice el diagrama...</li>`.
+  - **La negrita es ESPEJO del origen** (ver §9 "Respeta también"). Si el origen
+    trae en negrita la etiqueta del ítem —ya sea con la letra dentro
+    (`<strong>b. Medidas de posición:</strong>`) o fuera
+    (`a. <strong>Tabla de frecuencia.</strong>`)— consérvala en negrita pero
+    **sin la letra**: `<li><strong>Medidas de posición:</strong> ...</li>` y
+    `<li><strong>Tabla de frecuencia.</strong> ...</li>`. Si el origen **NO** trae
+    negrita en ese ítem, **no añadas ninguna**: `<li>Encuentre el coeficiente...</li>`.
+  - Aunque el origen sea **inconsistente** (p. ej. la `a.` fuera de la negrita y la
+    `b.`/`c.` dentro), el resultado queda uniforme porque siempre quitas la letra y
+    reflejas la negrita que ya existía sobre la etiqueta.
+  - Ítems con mucho texto (multilínea) → un `<br>` entre cada `<li>`; ítems cortos
+    de una línea → consecutivos sin `<br>`.
+- **Enumeraciones NUMERADAS** (`1.`, `2.`, `1)`, `2)`…): las preguntas orientadoras
+  y los ejercicios numerados se **mantienen como `<p>` con su número** (NO se
+  convierten en viñetas ni se les quita el número). Ej.:
+  `<p style="text-align: justify;">1) ¿Cuáles son las causas...?</p>`. Conserva la
+  negrita del origen tal cual (ni añadir ni quitar).
 - Las **correcciones tipográficas obligatorias** de la sección 17 (con reporte).
 
 **Flujo correcto:**
@@ -214,9 +240,18 @@ AAA.docx → mammoth → AAA.html  ← fuente autoritativa de párrafos
     cli.py fidelity AAA.html momento.html  →  verifica que no se perdieron párrafos
 ```
 
-**Respeta también:**
-- Los `<strong>` del origen (las citas bibliográficas son excepción: texto plano, §5).
-- No agregues negrita donde el origen no la tiene, ni la quites donde sí la tiene.
+**Respeta también — FIDELIDAD DE NEGRITAS (regla crítica):**
+- **La negrita del HTML de salida debe ser un ESPEJO EXACTO del origen.** El AAA
+  convertido (`<strong>`/`**`) es la única autoridad sobre qué va en negrita.
+- **NO añadas negrita** a nada que el origen no traiga en negrita: ni a marcadores
+  de lista (`a.`, `1)`), ni a etiquetas, ni a frases como "foro social", "video de
+  bienvenida", términos que te parezcan importantes, etc. Si dudas, **NO** la pongas.
+- **NO quites** la negrita que el origen sí tiene.
+- **Única negrita permitida que el origen no trae:** los enlaces de recursos
+  (`<strong><a href="@@PLUGINFILE@@/...">Título</a></strong>`) de syllabus, rúbrica,
+  mapa, Anexo, plantilla/Entregable y los RED (§3, §4, §12). Fuera de esos enlaces,
+  cero negrita inventada.
+- Excepción de las citas bibliográficas: texto plano aunque el origen las marque (§5).
 
 ## 10. Títulos de actividades
 
@@ -238,16 +273,28 @@ Las actividades se titulan **`Actividad N: Nombre`** en negrita:
 - El botón va **directo tras el último párrafo** (el `<p>` ya aporta su espacio).
 - **Sin `<br>`** ni `<p></p>` vacío entre el contenido y el botón.
 - **Texto del botón SIN punto final**: `Enviar Entregable 1` (no `Enviar Entregable 1.`).
+- **Todos los botones van centrados** con `<div style="text-align: center;">` (envío
+  semanal, Rúbrica, pestaña "Instrumento para Enviar Entregable").
+- **NUNCA** uses `<button>` dentro de un `<a>`: es HTML inválido y Moodle elimina el
+  `<a>`, quitando `target="_blank"` y haciendo que el botón abra en la misma pestaña.
+  Usa siempre `<a class="btn btn-outline-primary btn-lg" ... role="button">`.
 
 ```html
 <p style="text-align: justify;">...último párrafo / párrafo de envío.</p>
 <div style="text-align: center;">
-    <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
-        <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
-        </button>
+    <a class="btn btn-outline-primary btn-lg" href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener" role="button">
+        <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
     </a>
 </div>
+```
+
+Botón de Rúbrica (pestaña "Instrumento de Evaluación"):
+```html
+<strong><a href="@@PLUGINFILE@@/[RUBRICA.pdf]" target="_blank" rel="noopener">
+    <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+        <i class="fa fa fa-file-pdf-o fa-lg"></i> Rúbrica
+    </button>
+</a></strong>
 ```
 
 - **Entre dos botones** consecutivos (pestaña "Instrumento para Enviar Entregable"):
@@ -324,9 +371,9 @@ Dialnet, etc.) para descartar URLs caídas.
 - **No dupliques párrafos anunciadores**: un anunciador por lista. No copies
   fórmulas de otra semana ("Igualmente, apóyese de los RED...") si el origen
   solo trae una.
-- El **párrafo de envío** ("Envíe el documento en formato PDF...") va siempre de
-  **último**, justo encima del botón de envío — después de secciones adicionales
-  como "Exposiciones orales".
+- El **párrafo de envío** ("Envíe el documento en las fechas establecidas.") va
+  siempre de **último**, justo encima del botón de envío — después de secciones
+  adicionales como "Exposiciones orales".
 
 ## 17. Correcciones tipográficas OBLIGATORIAS (con reporte)
 
@@ -341,9 +388,12 @@ defectos evidentes del origen y **reporta cada cambio**:
    "experta disciplina" → "experta disciplinar".
 4. **Anglicismos de conversión** (palabras en inglés coladas por el convertidor):
    "aspects" → "aspectos", "explaining" → "explicando", "interviews" → "entrevistas".
-5. Al **eliminar "tablero de anotaciones"** la frase debe quedar gramatical:
+5. Al **eliminar "tablero de anotaciones"**, elimina también la especificación
+   de formato ("en formato PDF", "en formato Word", "en formato Excel", etc.):
    `envíelo en formato PDF a través del tablero de anotaciones en las fechas
-   establecidas` → `envíelo en formato PDF en las fechas establecidas`.
+   establecidas` → `Envíe el documento en las fechas establecidas.`
+   La frase final es **siempre** "Envíe el documento en las fechas establecidas."
+   independientemente del formato que mencionara el original.
 
 Al final del trabajo entrega, junto a los FLAGS, la lista `CORRECCIONES:` con cada
 cambio (`origen → corregido`, indicando semana/pestaña). Cualquier otra duda de

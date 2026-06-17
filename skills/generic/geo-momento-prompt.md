@@ -20,9 +20,14 @@ omitas nada.
 - **TRASPLANTE 1:1 desde el AAA.html.** El insumo llega convertido a HTML (mammoth).
   La regla es estricta: **cada `<p>` del AAA = un `<p>` en la salida**. Prohibido:
   unir dos párrafos, partir uno, eliminar puntos, añadir puntos, reescribir o parafrasear.
-  Solo se permite añadir enlaces `@@PLUGINFILE@@` y `<strong>` sobre palabras clave del
-  texto ya existente. Si no estás seguro de si un bloque del AAA es un `<p>` o dos,
-  respeta la división del AAA.html byte a byte.
+  Si no estás seguro de si un bloque del AAA es un `<p>` o dos, respeta la división del
+  AAA.html byte a byte.
+- **NEGRITA = ESPEJO DEL ORIGEN.** Respeta exactamente los `<strong>`/`**` del AAA: no
+  añadas negrita donde el origen no la tiene (ni a marcadores, ni a etiquetas, ni a
+  frases que te parezcan importantes), ni la quites donde sí la tiene. **La ÚNICA
+  negrita que puedes añadir** es la de los enlaces de recursos
+  `<strong><a href="@@PLUGINFILE@@/...">Título</a></strong>` (syllabus, rúbrica, mapa,
+  Anexo, plantilla/Entregable, RED). Fuera de esos enlaces: cero negrita inventada.
 - Los rangos de semanas, el número de avances y los cuestionarios los tomas
   **exclusivamente de la AAA del curso** adjunta. Nunca uses números de otro curso.
 - **No inventes nombres de archivo ni IDs de Moodle**: si no los conoces, emite FLAG
@@ -31,10 +36,11 @@ omitas nada.
   FLAG (ver Parte 2) y continúa.
 - "Módulo" / "módulos" → reemplaza siempre por "curso" / "cursos".
 - Elimina cualquier mención a "a través del tablero de anotaciones" o
-  "en el tablero de anotaciones". **Deja la frase gramatical** tras el recorte:
-  `envíelo en formato PDF a través del tablero de anotaciones en las fechas establecidas`
-  → `envíelo en formato PDF en las fechas establecidas` (nunca "a través de las
-  fechas establecidas").
+  "en el tablero de anotaciones", y **también la especificación de formato**
+  ("en formato PDF", "en formato Word", "en formato Excel", etc.). La frase final
+  es **siempre**: `Envíe el documento en las fechas establecidas.`
+  Ejemplo: `envíelo en formato PDF a través del tablero de anotaciones en las fechas
+  establecidas` → `Envíe el documento en las fechas establecidas.`
 
 ### Excepción al trasplante 1:1 — enumeraciones con guion
 
@@ -224,9 +230,9 @@ Cada semana tiene su propio panel `tab-pane`.
 - **No dupliques párrafos anunciadores**: si la AAA solo trae "Complemente su
   proceso... con los RED", no añadas además un "Igualmente, apóyese de los RED..."
   copiado de otra semana. Un anunciador por lista.
-- El **párrafo de envío** ("Envíe el documento en formato PDF...") va **SIEMPRE de
-  último**, justo encima del botón — después de cualquier sección adicional como
-  "Exposiciones orales".
+- El **párrafo de envío** ("Envíe el documento en las fechas establecidas.") va
+  **SIEMPRE de último**, justo encima del botón — después de cualquier sección
+  adicional como "Exposiciones orales".
 
 ### 6.3 No duplicar recursos
 
@@ -248,21 +254,55 @@ Cada actividad se titula **`Actividad N: Nombre`** en negrita:
 - **Elimina el andamiaje del AAA** como "Título de la actividad": usa solo el nombre real.
 - Corrige mayúscula inicial y tildes ("grafico" → "gráfico", "contexto" → "Contexto").
 
-### 6.5 Listas de preguntas con explicación (`a.`, `b.`, `c.`...)
+### 6.5 Listas con marcador de LETRA vs NÚMERO
 
-Cuando cada ítem es **pregunta + explicación**, va **un `<p>` por ítem**: el
-marcador y la pregunta en negrita, la explicación en texto normal:
+> ⚠️ La negrita de estos ítems es **espejo exacto del origen**: no añadas `<strong>`
+> donde el AAA no lo tiene, ni lo quites donde sí lo tiene.
+
+**A) Marcador de LETRA** (`a.`, `b.`, `c.`, `a)`, `A.`, `A)`…) → `<ul>` con un
+`<li>` por ítem, **QUITANDO la letra** (la viñeta la reemplaza), igual que con los
+guiones. La letra NO se conserva.
+
+- Si el origen pone en negrita la **etiqueta** del ítem —con la letra dentro
+  (`<strong>b. Medidas de posición:</strong>`) o fuera
+  (`a. <strong>Tabla de frecuencia.</strong>`)— consérvala en negrita **sin la letra**:
 
 ```html
-<p style="text-align: justify;"><strong>a. ¿Qué tipo de criminología podría abordar este caso?</strong> Define si es un enfoque clínico, académico o crítico, y justifica con base en las características del delito.</p>
-<p style="text-align: justify;"><strong>b. ¿Cuál es el objeto de estudio?</strong> Explica si se enfoca en el delincuente, la víctima, el delito o el control social.</p>
+<ul>
+    <li><strong>Tabla de frecuencia datos no agrupados.</strong> diseñar una tabla de frecuencia para datos no agrupados...</li>
+    <br>
+    <li><strong>Medidas de tendencia central y de posición:</strong> para la variable cuantitativa discreta elegida, deberá calcular...</li>
+    <br>
+    <li><strong>Medidas de dispersión:</strong> para la variable cuantitativa discreta elegida calcular...</li>
+</ul>
 ```
 
-- **Nunca** uses bloques `<strong>` sueltos separados por `<br>` fuera de un `<p>`,
-  ni pongas la explicación dentro de la negrita.
-- Enumeraciones simples sin explicación → viñetas `<li>` (ver la excepción de
-  guiones en la Parte 1): consecutivas si son cortas, con un `<br>` entre ítems
-  largos.
+- Si el origen **no** trae negrita, los ítems van **sin negrita**:
+
+```html
+<ul>
+    <li>Realice el diagrama de dispersión y determine el tipo de asociación entre las variables.</li>
+    <br>
+    <li>Encuentre el coeficiente de determinación y correlación.</li>
+</ul>
+```
+
+- Ítems multilínea → un `<br>` entre cada `<li>`; ítems cortos de una línea →
+  consecutivos sin `<br>`.
+- Aunque el origen sea inconsistente (la `a.` fuera de la negrita, la `b.`/`c.`
+  dentro), el resultado queda uniforme: siempre quitas la letra y reflejas la
+  negrita que ya existía.
+
+**B) Marcador NUMÉRICO** (`1.`, `2.`, `1)`, `2)`… — preguntas orientadoras,
+ejercicios) → se **mantienen como `<p>` con su número** (NO se convierten en
+viñetas, NO se les quita el número):
+
+```html
+<p style="text-align: justify;">1) ¿Cuáles son las causas o factores que ocasionan los accidentes de tránsito en las vías?</p>
+<p style="text-align: justify;">2) ¿Qué impacto podría tener el estado de ánimo del conductor, en un accidente de tránsito?</p>
+```
+
+- **Nunca** inviertas estas reglas: letras → viñeta sin letra; números → párrafo con número.
 
 ---
 
@@ -281,13 +321,17 @@ Toma la última semana de cada avance de la AAA del curso:
 
 ```html
 <div style="text-align: center;">
-    <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener">
-        <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-            <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
-        </button>
+    <a class="btn btn-outline-primary btn-lg" href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" target="_blank" rel="noopener" role="button">
+        <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
     </a>
 </div>
 ```
+
+> ⚠️ **Nunca** uses `<button>` dentro de un `<a>`: es HTML inválido y Moodle elimina
+> el `<a>`, quitando `target="_blank"` y haciendo que el botón abra en la misma pestaña.
+> Usa siempre `<a class="btn btn-outline-primary btn-lg" ... role="button">` directamente.
+> Todos los botones (envío semanal, Rúbrica, pestaña Instrumento) llevan
+> `<div style="text-align: center;">` como wrapper.
 
 - Texto del botón semanal: `Enviar Entregable N` (N = número del avance). En la
   pestaña "Instrumento para Enviar Entregable": `Enviar Entregable Avance N`.
@@ -518,11 +562,14 @@ Antes de entregar el HTML verifica:
 - [ ] Condiciones Particulares: mismo nº de `<p>` que el Word, entregables enlazados con `@@PLUGINFILE@@`.
 - [ ] Cada mención de syllabus/rúbrica/Anexo/plantilla hipervinculada (todas, no solo la 1.ª).
 - [ ] Citas: texto plano + enlace en `<strong>` debajo, con punto final tras `</strong>`.
-- [ ] Negrillas del origen respetadas; puntuación y párrafos `<p>` sin fusionar.
+- [ ] **Negritas = espejo del origen**: ninguna negrita añadida que el AAA no tenga (ni en marcadores, ni etiquetas, ni frases "importantes"); ninguna del origen perdida. Única negrita extra permitida: los enlaces de recursos `<strong><a href="@@PLUGINFILE@@/...">`.
+- [ ] **Nada agregado/cambiado**: sin frases, párrafos, actividades, recursos ni viñetas inventados; redacción del origen sin reescribir.
+- [ ] Puntuación y párrafos `<p>` sin fusionar ni partir (trasplante 1:1).
 - [ ] Sin `<p>` en `<li>`. Sin cursiva. Sin `<br>` adyacente a un `<p>` (se auto-espacia).
 - [ ] Máximo un `<br>` (nunca `<br><br>`); `<br>` solo entre viñetas / elementos no-`<p>`.
 - [ ] Punto final en cada `<li>` de texto.
-- [ ] "módulo" → "curso". Sin "tablero de anotaciones" (y la frase quedó gramatical).
+- [ ] "módulo" → "curso". Sin "tablero de anotaciones" y sin "en formato [X]": el párrafo de envío dice exactamente "Envíe el documento en las fechas establecidas."
+- [ ] Marcadores de **letra** (`a.`, `b.`, `A)`…) → viñeta `<li>` con la letra **QUITADA**, negrita espejo del origen. Marcadores **numéricos** (`1.`, `1)`…) → `<p>` con el número conservado.
 - [ ] **Ningún guion literal como viñeta**: enumeraciones `-Item.` convertidas a `<ul><li>`.
 - [ ] Cada lista inmediatamente después de su párrafo anunciador (bibliografía/RED/temas
       sin reordenar ni mover al final); sin párrafos anunciadores duplicados.
@@ -679,21 +726,21 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                     </div>
 
                     <!-- PESTAÑA 4: INSTRUMENTO PARA ENVIAR ENTREGABLE -->
-                    <!-- Un <a><button> por cada avance del momento, sin punto en el texto -->
+                    <!-- Un <div><a class="btn ..."> por cada avance del momento, sin punto en el texto -->
                     <div class="tab-pane fade shadow rounded bg-white p-5"
                         id="v-pills-profile2" role="tabpanel" aria-labelledby="v-pills-profile2-tab">
                         <h4 class="mb-4">Instrumento para Enviar Entregable</h4>
-                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" rel="noopener">
-                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" rel="noopener" role="button">
                                 <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
-                            </button>
-                        </a>
+                            </a>
+                        </div>
                         <p></p>
-                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" rel="noopener">
-                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" rel="noopener" role="button">
                                 <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
-                            </button>
-                        </a>
+                            </a>
+                        </div>
                         <!-- Último avance del último momento: "Producto Final" en lugar de "Avance N" -->
                     </div>
 
@@ -758,12 +805,10 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                         <ul>
                                             <li>[Recurso / cita.]</li>
                                         </ul>
-                                        <p style="text-align: justify;">[Párrafo de envío.]</p>
+                                        <p style="text-align: justify;">Envíe el documento en las fechas establecidas.</p>
                                         <div style="text-align: center;">
-                                            <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
-                                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable [N]
-                                                </button>
+                                            <a class="btn btn-outline-primary btn-lg" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable [N]
                                             </a>
                                         </div>
                                     </div>

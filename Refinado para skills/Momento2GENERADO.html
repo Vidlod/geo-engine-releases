@@ -1,0 +1,946 @@
+<!--
+FLAGS:
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Entregable 3" en la Semana 7.
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Entregable 4" en la Semana 9.
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Producto Final" en la Semana 12.
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Entregable Avance 3" en la pestaña "Instrumento para Enviar Entregable".
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Entregable Avance 4" en la pestaña "Instrumento para Enviar Entregable".
+- dato-faltante: Falta el enlace Moodle mod/assign/view.php?id=... para el botón "Enviar Producto Final" en la pestaña "Instrumento para Enviar Entregable".
+- red-sin-archivo: Falta el archivo local "Rubrica_Momento_2.pdf" o similar para la Rúbrica de evaluación en la pestaña "Instrumento de Evaluación".
+- red-sin-archivo: Falta el archivo local "Tarjetas_Medidas_Tendencia_Central.pdf" o similar para "Tarjetas didácticas medidas de tendencia central y de dispersión" en la Semana 6.
+- red-sin-archivo: Falta el archivo local "Tarjetas_Medidas_Posicion.pdf" o similar para "Tarjetas didácticas medidas de posición y medidas de forma" en la Semana 6.
+- red-sin-archivo: Falta el archivo local "Presentacion_Caza_Tesoro.pdf" o similar para "Presentación caza del tesoro de las medidas estadísticas" en la Semana 6.
+- red-sin-archivo: Falta el archivo local "Presentacion_Tablas_Frecuencias.pdf" o similar para "Presentación tablas de frecuencias" en la Semana 6.
+- red-sin-archivo: Falta el archivo local "Tarjetas_Medidas_Bivariantes.pdf" o similar para "Tarjetas didácticas medidas estadísticas bivariantes" en la Semana 8.
+- red-sin-archivo: Falta el archivo local "Presentacion_Unidad_4.pdf" o similar para "Presentación Unidad 4 – Medidas bivariantes" en la Semana 8.
+- dato-faltante: No hay contenido específico para la Semana 11 en la AAA, se deja la pestaña con un texto de transición para continuar el desarrollo del Producto Final.
+
+CORRECCIONES:
+- Semana 6 (Actividad 1): "Organizador grafico" -> "Organizador gráfico" (corrección de tilde).
+- Semana 6 (Actividad 2): "Medidas de tendencias central" -> "Medidas de tendencia central" (corrección de número en sustantivo).
+- Semana 6 (Actividad 2): "realizo" -> "realizó" (corrección de tilde).
+- Semana 7 (Actividad 3): "variable continúa" -> "variable continua" (corrección de tilde innecesaria).
+- Semana 7 (Actividad 3): "Medidas de tendencias central" -> "Medidas de tendencia central" (corrección de número en sustantivo).
+- Semana 8 (Actividad 1): "Organizador grafico" -> "Organizador gráfico" (corrección de tilde).
+- Semana 8 (Actividad 1): "Elias, J." -> "Elías, J." (corrección de tilde en apellido).
+- Semana 8 (Actividad 2): "Torres, L. Ariza, L y Blanco, D (2016)" -> "Torres, L., Ariza, L. y Blanco, D. (2016)" (corrección de comas, puntos y formato de autores).
+- Semana 9 (Actividad 4): "Actividad 4. Regresión" -> "Actividad 4: Regresión" (dos puntos en título de actividad).
+- Semana 9 (Actividad 4): "identificar cual podría..." -> "identificar cuál podría..." (tilde en interrogativo indirecto).
+- Semana 9 (Actividad 4): "realizo" -> "realizó" (corrección de tilde).
+- Semana 9 (Actividad 5): "Actividad 5. Regresión" -> "Actividad 5: Regresión" (dos puntos en título de actividad).
+- Semana 9 (Actividad 5): "Barón, F. (2022). Capítulo 7 Regresión..." -> "Barón, F. (2022). Capítulo 7: Regresión..." (dos puntos en título de capítulo).
+- Semana 9 (Actividad 5): "realizo" -> "realizó" (corrección de tilde).
+- Semana 9 (Actividad 5, ítem d/e): "D. Presente un análisis..." -> "e. Presente un análisis..." (corrección de letra mayúscula a minúscula y secuencia).
+- Semana 10 (Actividad 3): "variable continúa" -> "variable continua" (corrección de tilde innecesaria).
+- Semana 10 (Actividad 3): "Para una de las variables continúa elegida..." -> "Para una de las variables continua elegida..." (corrección de tilde innecesaria).
+- Semana 12 (Actividad 4): "Actividad 4. Regresión" -> "Actividad 4: Regresión" (dos puntos en título de actividad).
+- Semana 12 (Actividad 5): "Actividad 5. Análisis" -> "Actividad 5: Análisis" (dos puntos en título de actividad).
+- Semana 12 (Actividad 5): "Describir / : es explicar..." -> "Describir: es explicar..." (corrección de salto de línea huérfano).
+-->
+
+<section class="py-1 header">
+    <div class="container py-4">
+        <header class="text-center mb-1 pb-1 text-white"></header>
+        <div class="row">
+
+            <!-- COLUMNA IZQUIERDA: navegación vertical -->
+            <div class="col-md-3">
+                <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab" role="tablist"
+                    aria-orientation="vertical">
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-home-tab" data-toggle="pill"
+                        href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-calendar-check-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">RESUMEN DE ENTREGAS</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile-tab" data-toggle="pill"
+                        href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-bars mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">DESCRIPCIÓN GENERAL</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile1-tab" data-toggle="pill"
+                        href="#v-pills-profile1" role="tab" aria-controls="v-pills-profile1" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-check-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">INSTRUMENTO DE EVALUACIÓN</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile2-tab" data-toggle="pill"
+                        href="#v-pills-profile2" role="tab" aria-controls="v-pills-profile2" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-share-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">INSTRUMENTO PARA ENVIAR ENTREGABLE</span>
+                    </a>
+
+                    <a class="nav-link mb-3 p-3 shadow border active" id="v-pills-settings-tab" data-toggle="pill"
+                        href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="true"
+                        tabindex="0">
+                        <i class="fa fa-pencil-square-o mr-2"></i>
+                        <span class="font-weight-bold small text-uppercase">CONTENIDO DE LOS ENTREGABLES 3, 4 Y PRODUCTO
+                            FINAL</span>
+                    </a>
+
+                </div>
+            </div><!-- /col-md-3 -->
+
+            <!-- COLUMNA DERECHA: contenido de cada pestaña -->
+            <div class="col-md-9">
+                <div class="tab-content" id="v-pills-tabContent">
+
+                    <!-- PESTAÑA 1: RESUMEN DE ENTREGAS -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-home" role="tabpanel"
+                        aria-labelledby="v-pills-home-tab">
+                        <h4 class="mb-4">Resumen de Entregas</h4>
+                        <div style="text-align: center;">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Momento Evaluativo</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Duración Semana</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Entregable</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;"
+                                            nowrap="">Peso %</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Semana
+                                            de Entrega</th>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="6" style="vertical-align: middle; text-align: center;">Momento 2
+                                            <br>60%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">6 - 7</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Avance 3. Análisis
+                                                de datos:</strong> Informe con el diseño de un mapa conceptual, medidas
+                                            univariantes - Variable Discreta, medidas Univariantes - variable continua y
+                                            relación de la situación problema con los ODS (Objetivos de Desarrollo
+                                            Sostenible).</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">7</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Cuestionario de
+                                                evaluación - Unidad 3 – medidas estadísticas univariantes</strong></td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">8 - 9</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Avance 4.
+                                                Interpretación de resultados:</strong> Informe con la creación de un
+                                            diagrama de araña, aplicación de regresión y correlación, ejercicio de
+                                            aplicación, regresión y correlación lineal simple y regresión y correlación
+                                            múltiple.</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">9</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Cuestionario de
+                                                evaluación - Unidad 4 – Medidas estadísticas bivariantes</strong></td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">10 - 12</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Producto final.
+                                                Presentación de resultados:</strong> Informe variable cualitativa,
+                                            variable cuantitativa discreta, variable cuantitativa continua, regresión y
+                                            correlación entre variables cuantitativas y análisis y propuesta de solución
+                                            a la problemática.</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">12</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Cuestionario de
+                                                evaluación final</strong></td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 2: DESCRIPCIÓN GENERAL -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile" role="tabpanel"
+                        aria-labelledby="v-pills-profile-tab">
+                        <h4 class="mb-4">Descripción General</h4>
+                        <p style="text-align: justify;"><strong>Segundo reporte de avances (3, 4 y producto final) –
+                                60%</strong></p>
+                        <p style="text-align: justify;"><strong>Descripción general:</strong></p>
+                        <p style="text-align: justify;">Durante el desarrollo del avance 3, 4 y el producto final deberá
+                            entregar tres informes en formato PDF donde se consolide el desarrollo de todas las
+                            actividades propuestas.</p>
+                        <p style="text-align: justify;"><strong>Los informes deben cumplir con las siguientes
+                                condiciones formales de entrega:</strong></p>
+                        <ul>
+                            <li>Portada.</li>
+                            <li>Introducción.</li>
+                            <li>Justificación.</li>
+                            <li>Objetivos.</li>
+                            <li>Conclusiones (Relacionadas con los métodos estadísticos aplicados y la problemática
+                                estudiada).</li>
+                            <li>Referencias bibliográficas.</li>
+                        </ul>
+                        <br>
+                        <p style="text-align: justify;">Al finalizar cada informe deberá adjuntar evidencias del
+                            desarrollo de las actividades como pantallazos o compartir el enlace directo de la hoja de
+                            cálculo donde realizó los procedimientos correspondientes. Verifique en la configuración que
+                            cualquier persona con el enlace pueda ver el archivo y asegúrese de que el enlace abra
+                            correctamente.</p>
+                        <p style="text-align: justify;"><strong>Tenga en cuenta la siguiente situación
+                                hipotética:</strong></p>
+                        <p style="text-align: justify;">Usted ha sido contratado como ingeniero de software en la
+                            Agencia Nacional de Seguridad Vial (ANSV) y debe apoyar el área del observatorio nacional y
+                            entre sus funciones debe recopilar estudios, informes, investigaciones y documentos técnicos
+                            relacionados con las áreas de acción del sistema seguro y seguridad vial. Dentro de su labor
+                            deberá realizar análisis de datos, gráficos y presentar informes con los resultados
+                            parciales de la problemática de estudio.</p>
+                        <p style="text-align: justify;">La problemática de estudio que le fue asignada es analizar la
+                            accidentalidad vial en algunos departamentos de Colombia para el primer semestre del 2024
+                            por lo tanto deberá trabajar siempre con el <strong>Anexo 1. Base de datos indicadores de
+                                accidentalidad vial en algunos departamentos de Colombia</strong> para el desarrollo de
+                            las actividades propuestas de cada entregable.</p>
+                        <p style="text-align: justify;">No es casualidad que cada uno de los entregables tenga el nombre
+                            de las etapas de una investigación estadística, ya que en cada uno de los informes o
+                            entregables se espera que pueda ir desarrollando las competencias esperadas y de esta manera
+                            logre avanzar de manera progresiva hasta alcanzar el nivel relacional más alto en las
+                            dimensiones ser, saber y hacer para lograr la aprobación del curso.</p>
+                        <p style="text-align: justify;">El desarrollo de las actividades se puede realizar utilizando
+                            Excel (Office) o el software Estadístico Infostat.</p>
+                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje con el estudio
+                            de los recursos educativos Digitales RED, elaborados por el experto disciplinar:
+                            <strong>Video Tutorial para la descarga del software Infostat</strong></p>
+                        <p style="text-align: justify;">Enlace para la descarga del Infostat: <strong><a
+                                    href="http://www.infostat.com.ar" target="_blank"
+                                    rel="noopener">www.infostat.com.ar</a></strong></p>
+                        <h4 class="mb-4">Condiciones Particulares de Entrega</h4>
+                        <p style="text-align: justify;"><strong>Entregables del Avance 3, 4 y producto final.</strong>
+                        </p>
+                        <p style="text-align: justify;">En este segundo reporte de avances, realizará la entrega de los
+                            tres informes correspondientes denominados análisis de datos (entregable 3), interpretación
+                            de resultados (entregable 4) y presentación de resultados (entregable 5).</p>
+                        <p style="text-align: justify;">El desarrollo de las actividades de los entregables 3 y 4 se
+                            realizarán de manera individual.</p>
+                        <p style="text-align: justify;">El desarrollo de las actividades del entregable 5 se realizará
+                            de manera grupal.</p>
+                        <p style="text-align: justify;">En este momento evaluativo del proceso usted deberá lograr
+                            alcanzar las dimensiones del saber, ser y hacer contemplados en la rúbrica del momento II en
+                            el nivel 6.</p>
+                        <p style="text-align: justify;"><strong>SABER:</strong> Valida métodos, técnicas y herramientas
+                            de la estadística descriptiva para analizar, comprobar y comparar resultados con base a la
+                            situación problema.</p>
+                        <p style="text-align: justify;"><strong>SER:</strong> Comprueba el impacto que tiene el estudio
+                            de la estadística descriptiva para resolver problemas en el contexto real y en su desarrollo
+                            profesional.</p>
+                        <p style="text-align: justify;"><strong>HACER:</strong> Crea soluciones innovadoras para
+                            resolver la situación problema aplicando métodos, técnicas y herramientas estadísticas para
+                            la presentación de resultados.</p>
+                        <p style="text-align: justify;">Los tres entregables a solicitar equivalen al 60% del total de
+                            la calificación final del curso.</p>
+                        <p style="text-align: justify;"><strong>Condiciones particulares de entrega:</strong></p>
+                        <p style="text-align: justify;">Diligencie el formato o plantilla <strong>Entregable_3. Análisis
+                                de datos, Entregable_4. Interpretación de resultados y Entregable_5. Presentación de
+                                resultados</strong> de acuerdo con la secuencia y apartados de presentación registrados
+                            en el mismo.</p>
+                        <p style="text-align: justify;">Tenga presente las instrucciones y condiciones para los
+                            entregables.</p>
+                    </div>
+
+                    <!-- PESTAÑA 3: INSTRUMENTO DE EVALUACIÓN (Rúbrica) -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile1" role="tabpanel"
+                        aria-labelledby="v-pills-profile1-tab">
+                        <h4 class="mb-4">Instrumento de Evaluación</h4>
+                        <p style="text-align: justify;">En este momento evaluativo del proceso usted deberá lograr
+                            alcanzar las dimensiones del saber, ser y hacer contemplados en la <strong>Rúbrica del
+                                Momento 2</strong> en el nivel 6.</p>
+                        <strong><a href="@@PLUGINFILE@@/Rubrica_Momento_2.pdf" target="_blank" rel="noopener">
+                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true"
+                                    role="button">
+                                    <i class="fa fa fa-file-pdf-o fa-lg"></i> Rúbrica
+                                </button>
+                            </a></strong>
+                    </div>
+
+                    <!-- PESTAÑA 4: INSTRUMENTO PARA ENVIAR ENTREGABLE -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile2" role="tabpanel"
+                        aria-labelledby="v-pills-profile2-tab">
+                        <h4 class="mb-4">Instrumento para Enviar Entregable</h4>
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank"
+                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" rel="noopener"
+                                role="button">
+                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance 3
+                            </a>
+                        </div>
+                        <p></p>
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank"
+                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" rel="noopener"
+                                role="button">
+                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance 4
+                            </a>
+                        </div>
+                        <p></p>
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank"
+                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX" rel="noopener"
+                                role="button">
+                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Producto Final
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- PESTAÑA 5: CONTENIDO DE LOS ENTREGABLES -->
+                    <div class="tab-pane fade shadow rounded bg-white p-5 active show" id="v-pills-settings"
+                        role="tabpanel" aria-labelledby="v-pills-settings-tab">
+                        <h4 class="mb-4">Contenido de los Entregables 3, 4 y Producto Final</h4>
+                        <div>
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="semana6-tab" data-toggle="tab" href="#semana6"
+                                        role="tab" aria-controls="semana6" aria-selected="true">
+                                        Semana 6 <small class="d-block" style="text-align: center;">Avance 3</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana7-tab" data-toggle="tab" href="#semana7" role="tab"
+                                        aria-controls="semana7" aria-selected="false" tabindex="-1">
+                                        Semana 7 <small class="d-block" style="text-align: center;">Avance 3</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana8-tab" data-toggle="tab" href="#semana8" role="tab"
+                                        aria-controls="semana8" aria-selected="false" tabindex="-1">
+                                        Semana 8 <small class="d-block" style="text-align: center;">Avance 4</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana9-tab" data-toggle="tab" href="#semana9" role="tab"
+                                        aria-controls="semana9" aria-selected="false" tabindex="-1">
+                                        Semana 9 <small class="d-block" style="text-align: center;">Avance 4</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana10-tab" data-toggle="tab" href="#semana10" role="tab"
+                                        aria-controls="semana10" aria-selected="false" tabindex="-1">
+                                        Semana 10 <small class="d-block" style="text-align: center;">Producto
+                                            Final</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana11-tab" data-toggle="tab" href="#semana11" role="tab"
+                                        aria-controls="semana11" aria-selected="false" tabindex="-1">
+                                        Semana 11 <small class="d-block" style="text-align: center;">Producto
+                                            Final</small>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana12-tab" data-toggle="tab" href="#semana12" role="tab"
+                                        aria-controls="semana12" aria-selected="false" tabindex="-1">
+                                        Semana 12 <small class="d-block" style="text-align: center;">Producto
+                                            Final</small>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="myTabContent">
+
+                                <!-- PANEL SEMANA 6 -->
+                                <div class="tab-pane fade active show" id="semana6" role="tabpanel"
+                                    aria-labelledby="semana6-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Continuamos a la <strong>Unidad 3 – medidas
+                                                estadísticas univariantes</strong> con el entregable 3 – Análisis de
+                                            datos</p>
+                                        <p style="text-align: justify;">Deberá entregar un informe en formato PDF donde
+                                            se consolide el desarrollo de las actividades propuestas en la plantilla
+                                            <strong>Entregable_3. Análisis de datos</strong>.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 1: Organizador
+                                                gráfico</strong></p>
+                                        <p style="text-align: justify;">Resuma en un mapa conceptual las medidas
+                                            estadísticas univariantes (medidas de tendencia central, medidas de
+                                            posición, medidas de dispersión, medidas de asimetría y apuntamiento),
+                                            detallando cada una de ellas.</p>
+                                        <p style="text-align: justify;">Se recomienda realizar una revisión de los
+                                            recursos:</p>
+                                        <ul>
+                                            <li>Universidad Abierta y a Distancia de México. (s.f.) Unidad 2. Medidas de
+                                                tendencia central y dispersión.<br><strong><a
+                                                        href="https://dmd.unadmexico.mx/contenidos/TRONCO_COMUN/EBA/U2/descargables/EBA_U2_Contenidos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://dmd.unadmexico.mx/contenidos/TRONCO_COMUN/EBA/U2/descargables/EBA_U2_Contenidos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 7. Medidas de tendencia central. En:
+                                                Elementos básicos de estadística descriptiva para el análisis de datos.
+                                                Fundación Universitaria Luis Amigó. Fondo Editorial Luis Amigó. Medellín
+                                                (pp. 72 - 85).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 8. Medidas de posición. En: Elementos
+                                                básicos de estadística descriptiva para el análisis de datos. Fundación
+                                                Universitaria Luis Amigó. Fondo Editorial Luis Amigó. Medellín (pp. 86 -
+                                                95).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 9. Medidas de dispersión. En: Elementos
+                                                básicos de estadística descriptiva para el análisis de datos. Fundación
+                                                Universitaria Luis Amigó. Fondo Editorial Luis Amigó. Medellín (pp. 96 -
+                                                107).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 10. Medidas de forma. En: Elementos básicos
+                                                de estadística descriptiva para el análisis de datos. Fundación
+                                                Universitaria Luis Amigó. Fondo Editorial Luis Amigó. Medellín (pp. 108
+                                                - 115).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suárez, M. (2025). Capítulo 1. Medidas de tendencia central. En:
+                                                Estadística descriptiva para todos: Fundamentos y aplicaciones – Volumen
+                                                II. (pp.12 – 35).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suárez, M. (2025). Capítulo 2. Medidas de posición. En: Estadística
+                                                descriptiva para todos: Fundamentos y aplicaciones – Volumen II. (pp.36
+                                                – 60).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suárez, M. (2025). Capítulo 3. Medidas de dispersión. En: Estadística
+                                                descriptiva para todos: Fundamentos y aplicaciones – Volumen II. (pp.61
+                                                – 95).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Montero, J. M. (2007). Características de Una Distribución de
+                                                Frecuencias. Statistical Descriptive. Cengage Learning Paraninfo, S.A.
+                                                (pp 17 – 61).<br><strong><a
+                                                        href="https://link.gale.com/apps/doc/CX4052100008/GVRL?u=unad&amp;sid=GVRL&amp;xid=d49ed557"
+                                                        target="_blank"
+                                                        rel="noopener">https://link.gale.com/apps/doc/CX4052100008/GVRL?u=unad&amp;sid=GVRL&amp;xid=d49ed557</a></strong>.
+                                            </li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Para la elaboración del organizador gráfico
+                                            puede realizarlo en plataformas como: Miro, Mindmeister, Canva, Genially,
+                                            Lucidchart, Creately, etc.</p>
+                                        <p style="text-align: justify;">Debe adjuntar directamente el cuadro sinóptico.
+                                        </p>
+                                        <p style="text-align: justify;">Evitar adjuntar enlaces donde se haya creado el
+                                            organizador gráfico ya que la mayoría de las veces solicitan acceso. En caso
+                                            de adjuntarlo y si no se logra su visualización se calificará teniendo en
+                                            cuenta los criterios de la rúbrica de evaluación.</p>
+                                        <p style="text-align: justify;">Las actividades 2 y 3 se pueden realizar
+                                            utilizando Excel (Office) o el software Estadístico Infostat.</p>
+                                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje
+                                            con el estudio de los recursos educativos Digitales RED, elaborados por el
+                                            experto disciplinar para el desarrollo de las actividades 2 y 3.</p>
+                                        <ul>
+                                            <li><strong>Tarjetas didácticas medidas de tendencia central y de
+                                                    dispersión</strong>.</li>
+                                            <br>
+                                            <li><strong>Tarjetas didácticas medidas de posición y medidas de
+                                                    forma</strong>.</li>
+                                            <br>
+                                            <li><strong>Presentación caza del tesoro de las medidas
+                                                    estadísticas</strong>.</li>
+                                            <br>
+                                            <li><strong>Presentación tablas de frecuencias</strong>.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;"><strong>Actividad 2: Medidas univariantes -
+                                                variable discreta</strong></p>
+                                        <p style="text-align: justify;">Para el desarrollo de la actividad puede
+                                            consultar los recursos sugeridos en la actividad 1 y adicionalmente la
+                                            referencia:</p>
+                                        <ul>
+                                            <li>Montero, J. M. (2007). Características de Una Distribución de
+                                                Frecuencias. Statistical Descriptive. Cengage Learning Paraninfo,
+                                                S.A.<br><strong><a
+                                                        href="https://link.gale.com/apps/doc/CX4052100008/GVRL?u=unad&amp;sid=GVRL&amp;xid=d49ed557"
+                                                        target="_blank"
+                                                        rel="noopener">https://link.gale.com/apps/doc/CX4052100008/GVRL?u=unad&amp;sid=GVRL&amp;xid=d49ed557</a></strong>.
+                                            </li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Con base en el <strong>Anexo 1. Base de datos
+                                                indicadores de accidentalidad vial en algunos departamentos de
+                                                Colombia</strong> seleccione una variable CUANTITATIVA DISCRETA.</p>
+                                        <p style="text-align: justify;"><strong>Determine los siguientes
+                                                elementos:</strong></p>
+                                        <ul>
+                                            <li>a. <strong>Tabla de frecuencia datos no agrupados.</strong> diseñar una
+                                                tabla de frecuencia para datos no agrupados de la variable elegida, a
+                                                partir de ella elaborar un diagrama de barras y un diagrama de líneas o
+                                                de puntos.</li>
+                                            <br>
+                                            <li><strong>b. Medidas de tendencia central y de posición:</strong> para la
+                                                variable cuantitativa discreta elegida, deberá calcular las medidas de
+                                                tendencia central (media, mediana y moda), medidas de posición:
+                                                cuartiles 1, 2 y 3, percentil 30 y 90, determinar el tipo de asimetría y
+                                                curtosis, interpretar los resultados, sacar conclusiones de los
+                                                parámetros hallados y asociarlos con la problemática de estudio
+                                                indicadores de accidentalidad vial en algunos departamentos de Colombia.
+                                            </li>
+                                            <br>
+                                            <li><strong>c. Medidas de dispersión:</strong> para la variable cuantitativa
+                                                discreta elegida calcular: rango, varianza, desviación típica o
+                                                estándar, coeficiente de variación, posteriormente interpretar los
+                                                resultados, sacar conclusiones de los parámetros hallados y asociarlos
+                                                con la problemática de estudio indicadores de accidentalidad vial en
+                                                algunos departamentos de Colombia.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Se deben presentar los resultados teniendo en
+                                            cuenta la tabla consignada en la plantilla del entregable.</p>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 7 -->
+                                <div class="tab-pane fade" id="semana7" role="tabpanel" aria-labelledby="semana7-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">A través de su proceso de enseñanza -
+                                            aprendizaje y de la apropiación del conocimiento, enfoque su aprendizaje en
+                                            la actividad 3.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 3: Medidas univariantes -
+                                                variable continua</strong></p>
+                                        <p style="text-align: justify;">Para el desarrollo de la actividad puede
+                                            consultar los recursos sugeridos en la actividad 1 y 2.</p>
+                                        <p style="text-align: justify;">Con base en el <strong>Anexo 1. Base de datos
+                                                indicadores de accidentalidad vial en algunos departamentos de
+                                                Colombia</strong> seleccione una variable CUANTITATIVA CONTINUA.</p>
+                                        <p style="text-align: justify;"><strong>Determine los siguientes
+                                                elementos:</strong></p>
+                                        <ul>
+                                            <li><strong>a. Tabla de frecuencia datos agrupados</strong>. Con la variable
+                                                cuantitativa continua elegida, diseñar una tabla de frecuencias para
+                                                datos agrupados, identificando rango, número de intervalos, amplitud y a
+                                                partir de ella elaborar un histograma de frecuencias y un polígono de
+                                                frecuencias y un polígono de frecuencias. Finalmente, interpretar los
+                                                resultados de la tabla, de los gráficos estadísticos y asociarlos con la
+                                                problemática <strong>indicadores de accidentalidad vial en algunos
+                                                    departamentos de Colombia.</strong></li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Debe realizar las tablas en Excel teniendo en
+                                            cuenta el diseño consignado en la plantilla en su hoja de cálculo para la
+                                            presentación de los resultados.</p>
+                                        <ul>
+                                            <li><strong>b. Medidas de tendencia central y de posición:</strong> Para la
+                                                variable cuantitativa continua elegida, deberá calcular las medidas de
+                                                tendencia central (media, mediana, moda), medidas de posición: cuartiles
+                                                1, 2 y 3, percentil 15, 55 y 90, determinar el tipo de asimetría y
+                                                curtosis e interpretar los resultados, sacar conclusiones de los
+                                                parámetros hallados y asociarlos con la problemática <strong>indicadores
+                                                    de accidentalidad vial en algunos departamentos de
+                                                    Colombia.</strong></li>
+                                            <br>
+                                            <li><strong>c. Medidas de dispersión:</strong> Para la variable cuantitativa
+                                                continua elegida calcular: rango, varianza, desviación típica o
+                                                estándar, coeficiente de variación, posteriormente interpretar los
+                                                resultados, sacar conclusiones de los parámetros hallados y asociarlos
+                                                con la problemática <strong>indicadores de accidentalidad vial en
+                                                    algunos departamentos de Colombia.</strong></li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Se deben presentar los resultados teniendo en
+                                            cuenta la tabla consignada en la plantilla del entregable.</p>
+                                        <p style="text-align: justify;">A través de su proceso de enseñanza -
+                                            aprendizaje y de la apropiación del conocimiento, enfoque su aprendizaje en
+                                            la actividad 4.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 4: Relación de la situación
+                                                problema con los ODS (Objetivos de Desarrollo Sostenible)</strong></p>
+                                        <p style="text-align: justify;">Diseñe una infografía en la cual pueda presentar
+                                            como mejorar los <strong>indicadores de accidentalidad vial en algunos
+                                                departamentos de Colombia</strong> podría contribuir a los <strong>ODS
+                                                (Objetivos de Desarrollo Sostenible)</strong> y con cuáles
+                                            específicamente se podría relacionar.</p>
+                                        <p style="text-align: justify;">Tener en cuenta los siguientes parámetros de
+                                            presentación:</p>
+                                        <ul>
+                                            <li>Busque fuentes de información confiables para el desarrollo de la
+                                                infografía.</li>
+                                            <br>
+                                            <li>Debe incluir gráficos, diagramas, esquemas o imágenes.</li>
+                                            <br>
+                                            <li>El texto que se incluya dentro de la infografía debe ser en inglés.</li>
+                                            <br>
+                                            <li>Debe tener un diseño creativo.</li>
+                                            <br>
+                                            <li>Puede crearlo en cualquier plataforma de preferencia personal.</li>
+                                            <br>
+                                            <li>Debe adjuntar directamente la imagen de la infografía.</li>
+                                            <br>
+                                            <li>Evitar adjuntar enlaces donde se haya creado, ya que la mayoría de las
+                                                veces solicitan acceso. En caso de adjuntarlo y si no se logra su
+                                                visualización se calificará teniendo en cuenta los criterios de la
+                                                rúbrica de evaluación.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Realice la entrega del entregable en la
+                                            plataforma.</p>
+                                        <p style="text-align: justify;">Una vez realizada la calificación recuerde tener
+                                            en cuenta los comentarios de retroalimentación para los próximos
+                                            entregables.</p>
+                                        <p style="text-align: justify;">Envíe el documento en las fechas establecidas.
+                                        </p>
+                                        <div style="text-align: center;">
+                                            <a class="btn btn-outline-primary btn-lg"
+                                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX"
+                                                target="_blank" rel="noopener" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 3
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 8 -->
+                                <div class="tab-pane fade" id="semana8" role="tabpanel" aria-labelledby="semana8-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Exploraremos la <strong>Unidad 4 – Medidas
+                                                estadísticas bivariantes</strong> con el entregable 4 – interpretación
+                                            de resultados.</p>
+                                        <p style="text-align: justify;">Deberá entregar un informe en formato PDF donde
+                                            se consolide el desarrollo de las actividades propuestas en la plantilla
+                                            <strong>Entregable_4. Interpretación de resultados</strong>.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 1: Organizador
+                                                gráfico</strong></p>
+                                        <p style="text-align: justify;">Resuma en un diagrama de araña las medidas
+                                            estadísticas bivariantes de regresión y correlación.</p>
+                                        <p style="text-align: justify;">Para el desarrollo de la actividad puede
+                                            consultar los recursos:</p>
+                                        <ul>
+                                            <li>Talagala, P. (2020). Chapter 10 Correlation and
+                                                Regression.<br><strong><a
+                                                        href="https://pridiltal.github.io/CM1110/correlation-and-regression.html"
+                                                        target="_blank"
+                                                        rel="noopener">https://pridiltal.github.io/CM1110/correlation-and-regression.html</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Universidad Abierta y a Distancia de México. (s.f.) Unidad 3.
+                                                Correlación y regresión lineal simple.<br><strong><a
+                                                        href="https://dmd.unadmexico.mx/contenidos/TRONCO_COMUN/EBA/U3/descargables/EBA_U3_Contenidos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://dmd.unadmexico.mx/contenidos/TRONCO_COMUN/EBA/U3/descargables/EBA_U3_Contenidos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Elías, J. (2019). Análisis bivariante.<br><strong><a
+                                                        href="https://openaccess.uoc.edu/bitstream/10609/148455/1/AnalisisBivariante.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://openaccess.uoc.edu/bitstream/10609/148455/1/AnalisisBivariante.pdf</a></strong>.
+                                            </li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Para la elaboración del organizador gráfico
+                                            puede realizarlo en plataformas como: Miro, Mindmeister, Canva, Genially,
+                                            Lucidchart, Creately, etc.</p>
+                                        <p style="text-align: justify;">Debe adjuntar directamente el diagrama de araña.
+                                        </p>
+                                        <p style="text-align: justify;">Evitar adjuntar enlaces donde se haya creado el
+                                            recurso ya que la mayoría de las veces solicitan acceso. En caso de
+                                            adjuntarlo y si no se logra su visualización se calificará teniendo en
+                                            cuenta los criterios de la rúbrica de evaluación.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 2: Aplicación de regresión y
+                                                correlación</strong></p>
+                                        <p style="text-align: justify;">Realice la consulta de un artículo nacional o
+                                            internacional (académico o científico relacionado con su carrera profesional
+                                            como futuro ingeniero de software o una temática de su interés), en el cual
+                                            se haya implementado un modelo de regresión o análisis de correlación.</p>
+                                        <p style="text-align: justify;">Para tal fin podrá consultar en la biblioteca en
+                                            línea de la UDES a través del siguiente enlace: <strong><a
+                                                    href="https://udes.edu.co/biblioteca/servicios" target="_blank"
+                                                    rel="noopener">https://udes.edu.co/biblioteca/servicios</a></strong>
+                                        </p>
+                                        <p style="text-align: justify;">Posterior a su lectura y revisión deberá
+                                            realizar un breve resumen compuesto por mínimo 250 palabras en inglés, donde
+                                            destaque: título, autores, objetivos, resultados y conclusiones del
+                                            artículo.</p>
+                                        <p style="text-align: justify;">No se admite presentar el mismo resumen que
+                                            viene en el artículo en caso de presentar el mismo se calificará teniendo en
+                                            cuenta la rúbrica de evaluación.</p>
+                                        <p style="text-align: justify;">Como ejemplo puede consultar el recurso:</p>
+                                        <ul>
+                                            <li>Torres, L., Ariza, L. y Blanco, D. (2016). Cinética de adsorción de
+                                                2-Nitrofenol desde disolución acuosa sobre carbón
+                                                activado.<br><strong><a
+                                                        href="https://revistaciencias.univalle.edu.co/index.php/revista_de_ciencias/article/view/4674/6855"
+                                                        target="_blank"
+                                                        rel="noopener">https://revistaciencias.univalle.edu.co/index.php/revista_de_ciencias/article/view/4674/6855</a></strong>.
+                                            </li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Es indispensable que dentro del artículo de su
+                                            elección efectivamente se haya realizado la aplicación de un modelo de
+                                            regresión y correlación lineal de lo contrario el artículo no podrá servirle
+                                            para el desarrollo efectivo de la actividad.</p>
+                                        <p style="text-align: justify;">Las actividades 3, 4 y 5 se pueden realizar
+                                            utilizando Excel (Office) o el software Estadístico Infostat.</p>
+                                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje
+                                            con el estudio de los recursos educativos Digitales RED, elaborados por el
+                                            experto disciplinar para el desarrollo de las actividades 3, 4 y 5.</p>
+                                        <ul>
+                                            <li><strong>Tarjetas didácticas medidas estadísticas bivariantes</strong>.
+                                            </li>
+                                            <br>
+                                            <li><strong>Presentación Unidad 4 – Medidas bivariantes</strong>.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;"><strong>Actividad 3: Ejercicio de
+                                                aplicación</strong></p>
+                                        <p style="text-align: justify;">Con base a la tabla que se encuentra en la
+                                            plantilla en la cual se ilustran 8 valores anuales de ganancias de una
+                                            empresa colombiana en miles de millones en el eje (y), y la inversión en
+                                            miles de millones de dicha empresa en el eje (x).</p>
+                                        <p style="text-align: justify;">Calcule los siguientes parámetros:</p>
+                                        <ul>
+                                            <li>a. Realice el diagrama de dispersión y determine el tipo de asociación
+                                                entre las variables.</li>
+                                            <br>
+                                            <li>b. Encuentre el coeficiente de determinación y correlación.</li>
+                                            <br>
+                                            <li>c. Determine el modelo matemático que permite predecir el efecto de una
+                                                variable sobre la otra. ¿Es confiable?</li>
+                                            <br>
+                                            <li>d. Determine el grado de relación de las dos variables.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 9 -->
+                                <div class="tab-pane fade" id="semana9" role="tabpanel" aria-labelledby="semana9-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">A través de su proceso de enseñanza -
+                                            aprendizaje y de la apropiación del conocimiento, enfoque su aprendizaje en
+                                            la actividad 4 y 5.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 4: Regresión y correlación
+                                                lineal simple</strong></p>
+                                        <p style="text-align: justify;">Para el desarrollo de la actividad 4 y 5 puede
+                                            apoyarse en los referentes sugeridos de la actividad 1.</p>
+                                        <p style="text-align: justify;">Con base en el <strong>Anexo 1. Base de datos
+                                                indicadores de accidentalidad vial en algunos departamentos de
+                                                Colombia</strong> presente los siguientes parámetros:</p>
+                                        <ul>
+                                            <li>a. Identificar dos variables cuantitativas de la situación estudiada que
+                                                puedan estar relacionadas e identificar cuál podría ser la variable
+                                                dependiente e independiente.</li>
+                                            <br>
+                                            <li>b. Realizar el diagrama de dispersión de dichas variables y determinar
+                                                el tipo de relación entre las variables.</li>
+                                            <br>
+                                            <li>c. Determine el coeficiente de determinación y de correlación de las dos
+                                                variables. Interprete los resultados.</li>
+                                            <br>
+                                            <li>d. Encuentre el modelo matemático que permite predecir el efecto de una
+                                                variable sobre la otra. ¿Es confiable?</li>
+                                            <br>
+                                            <li>e. Presente un análisis general de los resultados obtenidos de acuerdo
+                                                con la problemática de estudio.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Copie y pegue el diagrama de dispersión que
+                                            realizó desde Excel o desde Infostat. Recuerde que debe aparecer
+                                            directamente la imagen y no adjuntar enlaces de ningún tipo.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 5: Regresión y correlación
+                                                múltiple</strong></p>
+                                        <p style="text-align: justify;">Se sugiere revisar el recurso adicional:</p>
+                                        <ul>
+                                            <li>Barón, F. (2022). Capítulo 7: Regresión lineal múltiple. En: Apuntes de
+                                                Estadística.<br><strong><a
+                                                        href="https://www.bioestadistica.uma.es/apuntesMaster/regresi%C3%B3n-lineal-m%C3%BAltiple.html"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.bioestadistica.uma.es/apuntesMaster/regresi%C3%B3n-lineal-m%C3%BAltiple.html</a></strong>.
+                                            </li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Con base en el <strong>Anexo 1. Base de datos
+                                                indicadores de accidentalidad vial en algunos departamentos de
+                                                Colombia</strong> presente los siguientes parámetros:</p>
+                                        <ul>
+                                            <li>a. Identificar una variable cuantitativa dependiente y varias variables
+                                                cuantitativas independientes del estudio de investigación.</li>
+                                            <br>
+                                            <li>b. Realizar el diagrama de dispersión de dichas variables y determinar
+                                                el tipo de relación entre las variables.</li>
+                                            <br>
+                                            <li>c. Determine el coeficiente de determinación y de correlación para
+                                                probar estadísticamente su relación.</li>
+                                            <br>
+                                            <li>d. Encuentre el modelo de regresión lineal múltiple.</li>
+                                            <br>
+                                            <li>e. Presente un análisis general de los resultados obtenidos de acuerdo
+                                                con la problemática de estudio.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;">Copie y pegue el diagrama de dispersión que
+                                            realizó desde Excel o desde Infostat. Recuerde que debe aparecer
+                                            directamente la imagen y no adjuntar enlaces de ningún tipo.</p>
+                                        <p style="text-align: justify;">Realice la entrega del entregable en la LMS.</p>
+                                        <p style="text-align: justify;">Una vez realizada la calificación recuerde tener
+                                            en cuenta los comentarios de retroalimentación para los próximos
+                                            entregables.</p>
+                                        <p style="text-align: justify;">Envíe el documento en las fechas establecidas.
+                                        </p>
+                                        <div style="text-align: center;">
+                                            <a class="btn btn-outline-primary btn-lg"
+                                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX"
+                                                target="_blank" rel="noopener" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 4
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 10 -->
+                                <div class="tab-pane fade" id="semana10" role="tabpanel" aria-labelledby="semana10-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Culminamos el curso con el Producto Final el
+                                            cual se debe entregar de manera grupal en caso de realizar la entrega de
+                                            manera individual tenga en cuenta que se tendrán en cuenta los criterios de
+                                            la rúbrica para su evaluación.</p>
+                                        <p style="text-align: justify;">Deberá entregar un informe en formato PDF donde
+                                            se consolide el desarrollo de las actividades propuestas en la plantilla
+                                            <strong>Producto Final. Presentación de resultados</strong>.</p>
+                                        <p style="text-align: justify;">Las actividades se pueden realizar utilizando
+                                            Excel (Office) o el software Estadístico Infostat.</p>
+                                        <p style="text-align: justify;"><strong>Ajuste de datos</strong></p>
+                                        <p style="text-align: justify;">Para iniciar su trabajo, el grupo deberá ajustar
+                                            la base de datos: <strong>Anexo 1. Base de datos indicadores de
+                                                accidentalidad vial en algunos departamentos de Colombia</strong>
+                                            trabajada a lo largo del curso, el grupo dejará sólo los primeros 100 datos
+                                            en cada una de las variables y procederá a procesarlos como una muestra de
+                                            la base original.</p>
+                                        <p style="text-align: justify;">Una vez ajustada la base de datos, el grupo
+                                            deberá tomar mínimo seis variables (al menos dos cualitativas, dos
+                                            cuantitativas discretas y dos cuantitativas continuas) y procesará para cada
+                                            variable la información solicitada a continuación:</p>
+                                        <p style="text-align: justify;">Para el desarrollo de esta actividad puede
+                                            apoyar en los recursos bibliográficos que fueron trabajados en la Unidad 1,
+                                            2, 3 y 4.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 1: Variable
+                                                cualitativa</strong></p>
+                                        <ul>
+                                            <li>Caracterizar una de las variables cualitativas elegidas presentando:
+                                                tabla de frecuencias, diagrama de barras y circular, moda, tabla de
+                                                contingencias y conclusiones.</li>
+                                            <br>
+                                            <li>Realizar una tabla de contingencias con las dos variables cualitativas
+                                                seleccionadas.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;"><strong>Actividad 2: Variable cuantitativa
+                                                discreta</strong></p>
+                                        <p style="text-align: justify;">Para una de las variables discreta elegida, se
+                                            deberán calcular las medidas univariantes de tendencia central: media,
+                                            mediana, moda y todos los cuartiles. Así mismo deberán calcular las medidas
+                                            univariantes de dispersión: rango, varianza, desviación típica y coeficiente
+                                            de variación.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 3: Variable cuantitativa
+                                                continua</strong></p>
+                                        <p style="text-align: justify;">Para una de las variables continua elegida, se
+                                            deberán calcular las medidas univariantes de tendencia central: media,
+                                            mediana, moda y todos los cuartiles. Así mismo deberán calcular las medidas
+                                            univariantes de dispersión: rango, varianza, desviación típica y coeficiente
+                                            de variación.</p>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 11 -->
+                                <div class="tab-pane fade" id="semana11" role="tabpanel" aria-labelledby="semana11-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Durante esta semana, continúe con el desarrollo
+                                            del trabajo colaborativo correspondiente al <strong>Producto Final</strong>
+                                            (entregable 5) que inició la semana anterior. Trabaje con su grupo en la
+                                            consolidación de los análisis de las variables cualitativas, cuantitativas
+                                            discretas y cuantitativas continuas en la plantilla <strong>Producto Final.
+                                                Presentación de resultados</strong>, preparándose para las actividades
+                                            finales de regresión y correlación que se abordarán en la Semana 12.</p>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL SEMANA 12 -->
+                                <div class="tab-pane fade" id="semana12" role="tabpanel" aria-labelledby="semana12-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;"><strong>Actividad 4: Regresión y correlación
+                                                entre variables cuantitativas</strong></p>
+                                        <p style="text-align: justify;">Identificar las dos variables cuantitativas
+                                            discreta y continua que no se hayan trabajado en la actividad 2 y 3 de las 6
+                                            que se eligieron inicialmente y calcular los siguientes parámetros:</p>
+                                        <ul>
+                                            <li>Realizar el diagrama de dispersión de dichas variables y determinar el
+                                                tipo de asociación entre las variables.</li>
+                                            <br>
+                                            <li>Encontrar el modelo matemático que permite predecir el efecto de una
+                                                variable sobre la otra. ¿Es confiable?</li>
+                                            <br>
+                                            <li>Determinar el grado de relación de las dos variables.</li>
+                                            <br>
+                                            <li>Relacionar la información obtenida con el problema.</li>
+                                        </ul>
+                                        <br>
+                                        <p style="text-align: justify;"><strong>Actividad 5: Análisis y propuesta de
+                                                solución a la problemática</strong></p>
+                                        <p style="text-align: justify;">Finalmente, el grupo deberá responder a la
+                                            pregunta:</p>
+                                        <p style="text-align: justify;">¿Qué alternativa de solución plantea para la
+                                            problemática estudiada?</p>
+                                        <p style="text-align: justify;">dicha respuesta deberá estar justificada
+                                            descriptivamente, es decir para ello (utilizará tablas, gráficos, medidas,
+                                            diagramas, entre otros) que fueron realizados en las actividades 1, 2 y 3.
+                                        </p>
+                                        <p style="text-align: justify;"><strong>Describir:</strong> es explicar,
+                                            representar, definir con detalle, las cualidades características o las
+                                            circunstancias de algo o de alguien.</p>
+                                        <p style="text-align: justify;">Por ejemplo: Del diagrama estadístico “XX” se
+                                            desprende que... De la tabla “XX” podemos concluir que... A partir del valor
+                                            de las medidas univariantes o de dispersión... Podemos afirmar que... y...
+                                            por esto consideramos necesario realizar... Para ello es necesario disponer
+                                            de... (ver tabla XX) y se propone realizar.</p>
+                                        <p style="text-align: justify;">Realice la entrega del entregable en la
+                                            plataforma.</p>
+                                        <p style="text-align: justify;"><strong>REALIMENTACIÓN GENERAL Y CIERRE DEL
+                                                CURSO</strong></p>
+                                        <p style="text-align: justify;"><strong>CIERRE DEL CURSO</strong></p>
+                                        <p style="text-align: justify;">Participe en la sesión sincrónica de
+                                            realimentación y cierre del curso.</p>
+                                        <p style="text-align: justify;">Envíe el documento en las fechas establecidas.
+                                        </p>
+                                        <div style="text-align: center;">
+                                            <a class="btn btn-outline-primary btn-lg"
+                                                href="https://virtual.udes.edu.co/mod/assign/view.php?id=XXXX"
+                                                target="_blank" rel="noopener" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Producto Final
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div><!-- /tab-content -->
+                        </div>
+                    </div><!-- /v-pills-settings -->
+
+                </div><!-- /tab-content principal -->
+            </div><!-- /col-md-9 -->
+        </div><!-- /row -->
+    </div><!-- /container -->
+</section>

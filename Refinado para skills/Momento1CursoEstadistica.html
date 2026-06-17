@@ -1,0 +1,705 @@
+<section class="py-1 header">
+    <div class="container py-4">
+        <header class="text-center mb-1 pb-1 text-white"></header>
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Tabs nav -->
+                <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab" role="tablist"
+                    aria-orientation="vertical">
+                    <a class="nav-link mb-3 p-3 shadow border active" id="v-pills-home-tab" data-toggle="pill"
+                        href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true" tabindex="0">
+                        <i class="fa fa-calendar-check-o mr-2"></i> <span
+                            class="font-weight-bold small text-uppercase">RESUMEN DE ENTREGAS</span>
+                    </a>
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile-tab" data-toggle="pill"
+                        href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-bars mr-2"></i> <span class="font-weight-bold small text-uppercase">DESCRIPCIÓN
+                            GENERAL</span>
+                    </a>
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile1-tab" data-toggle="pill"
+                        href="#v-pills-profile1" role="tab" aria-controls="v-pills-profile1" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-check-square-o mr-2"></i> <span
+                            class="font-weight-bold small text-uppercase">INSTRUMENTO DE EVALUACIÓN</span>
+                    </a>
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-profile2-tab" data-toggle="pill"
+                        href="#v-pills-profile2" role="tab" aria-controls="v-pills-profile2" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-share-square-o mr-2"></i> <span
+                            class="font-weight-bold small text-uppercase">INSTRUMENTO PARA ENVIAR ENTREGABLE</span>
+                    </a>
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-settings-tab" data-toggle="pill"
+                        href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false"
+                        tabindex="-1">
+                        <i class="fa fa-pencil-square-o mr-2"></i> <span
+                            class="font-weight-bold small text-uppercase">CONTENIDO DE LOS ENTREGABLES 1 Y 2</span>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <!-- Tabs content -->
+                <div class="tab-content" id="v-pills-tabContent">
+                    <div class="tab-pane fade shadow rounded bg-white p-5 active show" id="v-pills-home" role="tabpanel"
+                        aria-labelledby="v-pills-home-tab">
+                        <h4 class="mb-4">Resumen de Entregas</h4>
+                        <div style="text-align: center;">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Momento Evaluativo</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Duración Semana</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">
+                                            Entregable</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;"
+                                            nowrap="">Peso %</th>
+                                        <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Semana
+                                            de Entrega</th>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="4" style="vertical-align: middle; text-align: center;">I <br> 40%
+                                        </td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">1 - 3</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Avance 1.</strong>
+                                            Recolección de datos - Informe con la elaboración de un mapa
+                                            mental, respuesta a las preguntas orientadoras del contexto de la
+                                            problemática, clasificación de variables y ejercicio de muestreo.</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Cuestionario de
+                                                evaluación –</strong> Unidad 1 - Investigación estadística</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">4 - 5</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Avance 2.</strong>
+                                            Organización de datos - Informe con la construcción de un cuadro
+                                            sinóptico, caracterización de variables cualitativas, diagramas
+                                            estadísticos, tabla de contingencia de doble entrada y aplicaciones de la
+                                            estadística en la Ingeniería de software.</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                        <td rowspan="2" style="vertical-align: middle; text-align: center;">5</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>Cuestionario de
+                                                evaluación -</strong> Unidad 2 – Fundamentos de Estadística</td>
+                                        <td style="vertical-align: middle; text-align: center;">10%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile" role="tabpanel"
+                        aria-labelledby="v-pills-profile-tab">
+                        <h4 class="mb-4">Descripción General</h4>
+                        <p style="text-align: justify;">En este <strong>primer reporte de avances,</strong> realizará la
+                            entrega de los dos informes correspondientes denominados recolección de datos (entregable 1)
+                            y organización de datos (entregable 2).</p>
+                        <p style="text-align: justify;">El desarrollo de las actividades se realizará de manera
+                            individual.</p>
+                        <p style="text-align: justify;">En este <strong>momento evaluativo del proceso usted deberá
+                                lograr alcanzar las dimensiones del saber, ser y hacer contemplados en la rúbrica del
+                                momento I en el nivel 5.</strong></p>
+                        <p style="text-align: justify;"><strong>SABER:</strong> asocia conceptos fundamentales de la
+                            estadística y los pone en práctica para la recolección y organización de datos de la
+                            situación problema.</p>
+                        <p style="text-align: justify;"><strong>SER:</strong> Determina la importancia de la
+                            investigación estadística para abordar la situación problema y para su contexto real.</p>
+                        <p style="text-align: justify;"><strong>HACER:</strong> Genera métodos, técnicas y herramientas
+                            estadísticas para analizar, representar datos y encontrar soluciones basada en fundamentos
+                            con base a la situación problema.</p>
+                        <p style="text-align: justify;">Los dos entregables a solicitar equivalen al 40% del total de la
+                            calificación final del curso. </p>
+
+                        <h4 class="mb-4">Condiciones Particulares de Entrega</h4>
+                        <p style="text-align: justify;">Diligencie el documento o plantilla <strong><a
+                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Entregable1_Recoleccion_de_datos.docx"
+                                    target="_blank" rel="noopener">Entregable1_Recoleccion_de_datos</a> y
+                                <a href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Entregable2_Organizacion_de_datos.docx"
+                                    target="_blank" rel="noopener">Entregable2_Organizacion_de_datos</a></strong> de
+                            acuerdo con la secuencia y apartados de presentación registrados en el mismo.
+                        </p>
+                        <p style="text-align: justify;">Tenga presente las instrucciones y condiciones para los
+                            entregables.</p>
+                    </div>
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile1" role="tabpanel"
+                        aria-labelledby="v-pills-profile1-tab">
+                        <h4 class="mb-4">Instrumento de Evaluación</h4>
+                        <strong><a
+                                href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Rubrica1_Estadistica_Descriptiva.pdf"
+                                target="_blank" rel="noopener"><button type="button"
+                                    class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button"> <i
+                                        class="fa fa fa-file-pdf-o fa-lg"></i>
+                                    Rúbrica</button></a></strong>
+                    </div>
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-profile2" role="tabpanel"
+                        aria-labelledby="v-pills-profile2-tab">
+                        <h4 class="mb-4">Instrumento para Enviar Entregable</h4>
+                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=3940"
+                            rel="noopener"><button type="button" class="btn btn-outline-primary btn-lg"
+                                aria-pressed="true" role="button"><span class="spinner-grow spinner-grow-sm"></span>
+                                Enviar Entregable Avance 1</button></a>
+                        <p></p>
+                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=3950"
+                            rel="noopener"><button type="button" class="btn btn-outline-primary btn-lg"
+                                aria-pressed="true" role="button"><span class="spinner-grow spinner-grow-sm"></span>
+                                Enviar Entregable Avance 2</button></a>
+                    </div>
+                    <div class="tab-pane fade shadow rounded bg-white p-5" id="v-pills-settings" role="tabpanel"
+                        aria-labelledby="v-pills-settings-tab">
+                        <h4 class="mb-4">Contenido de los Entregables 1 y 2</h4>
+                        <div>
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="semana1-tab" data-toggle="tab" href="#semana1"
+                                        role="tab" aria-controls="semana1" aria-selected="true">Semana 1 <small
+                                            class="d-block" style="text-align: center;">Avance 1</small></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana2-tab" data-toggle="tab" href="#semana2" role="tab"
+                                        aria-controls="semana2" aria-selected="false" tabindex="-1">Semana 2 <small
+                                            class="d-block" style="text-align: center;">Avance 1</small></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana3-tab" data-toggle="tab" href="#semana3" role="tab"
+                                        aria-controls="semana3" aria-selected="false" tabindex="-1">Semana 3 <small
+                                            class="d-block" style="text-align: center;">Avance 1</small></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana4-tab" data-toggle="tab" href="#semana4" role="tab"
+                                        aria-controls="semana4" aria-selected="false" tabindex="-1">Semana 4 <small
+                                            class="d-block" style="text-align: center;">Avance 2</small></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="semana5-tab" data-toggle="tab" href="#semana5" role="tab"
+                                        aria-controls="semana5" aria-selected="false" tabindex="-1">Semana 5 <small
+                                            class="d-block" style="text-align: center;">Avance 2</small></a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="myTabContent">
+                                <div class="tab-pane fade active show" id="semana1" role="tabpanel"
+                                    aria-labelledby="semana1-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Cordial saludo.</p>
+                                        <p style="text-align: justify;">Bienvenido(a) al curso de estadística
+                                            descriptiva.</p>
+                                        <p style="text-align: justify;">Inicie su proceso académico, revisando el
+                                            <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/SYLLABUS_Estadistica_Descriptiva.pdf"
+                                                    target="_blank" rel="noopener">syllabus</a></strong>, el video de
+                                            bienvenida y presentación del curso, la <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Rubrica1_Estadistica_Descriptiva.pdf"
+                                                    target="_blank" rel="noopener">rúbrica</a></strong>, así como el
+                                            <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Mapa_Curso_Estadistica.pdf"
+                                                    target="_blank" rel="noopener">mapa conceptual</a></strong> para que
+                                            pueda identificar la información general y detallada del curso, además de la
+                                            organización y secuencia de las temáticas y contenidos propuestos, las
+                                            estrategias de enseñanza – aprendizaje. Así mismo es importante realizar la
+                                            exploración de los recursos educativos sugeridos para el desarrollo exitoso
+                                            de las actividades propuestas.
+                                        </p>
+                                        <p style="text-align: justify;">Se realizarán encuentros sincrónicos para
+                                            abordar aspectos y contenidos relacionados con las temáticas del curso.
+                                            También se resolverán inquietudes que surjan en la construcción de los
+                                            entregables e igualmente es importante que pueda participar e interactuar a
+                                            través del <strong><a
+                                                    href="https://virtual.udes.edu.co/mod/forum/view.php?id=3937"
+                                                    target="_blank" rel="noopener">foro social</a></strong>
+                                            <!-- FLAG: dato-faltante Falta enlace para "foro social" --> para que
+                                            intercambien expectativas e intereses
+                                            individuales que tengan del curso.
+                                        </p>
+                                        <ul>
+                                            <li><strong>Video de presentación y bienvenida del curso Estadística
+                                                    Descriptiva</strong>.</li>
+                                        </ul>
+                                        <!-- FLAG: red-sin-archivo No hay archivo para "Video de presentación y bienvenida del curso Estadística Descriptiva" -->
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="semana2" role="tabpanel" aria-labelledby="semana2-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Iniciamos la <strong>Unidad 1 - Investigación
+                                                estadística</strong> con el
+                                            <strong>entregable 1 - recolección de datos</strong>.
+                                        </p>
+                                        <p style="text-align: justify;">Deberá entregar un informe en formato PDF donde
+                                            se consolide el desarrollo de las actividades propuestas en la plantilla
+                                            <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Entregable1_Recoleccion_de_datos.docx"
+                                                    target="_blank" rel="noopener">Entregable_1. Recolección
+                                                    de datos</a></strong>.
+                                        </p>
+                                        <p style="text-align: justify;"><strong>Actividad 1: Organizador
+                                                gráfico</strong></p>
+                                        <p style="text-align: justify;">Resumir mediante un organizador gráfico las
+                                            etapas para el inicio de una investigación estadística (planeación,
+                                            recolección, organización, análisis y presentación de resultados)
+                                            describiendo cada una de ellas.</p>
+                                        <p style="text-align: justify;">Para el desarrollo de este podrá seleccionar de
+                                            manera libre el organizador gráfico de su preferencia (cuadro sinóptico,
+                                            mapa conceptual, mapa mental, mentefacto, etc.).</p>
+                                        <p style="text-align: justify;">Se sugiere explorar los
+                                            siguientes recursos para que pueda revisar diferentes alternativas y tener
+                                            en cuenta los aspectos fundamentales para el diseño y la presentación.</p>
+                                        <ul>
+                                            <li>Dirección General de Educación Tecnológica
+                                                Agropecuaria y Ciencias del Mar (2025). Organizadores
+                                                gráficos.<br><strong><a
+                                                        href="https://dgetaycm.sep.gob.mx/storage/recursos/2025/01/Wj9GE11AYO-Organizadores%20gr%C3%A1ficos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://dgetaycm.sep.gob.mx/storage/recursos/2025/01/Wj9GE11AYO-Organizadores%20gr%C3%A1ficos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Orientación Andújar (2015). Organizadores
+                                                gráficos.<br><strong><a
+                                                        href="https://www.orientacionandujar.es/wp-content/uploads/2015/07/OrganizadoresGraficos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.orientacionandujar.es/wp-content/uploads/2015/07/OrganizadoresGraficos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Para el desarrollo del
+                                            organizador gráfico teniendo en cuenta la temática propuesta puede revisar
+                                            los referentes:</p>
+                                        <ul>
+                                            <li>Martínez, C. (2013). Capítulo 1. Conceptos
+                                                generales. En: Estadística y muestreo, 13a ed. [Online] Bogotá: Ecoe
+                                                Ediciones. (pp. 10– 33).<br><strong><a
+                                                        href="http://ies-booklick.s3.amazonaws.com/1626728222781-Estadistica-MuestreoCiro1-198.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">http://ies-booklick.s3.amazonaws.com/1626728222781-Estadistica-MuestreoCiro1-198.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Fernández, D., y Guitart. M. (s.f.)
+                                                Estadística Descriptiva y análisis de datos.<br><strong><a
+                                                        href="http://www1.frm.utn.edu.ar/estadistica/documentos/ed&amp;ad.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">http://www1.frm.utn.edu.ar/estadistica/documentos/ed&amp;ad.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Para la elaboración del organizador gráfico
+                                            puede realizarlo en plataformas como: Miro, Mindmeister, Canva, Genially,
+                                            Lucidchart, Creately, etc.</p>
+                                        <p style="text-align: justify;">Debe adjuntar directamente la imagen del
+                                            organizador gráfico.</p>
+                                        <p style="text-align: justify;">Evitar adjuntar enlaces donde se haya creado el
+                                            organizador gráfico ya que la mayoría de las veces solicitan acceso. En caso
+                                            de adjuntarlo y si no se logra su visualización se calificará teniendo en
+                                            cuenta los criterios de la <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Rubrica1_Estadistica_Descriptiva.pdf"
+                                                    target="_blank" rel="noopener">rúbrica de evaluación</a></strong>.
+                                        </p>
+                                        <p style="text-align: justify;"><strong>Actividad 2: Contexto de la
+                                                problemática</strong></p>
+                                        <p style="text-align: justify;">Responda las siguientes preguntas orientadoras
+                                            para que pueda contextualizarse con la problemática de estudio.</p>
+                                        <p style="text-align: justify;">1) ¿Cuáles son las causas o factores que
+                                            ocasionan los accidentes de tránsito en las vías?</p>
+                                        <p style="text-align: justify;">2) ¿Qué impacto podría tener el estado de ánimo
+                                            del conductor, en un accidente de tránsito?</p>
+                                        <p style="text-align: justify;">3) ¿Como influye el estado y las condiciones de
+                                            las vías de los accidentes reportados en algunos departamentos en Colombia?
+                                        </p>
+                                        <p style="text-align: justify;">4) ¿Quiénes son más responsables a la hora de
+                                            conducir los hombres o las mujeres?</p>
+                                        <p style="text-align: justify;">5) ¿Cuáles considera son los accidentes de
+                                            tránsito más frecuentes en Bogotá?</p>
+                                        <p style="text-align: justify;">6) ¿Qué es un anuario de siniestralidad?</p>
+                                        <p style="text-align: justify;">Para el desarrollo de esta
+                                            actividad se recomienda explorar los recursos:</p>
+                                        <ul>
+                                            <li>Concejo de Bogotá (2025). En los últimos 7
+                                                años, los lesionados por siniestros viales han disminuido en el país,
+                                                pero las muertes han aumentado.<br><strong><a
+                                                        href="https://concejodebogota.gov.co/en-los-ultimos-7-anos-los-lesionados-por-siniestros-viales-han/cbogota/2025-03-25/102637.php"
+                                                        target="_blank"
+                                                        rel="noopener">https://concejodebogota.gov.co/en-los-ultimos-7-anos-los-lesionados-por-siniestros-viales-han/cbogota/2025-03-25/102637.php</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Alcaldía de Bogotá (2025). 47,3 % de las
+                                                víctimas fatales en accidentes de tránsito fueron
+                                                motociclistas.<br><strong><a
+                                                        href="https://bogota.gov.co/mi-ciudad/movilidad/47-de-victimas-en-accidentes-transito-en-bogota-fueron-moticiclistas"
+                                                        target="_blank"
+                                                        rel="noopener">https://bogota.gov.co/mi-ciudad/movilidad/47-de-victimas-en-accidentes-transito-en-bogota-fueron-moticiclistas</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Observatorio de salud de Bogotá (2025).
+                                                Mortalidad por accidentes de tránsito en Bogotá D.C.<br><strong><a
+                                                        href="https://saludata.saludcapital.gov.co/osb/indicadores/mortalidad-de-accidentes-de-transito/"
+                                                        target="_blank"
+                                                        rel="noopener">https://saludata.saludcapital.gov.co/osb/indicadores/mortalidad-de-accidentes-de-transito/</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Gómez, L. (2025). Muertes por accidentes de
+                                                tránsito en Colombia disminuyeron en enero de 2025: este es el panorama
+                                                por ciudades.<br><strong><a
+                                                        href="https://www.infobae.com/colombia/2025/02/16/muertes-por-accidentes-de-transito-en-colombia-disminuyeron-en-enero-de-2025-este-es-el-panorama-por-ciudades/"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.infobae.com/colombia/2025/02/16/muertes-por-accidentes-de-transito-en-colombia-disminuyeron-en-enero-de-2025-este-es-el-panorama-por-ciudades/</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">No obstante, puede dirigirse a otras fuentes de
+                                            información.</p>
+                                        <p style="text-align: justify;">Responda las preguntas planteadas no solo desde
+                                            su opinión, sino también debe argumentar y justificar su respuesta teniendo
+                                            en cuenta cifras y datos estadísticos.</p>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="semana3" role="tabpanel" aria-labelledby="semana3-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">A través de su proceso de enseñanza -
+                                            aprendizaje y de la apropiación del conocimiento, enfoque su aprendizaje en
+                                            la actividad 3 y 4.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 3: Clasificación de
+                                                variables</strong></p>
+                                        <p style="text-align: justify;">Para el desarrollo de esta
+                                            actividad se puede apoyar de los recursos:</p>
+                                        <ul>
+                                            <li>Posada, G. (2016). Capítulo 1. Conceptos
+                                                generales sobre estadística. En: Elementos básicos de estadística
+                                                descriptiva para el análisis de datos. Fundación Universitaria Luis
+                                                Amigó. Fondo Editorial Luis Amigó. Medellín. (pp. 11 –
+                                                21).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje
+                                            con el estudio de los recursos educativos Digitales RED, elaborados por el
+                                            experto disciplinar:</p>
+                                        <ul>
+                                            <li><strong><a
+                                                        href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/VARIABLES.pdf"
+                                                        target="_blank" rel="noopener">Infografía de
+                                                        variables</a></strong>.</li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Clasifique todas las variables del <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Anexo1_Base_de_datos.xlsx"
+                                                    target="_blank" rel="noopener">Anexo 1. Base de datos indicadores de
+                                                    accidentalidad vial en algunos departamentos de
+                                                    Colombia</a></strong> en cualitativas (nominales, ordinales) y
+                                            cuantitativas (discretas o continuas) teniendo en cuenta la tabla que se
+                                            encuentra en la plantilla</p>
+                                        <p style="text-align: justify;"><strong>Actividad 4. Muestreo</strong></p>
+                                        <p style="text-align: justify;">Revise los siguientes
+                                            recursos para el desarrollo de esta actividad:</p>
+                                        <ul>
+                                            <li>Posada, G. (2016). Capítulo 2. Introducción
+                                                a los tipos de muestreo. En: Elementos básicos de estadística
+                                                descriptiva para el análisis de datos. Fundación Universitaria Luis
+                                                Amigó. Fondo Editorial Luis Amigó. Medellín (pp. 23 -32).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje
+                                            con el estudio de los recursos educativos Digitales RED, elaborados por el
+                                            experto disciplinar:</p>
+                                        <ul>
+                                            <li><strong>Cálculo del tamaño muestral</strong>.</li>
+                                            <div style="width: 100%;">
+                                                <div
+                                                    style="position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;">
+                                                    <iframe title="Cálculo del tamaño muestral" frameborder="0"
+                                                        width="1200" height="675"
+                                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                                        src="https://view.genially.com/689a476c28c2309ec208f8d9"
+                                                        type="text/html" allowscriptaccess="always"
+                                                        allowfullscreen="true" scrolling="yes"
+                                                        allownetworking="all"></iframe>
+                                                </div>
+                                            </div>
+                                        </ul>
+                                        <br>
+                                        <!-- FLAG: red-sin-archivo No hay archivo para "Presentación cálculo del tamaño muestral" -->
+                                        <p style="text-align: justify;">Dado que la base de datos suministrada
+                                            <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Anexo1_Base_de_datos.xlsx"
+                                                    target="_blank" rel="noopener">Anexo 1. Base de datos indicadores de
+                                                    accidentalidad vial en algunos departamentos de
+                                                    Colombia</a></strong> corresponde a una muestra ya definida, es
+                                            importante reconocer que, en algunas ocasiones, la muestra se debe calcular.
+                                        </p>
+                                        <p style="text-align: justify;">Realice los dos ejercicios que se presentan a
+                                            continuación:</p>
+                                        <p style="text-align: justify;">1. Si se desea establecer
+                                            una muestra representativa para estudiar la problemática <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Anexo1_Base_de_datos.xlsx"
+                                                    target="_blank" rel="noopener">indicadores de accidentalidad vial en
+                                                    algunos departamentos de Colombia</a></strong> a través del muestreo
+                                            aleatorio simple con un nivel de confianza del 90%, un error estimado del 5%
+                                            y una población de 2920 defunciones, ¿Cuál sería el tamaño de la muestra?
+                                        </p>
+                                        <p style="text-align: justify;">2. Si se desea establecer
+                                            una muestra representativa para estudiar el problema de <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Anexo1_Base_de_datos.xlsx"
+                                                    target="_blank" rel="noopener">indicadores de accidentalidad vial en
+                                                    algunos departamentos de Colombia</a></strong> a través del muestreo
+                                            aleatorio simple, con un nivel de confianza del 91%, un error estimado del
+                                            5%, pero se desconoce el total de la población constituida mayormente por
+                                            peatones, ¿Cuál sería el tamaño de la muestra?</p>
+                                        <p style="text-align: justify;">Se debe presentar no solo el resultado sino los
+                                            procedimientos o cálculos realizados para llegar a las respuestas.</p>
+                                        <p style="text-align: justify;">Realice la entrega del entregable en la
+                                            plataforma.</p>
+                                        <p style="text-align: justify;">Una vez realizada la calificación recuerde tener
+                                            en cuenta los comentarios de retroalimentación para los próximos
+                                            entregables.</p>
+                                        <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=3940">
+                                            <button type="button" class="btn btn-outline-primary btn-lg"
+                                                aria-pressed="true" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 1
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="semana4" role="tabpanel" aria-labelledby="semana4-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">Avanzamos a la <strong>Unidad 2 – Fundamentos de
+                                                Estadística</strong> con el
+                                            <strong>entregable 2 -Organización de datos</strong>.
+                                        </p>
+                                        <p style="text-align: justify;">Deberá entregar un informe en formato PDF donde
+                                            se consolide el desarrollo de las actividades propuestas en la plantilla
+                                            <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Entregable2_Organizacion_de_datos.docx"
+                                                    target="_blank" rel="noopener">Entregable_2. Organización de
+                                                    datos.</a></strong>.
+                                        </p>
+                                        <p style="text-align: justify;"><strong>Actividad 1: Organizador
+                                                gráfico</strong></p>
+                                        <p style="text-align: justify;">Diseñar un cuadro sinóptico donde se recopile lo
+                                            relacionado con la tabulación de datos estadísticos, distribución de
+                                            frecuencias y tipos de gráficas y diagramas.</p>
+                                        <p style="text-align: justify;">Para el desarrollo de la
+                                            actividad puede consultar los recursos:</p>
+                                        <ul>
+                                            <li>Posada, G. (2016). Capítulo 3. Tabulación
+                                                de datos estadísticos. En: Elementos básicos de estadística descriptiva
+                                                para el análisis de datos. Fundación Universitaria Luis Amigó. Fondo
+                                                Editorial Luis Amigó. Medellín (pp. 34 -43).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 4. Distribución
+                                                de frecuencias. En: Elementos básicos de estadística descriptiva para el
+                                                análisis de datos. Fundación Universitaria Luis Amigó. Fondo Editorial
+                                                Luis Amigó. Medellín (pp. 44 -51).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Posada, G. (2016). Capítulo 5. Gráficas y
+                                                Diagramas. En: Elementos básicos de estadística descriptiva para el
+                                                análisis de datos. Fundación Universitaria Luis Amigó. Fondo Editorial
+                                                Luis Amigó. Medellín (pp. 52 - 63).<br><strong><a
+                                                        href="https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.funlam.edu.co/uploads/fondoeditorial/120_Ebook-elementos_basicos.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suarez. M. (2025). Capítulo 2. Tablas
+                                                estadísticas. En: Estadística descriptiva para todos: Fundamentos y
+                                                aplicaciones – Volumen I. (pp.52 – 69).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suarez. M. (2025). Capítulo 3. Distribución
+                                                de frecuencias. En: Estadística descriptiva para todos: Fundamentos y
+                                                aplicaciones – Volumen I. (pp.70 – 108).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Para la elaboración del organizador gráfico
+                                            puede realizarlo en plataformas como: Miro, Mindmeister, Canva, Genially,
+                                            Lucidchart, Creately, etc.</p>
+                                        <p style="text-align: justify;">Debe adjuntar directamente el cuadro sinóptico.
+                                        </p>
+                                        <p style="text-align: justify;">Evitar adjuntar enlaces donde se haya creado el
+                                            recurso ya que la mayoría de las veces solicitan acceso. En caso de
+                                            adjuntarlo y si no se logra su visualización se calificará teniendo en
+                                            cuenta los criterios de la <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Rubrica1_Estadistica_Descriptiva.pdf"
+                                                    target="_blank" rel="noopener">rúbrica de evaluación</a></strong>.
+                                        </p>
+                                        <p style="text-align: justify;">Las actividades 2, 3 y 4 se pueden realizar
+                                            utilizando Excel (Office) o el software Estadístico Infostat.</p>
+                                        <p style="text-align: justify;">Complemente su proceso de enseñanza aprendizaje
+                                            con el estudio de los recursos educativos Digitales RED, elaborados por el
+                                            experto disciplinar para el desarrollo de las actividades 2, 3 y 4.</p>
+                                        <ul>
+                                            <li><strong>Fundamentos de estadística</strong>.</li>
+                                            <div style="width: 100%;">
+                                                <div
+                                                    style="position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;">
+                                                    <iframe title="Unidad 2 – Fundamentos de Estadística"
+                                                        frameborder="0" width="1200" height="675"
+                                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                                        src="https://view.genially.com/68a650ff128549c9f84994d8"
+                                                        type="text/html" allowscriptaccess="always"
+                                                        allowfullscreen="true" scrolling="yes"
+                                                        allownetworking="all"></iframe>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <li><strong>Tablas de frecuencias</strong>.</li>
+                                            <div style="width: 100%;">
+                                                <div
+                                                    style="position: relative; padding-bottom: 56.25%; padding-top: 0; height: 0;">
+                                                    <iframe title="TABLAS DE FRECUENCIAS" frameborder="0" width="1200"
+                                                        height="675"
+                                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                                                        src="https://view.genially.com/68a751036ade5bbd81cf5c5a"
+                                                        type="text/html" allowscriptaccess="always"
+                                                        allowfullscreen="true" scrolling="yes"
+                                                        allownetworking="all"></iframe>
+                                                </div>
+                                            </div>
+                                        </ul>
+                                        <br>
+                                        <!-- FLAG: red-sin-archivo No hay archivo para "Presentación unidad 2 – Fundamentos de estadística" ni "Presentación Tablas de frecuencias" -->
+                                        <p style="text-align: justify;"><strong>Actividad 2: Caracterización de
+                                                Variables cualitativas tabla de frecuencias</strong></p>
+                                        <p style="text-align: justify;">Se sugiere revisar los
+                                            siguientes referentes para una mayor comprensión de la temática propuesta.
+                                        </p>
+                                        <ul>
+                                            <li>Martínez, C. (2013). Capítulo 2.
+                                                Distribuciones de frecuencia. En: Estadística y muestreo, 13a ed.
+                                                [Online] Bogotá: Ecoe Ediciones. (pp 43 – 89).<br><strong><a
+                                                        href="http://ies-booklick.s3.amazonaws.com/1626728222781-Estadistica-MuestreoCiro1-198.pdf"
+                                                        target="_blank"
+                                                        rel="noopener">http://ies-booklick.s3.amazonaws.com/1626728222781-Estadistica-MuestreoCiro1-198.pdf</a></strong>.
+                                            </li>
+                                            <br>
+                                            <li>Suarez. M. (2025). Capítulo 3. Distribución
+                                                de frecuencias. En: Estadística descriptiva para todos: Fundamentos y
+                                                aplicaciones – Volumen I. (pp.70 – 108).<br><strong><a
+                                                        href="https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I"
+                                                        target="_blank"
+                                                        rel="noopener">https://www.researchgate.net/publication/391908519_ESTADISTICA_DESCRIPTIVA_PARA_TODOS_FUNDAMENTOS_Y_APLICACIONES_VOLUMEN_I</a></strong>.
+                                            </li>
+                                            <br>
+                                        </ul>
+                                        <p style="text-align: justify;">Teniendo en cuenta el <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Anexo1_Base_de_datos.xlsx"
+                                                    target="_blank" rel="noopener">Anexo 1. Base de datos indicadores de
+                                                    accidentalidad vial en algunos departamentos de
+                                                    Colombia</a></strong> seleccione una variable cualitativa.</p>
+                                        <ul>
+                                            <li>Calcule la frecuencia absoluta, frecuencia
+                                                relativa y frecuencia porcentual de la variable cualitativa elegida y
+                                                reporte los valores en la tabla de frecuencias consignada en la
+                                                plantilla</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="semana5" role="tabpanel" aria-labelledby="semana5-tab">
+                                    <div class="card-body">
+                                        <p style="text-align: justify;">A través de su proceso de enseñanza -
+                                            aprendizaje y de la apropiación del conocimiento, enfoque su aprendizaje en
+                                            la actividad 3 y 4.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 3: Diagramas
+                                                estadísticos</strong></p>
+                                        <p style="text-align: justify;">Representar la información de la tabla de datos
+                                            realizada en la actividad 2 (variable vs frecuencia absoluta) por medio de
+                                            (diagrama de barras y diagrama circular).</p>
+                                        <p style="text-align: justify;">Posteriormente determine cuál es la moda de la
+                                            variable cualitativa.</p>
+                                        <p style="text-align: justify;">Realizar un análisis estadístico asociado con la
+                                            situación objeto de estudio en este caso <strong>indicadores de
+                                                accidentalidad vial
+                                                en algunos departamentos de Colombia.</strong></p>
+                                        <p style="text-align: justify;">El análisis debe ser coherente de acuerdo con
+                                            las gráficas realizadas y la moda.</p>
+                                        <p style="text-align: justify;">Copie y pegue las gráficas realizadas en Excel o
+                                            en el software estadístico de Infostat.</p>
+                                        <p style="text-align: justify;">Evite adjuntar enlaces de hojas de cálculo.
+                                            Deben presentarse directamente las imágenes de los diagramas estadísticos.
+                                            En caso de adjuntarlo y si no se logra su visualización se calificará
+                                            teniendo en cuenta los criterios de la <strong><a
+                                                    href="https://virtual.udes.edu.co/draftfile.php/7655/user/draft/174059511/Rubrica1_Estadistica_Descriptiva.pdf"
+                                                    target="_blank" rel="noopener">rúbrica de evaluación</a></strong>.
+                                        </p>
+                                        <p style="text-align: justify;"><strong>Actividad 4: Tabla de contingencia de
+                                                doble entrada</strong></p>
+                                        <p style="text-align: justify;">Realizar una tabla de contingencias o de doble
+                                            entrada, con dos variables cualitativas, las cuales usted considere podrían
+                                            estar relacionadas. (Representarla gráficamente) y realizar un análisis
+                                            asociado con la situación objeto de estudio en este caso <strong>indicadores
+                                                de
+                                                accidentalidad vial en algunos departamentos de Colombia</strong>.</p>
+                                        <p style="text-align: justify;">Puede emplear la misma variable que usó en las
+                                            actividades anteriores junto con otra variable de su preferencia o puede
+                                            escoger una variable distinta a la que seleccionó inicialmente lo importante
+                                            es analizar y establecer si existe alguna relación entre dos variables.</p>
+                                        <p style="text-align: justify;">Recuerde que las variables deben ser únicamente
+                                            de tipo cualitativo.</p>
+                                        <p style="text-align: justify;">Continúe su proceso de enseñanza - aprendizaje
+                                            con el desarrollo de la actividad 5.</p>
+                                        <p style="text-align: justify;"><strong>Actividad 5: Aplicaciones de la
+                                                estadística en la Ingeniería de software</strong></p>
+                                        <p style="text-align: justify;">Realice un video (de máximo 3 a 5 minutos),
+                                            subirlo a un canal como YouTube o similares (se sugiere publicar en modo
+                                            oculto); y compartir el enlace.</p>
+                                        <p style="text-align: justify;">El video debe presentarse teniendo en cuenta los
+                                            siguientes parámetros:</p>
+                                        <p style="text-align: justify;">Debe realizar su presentación personal (nombre,
+                                            edad, con quién vive, lugar de residencia, hobby o pasatiempos).</p>
+                                        <p style="text-align: justify;">Debe responder a la pregunta ¿Por qué es
+                                            importante aprender estadística descriptiva para su formación profesional
+                                            como futuro ingeniero de software o qué aplicaciones podría darle en su vida
+                                            cotidiana, académica o laboral?</p>
+                                        <p style="text-align: justify;">Puede emplear diapositivas o presentación con
+                                            las respuestas o las ideas que quiera expresar y puede acompañarla de
+                                            imágenes o fotografías.</p>
+                                        <p style="text-align: justify;">Debe compartir la pantalla en caso de tener una
+                                            presentación de apoyo y debe activarse la cámara durante todo el transcurso
+                                            de la presentación.</p>
+                                        <p style="text-align: justify;">Es importante tener en cuenta aspectos como
+                                            buena iluminación, sonido, presentación personal.</p>
+                                        <p style="text-align: justify;">Verificar que el enlace del video se pueda
+                                            visualizar correctamente y no solicite ningún tipo de permiso. </p>
+                                        <p style="text-align: justify;">Copiar el enlace del video.</p>
+                                        <p style="text-align: justify;">Realice la entrega del entregable en la
+                                            plataforma.</p>
+                                        <p style="text-align: justify;">Una vez realizada la calificación recuerde tener
+                                            en cuenta los comentarios de retroalimentación para los próximos
+                                            entregables.</p>
+                                        <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=3950">
+                                            <button type="button" class="btn btn-outline-primary btn-lg"
+                                                aria-pressed="true" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable 2
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

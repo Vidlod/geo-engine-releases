@@ -87,17 +87,21 @@ citas, "Producto Final" y uso del linter).
 4. **No duplicar recursos**: cada recurso bibliográfico/RED se lista UNA vez, debajo de
    la actividad que lo usa. Prohibido repetir una lista general al final de la semana.
 5. **Separación entre viñetas** (`</li><br><li>`, un solo `<br>`, nunca `<br><br>`):
-   - **Listas de texto numeradas** (ejercicios, preguntas `1) 2)` o `a. b.`): un `<br>`
-     entre cada ítem. Si llevan negrita, el marcador va DENTRO del `<strong>` de forma
-     consistente (`<strong>a. Título.</strong>`).
+   - **Listas NUMERADAS** (`1.`, `2.`, `1)`, `2)` — ejercicios, preguntas
+     orientadoras): se **mantienen como `<p>` con su número** (NO se vuelven viñetas
+     ni se les quita el número). La negrita es espejo del origen: no añadas `<strong>`
+     donde no lo hay. (Las **letras** `a. b. c.` sí se vuelven viñetas → regla 11.)
    - **Citas bibliográficas** y **grupos de RED** (viñetas con mucho texto / enlace):
      un `<br>` entre cada viñeta (los RED **siempre** separados).
    - **Listas cortas de una línea** (Portada/Introducción/Conclusiones): **sin** `<br>`.
    - El `<br>` va **entre** viñetas, nunca antes de `</ul>`/`</ol>` (ver reglas §6).
 6. **Párrafo de envío** al final de la pestaña, encima del botón — después de
    secciones adicionales como "Exposiciones orales". Al quitar "tablero de
-   anotaciones" la frase queda gramatical ("envíelo en formato PDF en las fechas
-   establecidas", no "a través de las fechas establecidas").
+   anotaciones" **también se elimina la especificación de formato** ("en formato PDF",
+   "en formato Word", "en formato Excel", etc.). La frase final es **siempre**:
+   `Envíe el documento en las fechas establecidas.`
+   Ejemplo: `envíelo en formato PDF a través del tablero de anotaciones en las fechas
+   establecidas` → `Envíe el documento en las fechas establecidas.`
 7. **Videos y diapositivas en video = RED** (ver reglas transversales §4). Varían por curso
    y suelen ser lo último en colocarse. Si no tienes las URLs, emite FLAG `dato-faltante`
    indicando **cuáles son y en qué semana/actividad van**; no inventes videos.
@@ -107,9 +111,22 @@ citas, "Producto Final" y uso del linter).
 10. **Secuencia de lectura** (reglas §16): cada lista va inmediatamente después de su
     párrafo anunciador (el que termina en `:`); no muevas bibliografía/RED al final
     de la pestaña ni dupliques párrafos anunciadores.
-11. **Listas de preguntas `a.`, `b.` con explicación**: un `<p>` por ítem, con
-    `<strong>marcador + pregunta</strong>` y la explicación en texto normal —
-    nunca bloques `<strong>` sueltos separados por `<br>`.
+11. **Listas con marcador de LETRA** (`a.`, `b.`, `c.`, `a)`, `A.`, `A)`, etc.)
+    → `<ul>` con un `<li>` por ítem, **QUITANDO la letra** (la viñeta la reemplaza),
+    igual que con los guiones (reglas §9). `a. Realice el diagrama...` →
+    `<li>Realice el diagrama...</li>`.
+    - **Negrita = espejo del origen.** Si el origen pone en negrita la etiqueta del
+      ítem —con la letra dentro (`<strong>b. Medidas de posición:</strong>`) o fuera
+      (`a. <strong>Tabla de frecuencia.</strong>`)— consérvala en negrita **sin la
+      letra**: `<li><strong>Medidas de posición:</strong> ...</li>`. Si el origen
+      **no** trae negrita, **no añadas ninguna**.
+    - Aunque el origen sea inconsistente (la `a.` fuera de la negrita y la `b.`/`c.`
+      dentro), el resultado queda uniforme: siempre quitas la letra y reflejas la
+      negrita que ya existía sobre la etiqueta.
+    - Ítems multilínea → un `<br>` entre cada `<li>`; ítems cortos de una línea →
+      consecutivos sin `<br>`.
+    - **NUNCA** conviertas estos ítems en bloques `<p><strong>` por tu cuenta:
+      mantenlos como viñetas reflejando exactamente la negrita del origen.
 12. **Correcciones tipográficas obligatorias** (reglas §17): negrita partida a media
     palabra, `¿` faltante, erratas evidentes ("Comprar"→"Comparar") y anglicismos del
     convertidor ("aspects", "explaining"). Repórtalas en lista `CORRECCIONES:` y nunca

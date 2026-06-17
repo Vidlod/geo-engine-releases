@@ -151,23 +151,23 @@
 
                     <!-- ─────────────────────────────────────────────────────
                          PESTAÑA 4: INSTRUMENTO PARA ENVIAR ENTREGABLE
-                         Un botón por cada avance del momento (sin punto final en estos botones).
+                         Un <div><a class="btn ..."> por cada avance (sin punto final en el texto).
                          ───────────────────────────────────────────────────── -->
                     <div class="tab-pane fade shadow rounded bg-white p-5"
                         id="v-pills-profile2" role="tabpanel" aria-labelledby="v-pills-profile2-tab">
                         <h4 class="mb-4">Instrumento para Enviar Entregable</h4>
-                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener">
-                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener" role="button">
                                 <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
-                            </button>
-                        </a>
+                            </a>
+                        </div>
                         <p></p>
-                        <a target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener">
-                            <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
+                        <div style="text-align: center;">
+                            <a class="btn btn-outline-primary btn-lg" target="_blank" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID_AVANCE_N]" rel="noopener" role="button">
                                 <span class="spinner-grow spinner-grow-sm"></span> Enviar Entregable Avance [N]
-                            </button>
-                        </a>
-                        <!-- Repite un <a><button> por cada avance adicional del momento.
+                            </a>
+                        </div>
+                        <!-- Repite un <div><a class="btn ..."> por cada avance adicional del momento.
                              El último avance del ÚLTIMO momento dice "Producto Final" en lugar de "Avance N". -->
                     </div>
 
@@ -276,10 +276,8 @@
                                         </ul>
                                         <p style="text-align: justify;">[Párrafo de envío: "Realice la entrega del entregable en la plataforma..."]</p>
                                         <div style="text-align: center;">
-                                            <a href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener">
-                                                <button type="button" class="btn btn-outline-primary btn-lg" aria-pressed="true" role="button">
-                                                    <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N]
-                                                </button>
+                                            <a class="btn btn-outline-primary btn-lg" href="https://virtual.udes.edu.co/mod/assign/view.php?id=[ID]" target="_blank" rel="noopener" role="button">
+                                                <span class="spinner-grow spinner-grow-sm"></span> Enviar Avance [N]
                                             </a>
                                         </div>
                                     </div>
