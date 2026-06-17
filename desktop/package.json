@@ -7,12 +7,15 @@
   "scripts": {
     "dev": "electron .",
     "build:web": "cd ../web && npm run build",
-    "prebuild:mac": "npm run build:web",
-    "prebuild:win": "npm run build:web",
+    "pandoc:mac": "node scripts/download-pandoc.js --platform darwin",
+    "pandoc:win": "node scripts/download-pandoc.js --platform win32",
+    "prebuild:mac": "npm run pandoc:mac && npm run build:web",
+    "prebuild:win": "npm run pandoc:win && npm run build:web",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
+    "prebuild:all": "npm run pandoc:mac && npm run pandoc:win && npm run build:web",
     "build:all": "electron-builder --mac --win",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps && node scripts/download-pandoc.js"
   },
   "devDependencies": {
     "electron": "^33.4.11",
