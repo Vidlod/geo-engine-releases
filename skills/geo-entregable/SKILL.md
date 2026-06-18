@@ -38,7 +38,9 @@ Si falta alguno, emite un FLAG `dato-faltante` y continúa con lo disponible.
    `<h5>Tipo de entregable: <span style="">Descripción...</span></h5><br>`
    No dupliques esta descripción dentro de "Forma de entrega".
 3. Dos pestañas:
-   - **"Forma de entrega"** (corrige si la plantilla dice "Formato de entrega").
+   - **"Forma de entrega"** — corrige SOLO el texto visible de la pestaña (el
+     `<a>` nav-link) si dice "Formato de entrega". Si esa frase aparece dentro
+     del cuerpo del contenido del insumo, se copia tal cual sin modificar.
    - **"Tenga en cuenta"**.
 
 ## Procedimiento
@@ -55,6 +57,10 @@ Si falta alguno, emite un FLAG `dato-faltante` y continúa con lo disponible.
 3. **Párrafo de envío:** el que indica la acción de entregar (p. ej. "Envíe el
    documento en formato PDF...") va como **último** párrafo de la pestaña, justo
    encima del botón de envío. Otros párrafos descriptivos van arriba.
+   **Cópialo EXACTAMENTE del insumo, sin modificar la especificación de formato.**
+   La regla §17.5 (eliminar "en formato [X]" al quitar "tablero de anotaciones")
+   **NO aplica en los entregables**: si el PDF dice "Entregue en el formato
+   suministrado", se copia tal cual.
 4. **Anexos / RED / citas:** formatéalos según `references/reglas-transversales.md`.
    Recuerda la **separación entre viñetas**: un `<br>` entre cada cita o RED (viñetas con
    mucho texto; los RED **siempre** separados), pero **sin** `<br>` en listas cortas de

@@ -20,18 +20,19 @@
   color: #212529;
 }
 
-.preview-container h1 { font-size: 2rem;   font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h2 { font-size: 1.75rem; font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h3 { font-size: 1.5rem;  font-weight: 500; margin-bottom: 0.5rem; color: #3b71ca; }
-.preview-container h4 { font-size: 1.25rem; font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h5 { font-size: 1.1rem;  font-weight: 500; margin-bottom: 0.5rem; }
-.preview-container h6 { font-size: 1rem;    font-weight: 500; margin-bottom: 0.5rem; }
+.preview-container h1 { font-size: 2em;    font-weight: 500; margin-bottom: 0.5em; }
+.preview-container h2 { font-size: 1.75em; font-weight: 500; margin-bottom: 0.5em; }
+.preview-container h3 { font-size: 1.5em;  font-weight: 500; margin-bottom: 0.5em; color: #3b71ca; }
+.preview-container h4 { font-size: 1.25em; font-weight: 500; margin-bottom: 0.5em; }
+.preview-container h5 { font-size: 1.1em;  font-weight: 500; margin-bottom: 0.5em; }
+.preview-container h6 { font-size: 1em;    font-weight: 500; margin-bottom: 0.5em; }
 
 .preview-container p {
-  /* Bootstrap 4 / Moodle Boost: los <p> SÍ llevan margin-bottom: 1rem.
-     (Por eso dos párrafos seguidos se ven separados en Moodle.) */
+  /* Moodle Boost: párrafos con margin-bottom proporcional al font-size del
+     preview (14 px). Usamos em —no rem— para que 1em = 14 px aquí, igual
+     que en el área de contenido de Moodle cuando usa 14 px de base. */
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 1em;
 }
 
 .preview-container a {
@@ -50,12 +51,67 @@
 
 .preview-container ul, .preview-container ol {
   margin-top: 0;
-  margin-bottom: 1rem;
-  padding-left: 2rem;
+  margin-bottom: 1em;   /* em = 14 px, igual que Moodle con base 14 px */
+  padding-left: 2em;
 }
 
 .preview-container li {
   margin-bottom: 0;
+}
+
+/* ── <br> — rendering fiel a Moodle ───────────────────────────────────
+   Dos comportamientos distintos según contexto:
+
+   A) <br> dentro de un bloque (p, li, td…): salto de línea inline estándar.
+      El navegador lo maneja bien por defecto.
+
+   B) <br> entre elementos de bloque (hermano de <ul>, <p>, <div>…):
+      el navegador crea un "line-box anónimo" que puede colapsar a 0 cuando
+      no hay texto inline adyacente (caso frecuente tras error-recovery del
+      parser con <div> dentro de <ul>). Forzamos display:block + height
+      explícito para que siempre muestre el salto visible.
+
+   C) <br> hijo directo de <ul>/<ol> (patrón "lista pesada" de Moodle):
+      produce un espacio entre viñetas equivalente a una línea.
+*/
+
+/* Caso B — <br> entre bloques: forzar línea visible */
+.preview-container br {
+  display: block;
+  height: 1.5em;     /* = 21 px — una línea de contenido */
+  overflow: hidden;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Caso A — <br> dentro de contenido inline: restaurar comportamiento nativo */
+.preview-container p br,
+.preview-container li br,
+.preview-container td br,
+.preview-container th br,
+.preview-container h1 br,
+.preview-container h2 br,
+.preview-container h3 br,
+.preview-container h4 br,
+.preview-container h5 br,
+.preview-container h6 br {
+  display: inline;
+  height: auto;
+  overflow: visible;
+  line-height: inherit;
+}
+
+/* Caso C — <br> hijo directo de <ul>/<ol> (entre o después de <li>):
+   normalizar a exactamente 1 línea para consistencia entre secciones */
+.preview-container ul > br,
+.preview-container ol > br {
+  display: block;
+  height: 1.5em;
+  overflow: hidden;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .preview-container img {

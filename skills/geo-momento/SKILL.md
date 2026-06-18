@@ -46,10 +46,21 @@ citas, "Producto Final" y uso del linter).
    - **Caso B (avance + cuestionario en la AAA)**: dos filas por avance; "Duración
      Semana" y "Semana de Entrega" se fusionan con `rowspan="2"`. No repitas la
      misma semana en filas separadas.
-   - **Negrita solo en el nombre del avance**, NO en toda la celda:
-     `<strong>Avance 1. Recolección de datos:</strong> Informe con la elaboración...`
-     (el nombre con dos puntos `:` en negrita; la descripción en texto normal).
-     La fila del cuestionario sí va completa en `<strong>`.
+   - **La negrita de esta tabla es un ESPEJO EXACTO del AAA — no la inventes ni la
+     extiendas.** El AAA pone en negrita SOLO la etiqueta del entregable
+     (`<strong>Avance 1</strong>`, `<strong>Producto final.</strong>`) o la del
+     cuestionario hasta su guion (`<strong>Cuestionario de evaluación –</strong>`).
+     El nombre del entregable y toda su descripción van en **texto normal**. La fila
+     del cuestionario **NO** va completa en negrita: solo su etiqueta.
+     - ✅ `<strong>Avance 1.</strong> Recolección de datos - Informe con la elaboración...`
+     - ✅ `<strong>Cuestionario de evaluación –</strong> Unidad 1 - Investigación estadística`
+     - ❌ `<strong>Avance 1. Recolección de datos:</strong> Informe...` (negrita extendida
+       al nombre del entregable + dos puntos inventados que el AAA no trae)
+     - ❌ `<strong>Cuestionario de evaluación - Unidad 2 – Fundamentos de Estadística</strong>`
+       (toda la celda en negrita)
+     - Respeta el separador del AAA (`–`/`-`): no lo cambies por `:`. Si el AAA escribe
+       `<strong>Avance 1</strong>. Recolección...`, puedes mover el punto dentro de la
+       negrita (`<strong>Avance 1.</strong>`) pero **nunca** absorber el nombre del entregable.
 2. **Pestañas de contenido: una pestaña por SEMANA individual.** Cada semana tiene su
    propia pestaña, con el nombre de la semana y el número de su Avance en el subtítulo,
    p. ej. `Semana 1 / Avance 1`, `Semana 2 / Avance 1`, `Semana 3 / Avance 1`,
@@ -71,6 +82,26 @@ citas, "Producto Final" y uso del linter).
 
 4. **Pestaña "Instrumento para Enviar Entregable"**: tantos botones como avances tenga
    el momento (p. ej. Momento con 3 avances → 3 botones).
+5. **Pestaña "Descripción General" — de QUÉ tabla del AAA sale.** Por cada momento, el
+   AAA suele traer **dos** tablas seguidas y hay que elegir bien la fuente:
+   - **Tabla de "reporte de avance(s)"** (título tipo *"Primer reporte de avance (1 y 2)
+     – 40%"*, de una sola columna): trae el rótulo `Descripción general:`, la **situación
+     hipotética**, las condiciones formales (Portada, Introducción…) y enlaces como
+     Infostat. ⚠️ **Esta tabla NO alimenta la pestaña** cuando existe la siguiente.
+   - **Tabla de "Entregables del avance N…"** (título tipo *"Entregables del avance 1 y 2"*,
+     multicolumna, la que precede a las filas `Semana | Secuencia | Recursos Educativos`):
+     **ESTA es la fuente de "Descripción General".** Vuelca sus párrafos introductorios
+     (`En este [primer/segundo] reporte de avances…`, desarrollo individual/grupal,
+     `SABER:`/`SER:`/`HACER:`, `Los N entregables… equivalen al X%…`). La fila
+     **"Condiciones particulares de entrega"** se convierte en un `<h4>Condiciones
+     Particulares de Entrega</h4>` con su texto, dentro de la misma pestaña.
+   - **Regla de selección**: usa SIEMPRE la tabla "Entregables del avance…". Recurre a la
+     de "reporte de avance" **solo si la de "Entregables" no existe** en ese momento.
+     Los títulos varían por curso → identifícalas por su rol (la multicolumna que precede
+     a las semanas es la buena), no por el texto exacto.
+   - **No mezcles**: la situación hipotética y las condiciones formales (Portada,
+     Introducción, Justificación…) de la tabla de "reporte de avance" **no van** en la
+     Descripción General cuando usas la tabla de "Entregables".
 
 ## Reglas de criterio / formato
 
@@ -84,8 +115,13 @@ citas, "Producto Final" y uso del linter).
    según los rangos de la AAA del curso. Ejemplo (Estadística): semanas 3 / 5 / 7 / 9 / 12
    (Avance 1: 1-3, Avance 2: 4-5, Avance 3: 6-7, Avance 4: 8-9, Producto Final: 10-12).
    Los rangos varían por curso → tómalos de `config/course.yaml` o de la AAA.
-4. **No duplicar recursos**: cada recurso bibliográfico/RED se lista UNA vez, debajo de
-   la actividad que lo usa. Prohibido repetir una lista general al final de la semana.
+4. **No duplicar recursos — un RED aparece UNA sola vez** (reglas §12-C): si el AAA lo
+   nombra en una frase corrida (syllabus, rúbrica, mapa, infografía, **foro social**…),
+   va como **enlace inline** ahí mismo y NO se repite en viñeta abajo. Si el AAA lo
+   anuncia aparte (*"…recursos educativos Digitales RED…:"* + título), va en su **viñeta**.
+   **Videos y presentaciones SIEMPRE en viñeta abajo** con su caja (iframe/responsiva),
+   nunca inline. Prohibido nombrar un recurso inline y además listarlo abajo, o repetir
+   una lista general al final de la semana.
 5. **Separación entre viñetas** (`</li><br><li>`, un solo `<br>`, nunca `<br><br>`):
    - **Listas NUMERADAS** (`1.`, `2.`, `1)`, `2)` — ejercicios, preguntas
      orientadoras): se **mantienen como `<p>` con su número** (NO se vuelven viñetas
@@ -142,7 +178,9 @@ citas, "Producto Final" y uso del linter).
 
 ## Reglas de parada (detener e informar al usuario)
 
-- **Foro** mencionado en el texto → solicitar enlace `mod/forum/view.php?id=...`.
+- **Foro** mencionado en el texto → **NO es regla de parada**: es un RED. Enlázalo inline
+  (`mod/forum/view.php?id=...`) y, si falta el id, deja el marcador + FLAG `dato-faltante`
+  y continúa (reglas §18). Nunca lo dejes como texto plano.
 - **Inconsistencia entre insumos** (PDF vs Word) → reportar; la autoridad es Syllabus/AAA.
 - **Enlace externo caído** → FLAG `enlace-roto`; buscar reemplazo o reportar.
 
@@ -150,6 +188,15 @@ citas, "Producto Final" y uso del linter).
 
 - [ ] Tabla de Resumen con las filas EXACTAS de la AAA (sin cuestionarios inventados);
       `rowspan` según el caso (A: solo Momento; B: Momento + Duración/Semana).
+- [ ] **Negrita del Resumen = espejo del AAA**: solo la etiqueta (`<strong>Avance N.</strong>`,
+      `<strong>Cuestionario de evaluación –</strong>`); nunca el nombre/descripción del
+      entregable ni la fila del cuestionario completa; separador `–`/`-` sin cambiar a `:`.
+- [ ] **Descripción General** tomada de la tabla "Entregables del avance N…" (no de la de
+      "reporte de avance — X%"); incluye SABER/SER/HACER y `<h4>Condiciones Particulares
+      de Entrega</h4>`; sin la situación hipotética ni las condiciones formales.
+- [ ] **Sin RED duplicados**: cada recurso una sola vez — inline si la prosa lo nombra,
+      viñeta si es anuncio dedicado; video/presentaciones en viñeta con su caja.
+- [ ] **Foros enlazados inline** (`mod/forum/view.php?id=…`) con FLAG si falta id; nunca texto plano.
 - [ ] **Una pestaña por semana individual** (nunca fusionada), con `Semana N` y subtítulo `Avance N`.
 - [ ] Botón de envío en la última semana de cada avance (`Enviar Entregable N`);
       **texto SIN punto final**; sin `<br>` antes del `<div>`.

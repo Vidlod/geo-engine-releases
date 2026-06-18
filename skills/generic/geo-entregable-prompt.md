@@ -79,7 +79,9 @@ tomada de la columna "Nombre del entregable" de la tabla de la AAA:
 - Esta descripción **NO se duplica** dentro de la pestaña "Forma de entrega".
 
 ### 3.3 Pestañas
-- Pestaña 1: **"Forma de entrega"** (si la plantilla dice "Formato de entrega" → corrígelo).
+- Pestaña 1: **"Forma de entrega"** — corrige SOLO el texto visible de la pestaña
+  (el `<a>` nav-link) si dice "Formato de entrega". Si esa frase aparece dentro
+  del cuerpo del contenido del insumo, se copia tal cual sin modificar.
 - Pestaña 2: **"Tenga en cuenta"**.
 - El contenido de cada pestaña se toma del documento fuente tal como está.
 
@@ -117,6 +119,10 @@ aparece textualmente en el PDF de ESE entregable. Si no aparece, no la pongas.
 El párrafo que indica la acción de entregar (ej. "Envíe el documento en formato PDF
 en las fechas establecidas.") va como **último párrafo del cuerpo de texto** de la
 pestaña, justo encima del botón. Cualquier otro párrafo descriptivo va arriba de este.
+
+> ⚠️ **Cópialo EXACTAMENTE del insumo, sin modificar la especificación de formato.**
+> La regla de eliminar "en formato [X]" aplica SOLO en los Momentos, NO aquí.
+> Si el PDF dice "Entregue en el formato suministrado", eso es lo que va en el HTML.
 
 ### 5.2 Botón de envío
 Formato estándar centrado, con el texto del botón **SIN punto final**:

@@ -16,7 +16,7 @@
   color: #212529;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.6;
+  /* line-height defined in moodle.css (1.5) — do not redeclare here */
 }
 
 /* ── Editable Text Nodes ── */

@@ -331,9 +331,32 @@ Libros/artículos de terceros (Posada 2016, Martínez 2013, etc.) con su URL ext
 - Viñeta `<li>` con la cita en **texto plano** (conserva autor-año) + el enlace externo
   visible en negrita debajo, separado por `<br>` (sección 5).
 
+### C) ¿Enlace INLINE o viñeta abajo? Un RED aparece UNA sola vez
+
+El error más común es nombrar un RED en un párrafo **y además** repetirlo en una viñeta
+debajo. **Un mismo recurso se coloca una sola vez.** Dónde, depende de cómo lo presenta el AAA:
+
+1. **Nombrado dentro de una frase corrida** (el párrafo habla de él: *"Inicie su proceso
+   académico, revisando el syllabus… la rúbrica… el mapa conceptual…"*) → conviértelo en
+   **enlace inline** justo ahí: `revisando el <strong><a href="@@PLUGINFILE@@/Syllabus.pdf"
+   target="_blank" rel="noopener">syllabus</a></strong>`. **No** lo repitas en una viñeta abajo.
+2. **Introducido como RED dedicado** (el AAA usa el anunciador *"Complemente su proceso…
+   con el estudio de los recursos educativos Digitales RED… :"* y a continuación el título
+   del recurso en su propia línea) → va en su **viñeta `<li>` debajo** del anunciador.
+3. **Videos y presentaciones/diapositivas SIEMPRE van en viñeta abajo** (nunca inline),
+   porque se muestran con una **caja especial** (iframe de YouTube/Genially o caja
+   responsiva) que no puede vivir dentro de un párrafo. Si además se nombran en la prosa,
+   la mención en el párrafo queda como **texto** (sin enlace) y la caja va abajo: no
+   dupliques. Es la excepción a la regla 1.
+
+> Regla mental: documentos (syllabus, rúbrica, mapa, infografía, anexo) nombrados en la
+> prosa → enlace inline; RED anunciados aparte → viñeta; video/presentación → viñeta con
+> su caja. Nunca inline **y** viñeta a la vez.
+
 ### Reglas comunes
 - Las viñetas de RED y de citas pueden convivir en la misma `<ul>` (como en la referencia).
-- **No dupliques** un recurso ya listado en su actividad (primer uso).
+- **No dupliques** un recurso ya listado en su actividad (primer uso): ni dos viñetas
+  iguales, ni una mención inline + una viñeta del mismo recurso.
 
 ## 13. Verificación de enlaces externos caídos
 
@@ -394,6 +417,10 @@ defectos evidentes del origen y **reporta cada cambio**:
    establecidas` → `Envíe el documento en las fechas establecidas.`
    La frase final es **siempre** "Envíe el documento en las fechas establecidas."
    independientemente del formato que mencionara el original.
+   > ⚠️ **Esta regla aplica SOLO en los Momentos (`geo-momento`).** En los
+   > **Entregables (`geo-entregable`)**, el párrafo de envío se copia
+   > **exactamente** del insumo sin modificar la especificación de formato.
+   > Si el PDF dice "Entregue en el formato suministrado", se copia tal cual.
 
 Al final del trabajo entrega, junto a los FLAGS, la lista `CORRECCIONES:` con cada
 cambio (`origen → corregido`, indicando semana/pestaña). Cualquier otra duda de
@@ -401,8 +428,13 @@ redacción **NO se corrige**: FLAG `ubicacion` o `dato-faltante`.
 
 ## 18. Foros
 
-- Siempre que el texto haga referencia a cualquier tipo de **foro** (social, punto de
-  encuentro, presentación, etc.): **detente e informa al usuario** para que proporcione
-  el enlace de Moodle (`mod/forum/view.php?id=...`).
-- No avances sin el enlace: emite FLAG `dato-faltante` con la descripción del foro y
-  continúa con el resto del contenido.
+- Un **foro** (foro social, foro punto de encuentro, foro de presentación, etc.) es **un
+  RED** y se trata como tal: cuando el texto lo nombra dentro de una frase, conviértelo en
+  **enlace inline** sobre el nombre del foro, igual que el syllabus o la rúbrica (§12-C-1):
+  ```html
+  …participar e interactuar a través del <strong><a href="https://virtual.udes.edu.co/mod/forum/view.php?id=ID" target="_blank" rel="noopener">foro social</a></strong> para que…
+  ```
+- **Nunca lo dejes como texto plano.** Si no conoces el `id` del foro, deja igualmente el
+  enlace con un marcador (`view.php?id=`) y **emite FLAG `dato-faltante`** describiendo qué
+  foro es y en qué semana va. Continúa con el resto del contenido (degradación elegante, §1).
+- No detengas todo el procesamiento por un foro sin enlace: basta el FLAG.

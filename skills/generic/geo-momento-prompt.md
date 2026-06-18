@@ -99,6 +99,25 @@ Un Momento Evaluativo contiene en orden:
 4. Pestaña "Instrumento para Enviar Entregable"
 ```
 
+### De QUÉ tabla del AAA sale la "Descripción General"
+
+Cada momento suele traer **dos** tablas seguidas en la AAA. Elige bien la fuente:
+
+- **Tabla de "reporte de avance(s)"** (título tipo *"Primer reporte de avance (1 y 2) – 40%"*,
+  una sola columna): trae el rótulo `Descripción general:`, la **situación hipotética**,
+  las condiciones formales (Portada, Introducción…) y enlaces tipo Infostat.
+  ⚠️ **NO uses esta tabla** para la pestaña cuando exista la siguiente.
+- **Tabla de "Entregables del avance N…"** (multicolumna, la que precede a las filas
+  `Semana | Secuencia | Recursos Educativos`): **ESTA es la fuente.** Vuelca sus párrafos
+  introductorios (`En este [primer/segundo] reporte de avances…`, desarrollo
+  individual/grupal, `SABER:`/`SER:`/`HACER:`, `Los N entregables… equivalen al X%…`). La
+  fila **"Condiciones particulares de entrega"** → `<h4>Condiciones Particulares de
+  Entrega</h4>` dentro de la misma pestaña.
+- **Selección**: usa siempre la de "Entregables del avance…"; recurre a la de "reporte de
+  avance" **solo si la otra no existe**. Los títulos varían por curso: identifícalas por su
+  rol (la multicolumna que precede a las semanas es la buena). **No mezcles** la situación
+  hipotética ni las condiciones formales en la Descripción General.
+
 ---
 
 ## ═══ PARTE 4 — TABLA DE RESUMEN DE ENTREGAS ═══
@@ -138,14 +157,14 @@ filas usando `rowspan="2"`. **Nunca repitas** la misma semana en filas separadas
 <tr>
     <td rowspan="2" style="vertical-align: middle; text-align: center;">1 - 3</td>
     <td style="text-align: left; vertical-align: middle;">
-        <strong>Avance 1. Nombre del avance:</strong> Descripción del avance.
+        <strong>Avance 1.</strong> Nombre del avance - Descripción del avance.
     </td>
     <td style="vertical-align: middle; text-align: center;">10%</td>
     <td rowspan="2" style="vertical-align: middle; text-align: center;">3</td>
 </tr>
 <tr>
     <td style="text-align: left; vertical-align: middle;">
-        <strong>Cuestionario de evaluación – Unidad 1 - Nombre de unidad</strong>
+        <strong>Cuestionario de evaluación –</strong> Unidad 1 - Nombre de unidad
     </td>
     <td style="vertical-align: middle; text-align: center;">10%</td>
 </tr>
@@ -161,11 +180,21 @@ del momento usando `rowspan` igual al **número total de filas reales** de la ta
 <td rowspan="2" style="vertical-align: middle; text-align: center;">I <br> 40%</td>
 ```
 
-### 4.3 Negrita: solo el nombre del avance
-En la fila del avance, **solo** `<strong>Avance N. Nombre:</strong>` va en negrita (con
-dos puntos `:`); la descripción va en texto normal. **No** pongas toda la celda en
-negrita ni uses guion "–" en lugar de los dos puntos. La fila del cuestionario sí va
-completa en `<strong>`.
+### 4.3 Negrita: ESPEJO EXACTO del AAA (no la inventes ni la extiendas)
+La negrita de esta tabla refleja **solo** lo que el AAA ya trae en negrita: la **etiqueta**
+del entregable (`<strong>Avance 1</strong>` / `<strong>Producto final.</strong>`) o la del
+cuestionario hasta su guion (`<strong>Cuestionario de evaluación –</strong>`). El nombre
+del entregable y su descripción van en **texto normal**.
+
+- ✅ `<strong>Avance 1.</strong> Recolección de datos - Informe con la elaboración…`
+- ✅ `<strong>Cuestionario de evaluación –</strong> Unidad 1 - Investigación estadística`
+- ❌ `<strong>Avance 1. Recolección de datos:</strong> Informe…` (negrita extendida al
+  nombre + dos puntos inventados)
+- ❌ poner la fila del cuestionario **completa** en `<strong>`
+
+**Respeta el separador del AAA** (`–` / `-`): NO lo cambies por `:`. Puedes mover el punto
+dentro de la negrita (`<strong>Avance 1.</strong>`), pero nunca absorber el nombre del
+entregable. La fila del cuestionario **NO** va completa en negrita: solo su etiqueta.
 
 ### 4.4 Datos de la tabla
 Tómalos íntegramente de la AAA: nombres de avances, descripciones, pesos porcentuales,
@@ -234,11 +263,24 @@ Cada semana tiene su propio panel `tab-pane`.
   **SIEMPRE de último**, justo encima del botón — después de cualquier sección
   adicional como "Exposiciones orales".
 
-### 6.3 No duplicar recursos
+### 6.3 No duplicar recursos — un RED aparece UNA sola vez
 
-Cada recurso (bibliográfico o RED) se lista **una única vez**, justo debajo de la
-actividad que lo usa. **Prohibido** repetir una lista general de recursos al final
-de la pestaña semanal.
+Cada recurso (bibliográfico o RED) se coloca **una única vez**. El error más común es
+nombrarlo en un párrafo **y además** repetirlo en una viñeta abajo. Dónde va depende de
+cómo lo presenta la AAA:
+
+1. **Nombrado en una frase corrida** (syllabus, rúbrica, mapa, infografía, **foro social**…,
+   p. ej. *"Inicie su proceso académico, revisando el syllabus… la rúbrica… el mapa
+   conceptual…"*) → **enlace inline** ahí mismo (`<strong><a href="…">syllabus</a></strong>`).
+   **No** lo repitas en viñeta abajo.
+2. **Anunciado como RED dedicado** (*"Complemente su proceso… con… los recursos educativos
+   Digitales RED…:"* + el título en su propia línea) → su **viñeta `<li>`** debajo.
+3. **Videos y presentaciones/diapositivas SIEMPRE en viñeta abajo** con su caja
+   (iframe/responsiva), nunca inline — aunque la prosa los nombre. La mención en el
+   párrafo queda como texto (sin enlace) y la caja va abajo.
+
+**Prohibido**: nombrar un recurso inline **y** listarlo abajo, o repetir una lista general
+de recursos al final de la pestaña.
 
 ### 6.4 Títulos de actividades
 
@@ -524,13 +566,18 @@ Si detectas contradicciones entre PDF y Word (créditos, ponderaciones, semanas,
 estructura de actividades): la **autoridad es el Syllabus y la AAA**.
 Informa al usuario de la discrepancia concreta y espera instrucciones.
 
-### 15.2 Foros
-Cada vez que el texto mencione un **foro** (social, punto de encuentro, de
-presentación, etc.): inserta FLAG y notifica:
+### 15.2 Foros — NO es regla de parada: es un RED
+Un **foro** (social, punto de encuentro, de presentación, etc.) es un RED. Cuando el
+texto lo nombre dentro de una frase, conviértelo en **enlace inline** sobre el nombre del
+foro (igual que el syllabus o la rúbrica):
+```html
+…interactuar a través del <strong><a href="https://virtual.udes.edu.co/mod/forum/view.php?id=ID" target="_blank" rel="noopener">foro social</a></strong> para que…
+```
+**Nunca lo dejes como texto plano.** Si no conoces el `id`, deja el enlace con marcador
+(`view.php?id=`) e inserta el FLAG; continúa con el resto (no detengas el procesamiento):
 ```html
 <!-- FLAG: dato-faltante Enlace Moodle del "[nombre del foro]" (mod/forum/view.php?id=...) -->
 ```
-No avances sin el enlace.
 
 ### 15.3 Verificación de enlaces externos
 Antes de entregar el HTML final, verifica que los enlaces bibliográficos externos
@@ -548,10 +595,18 @@ Antes de entregar el HTML verifica:
       ni pesos 0%; `rowspan="2"` solo si la AAA trae el par avance/cuestionario.
 - [ ] Sin cuestionarios: nada de `rowspan` en "Duración Semana" / "Semana de Entrega".
 - [ ] Primera columna del Momento con `rowspan` = nº total de filas reales.
-- [ ] Tabla: negrita solo en `Avance N. Nombre:` (con `:`), descripción normal.
+- [ ] Tabla: negrita = **espejo del AAA** — solo la etiqueta (`<strong>Avance N.</strong>`,
+      `<strong>Cuestionario de evaluación –</strong>`); NUNCA el nombre/descripción del
+      entregable ni la fila del cuestionario completa; separador `–`/`-` sin cambiar a `:`.
+- [ ] **Descripción General** tomada de la tabla "Entregables del avance N…" (con
+      SABER/SER/HACER y `<h4>Condiciones Particulares de Entrega</h4>`), NO de la de
+      "reporte de avance — X%" (sin situación hipotética ni condiciones formales).
 - [ ] **Una pestaña por SEMANA individual** (nunca fusionada por rango), con subtítulo del Avance.
 - [ ] Actividades tituladas `Actividad N: Nombre` (numeración continua por avance, sin "Título de la actividad").
-- [ ] Recursos listados una sola vez debajo de su actividad (sin duplicar al final).
+- [ ] **Cada RED una sola vez**: inline si la prosa lo nombra (syllabus, rúbrica, mapa,
+      foro), viñeta si es anuncio dedicado; video/presentaciones en viñeta con su caja.
+      Sin mención inline + viñeta del mismo recurso, ni lista general al final.
+- [ ] **Foros enlazados inline** (`mod/forum/view.php?id=…`) con FLAG si falta id; nunca texto plano.
 - [ ] Botón de envío al final de la última semana de cada avance; **texto SIN punto final**.
 - [ ] Sin `<br>` ni `<p></p>` vacío antes del `<div>` del botón (el `<p>` ya separa).
 - [ ] Sin `margin-bottom` en ningún lado; máximo un `<br>` (nunca `<br><br>`).
@@ -579,7 +634,7 @@ Antes de entregar el HTML verifica:
 - [ ] Ningún `¿`/`¡` del origen perdido en la transcripción.
 - [ ] Botones semanales `Enviar Entregable N`; pestaña Instrumento `Enviar Entregable Avance N`.
 - [ ] Nombres de archivo reales o FLAG `dato-faltante` (nunca inventados).
-- [ ] Foros: FLAG `dato-faltante` con enlace pendiente (no avanzar sin él).
+- [ ] Foros: enlazados inline (`mod/forum/view.php?id=…`) con FLAG `dato-faltante` si falta id; nunca texto plano.
 - [ ] Inconsistencias PDF/Word: reportadas al usuario, no corregidas de forma autónoma.
 - [ ] Enlace proxy eLibro con guion (`elibro-net.ezproxy`); enlaces externos verificados.
 - [ ] Lista de FLAGS entregada al final.
@@ -668,13 +723,13 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                     <tr>
                                         <td rowspan="2" style="vertical-align: middle; text-align: center;">[I/II] <br>[X]%</td>
                                         <td style="vertical-align: middle; text-align: center;">[X - Y]</td>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N.]</strong> [Nombre] - [Descripción AAA.]</td>
                                         <td style="vertical-align: middle; text-align: center;">[X]%</td>
                                         <td style="vertical-align: middle; text-align: center;">[N]</td>
                                     </tr>
                                     <tr>
                                         <td style="vertical-align: middle; text-align: center;">[X - Y]</td>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N.]</strong> [Nombre] - [Descripción AAA.]</td>
                                         <td style="vertical-align: middle; text-align: center;">[X]%</td>
                                         <td style="vertical-align: middle; text-align: center;">[N]</td>
                                     </tr>
@@ -683,12 +738,12 @@ contenido real del curso. No cambies ningún `class`, `id`, `role`, `aria-*` ni
                                     <tr>
                                         <td rowspan="4" style="vertical-align: middle; text-align: center;">[I/II] <br>[X]%</td>
                                         <td rowspan="2" style="vertical-align: middle; text-align: center;">[X - Y]</td>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N. Nombre:]</strong> [Descripción AAA.]</td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Avance N.]</strong> [Nombre] - [Descripción AAA.]</td>
                                         <td style="vertical-align: middle; text-align: center;">[X]%</td>
                                         <td rowspan="2" style="vertical-align: middle; text-align: center;">[N]</td>
                                     </tr>
                                     <tr>
-                                        <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación – Unidad N - Nombre]</strong></td>
+                                        <td style="text-align: left; vertical-align: middle;"><strong>[Cuestionario de evaluación –]</strong> [Unidad N - Nombre]</td>
                                         <td style="vertical-align: middle; text-align: center;">[X]%</td>
                                     </tr>
                                     -->
