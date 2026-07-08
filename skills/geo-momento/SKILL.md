@@ -40,6 +40,10 @@ citas, "Producto Final" y uso del linter).
 1. **Resumen de Entregas** (tabla): las filas son **exactamente** las de la tabla
    resumen de la AAA. **Prohibido inventar filas**: si la AAA solo lista avances,
    NO se agregan filas de "Cuestionario de evaluación" (ni con peso 0%).
+   - **Encabezados fijos — no modificar**: la tabla tiene SIEMPRE exactamente 5
+     columnas `<th>` en este orden y con este texto exacto:
+     `Momento Evaluativo` | `Duración Semana` | `Entregable` | `Peso %` | `Semana de Entrega`.
+     Nunca renombres, reordenes ni agregues columnas.
    - **Caso A (solo avances)**: una fila por avance, SIN `rowspan` en "Duración
      Semana" / "Semana de Entrega"; el único `rowspan` es el de la columna del
      Momento (= nº de avances).

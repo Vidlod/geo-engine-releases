@@ -22,9 +22,9 @@
                 <div class="nav flex-column nav-pills nav-pills-custom" id="v-pills-tab"
                     role="tablist" aria-orientation="vertical">
 
-                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-home-tab"
+                    <a class="nav-link mb-3 p-3 shadow border active" id="v-pills-home-tab"
                         data-toggle="pill" href="#v-pills-home" role="tab"
-                        aria-controls="v-pills-home" aria-selected="false" tabindex="-1">
+                        aria-controls="v-pills-home" aria-selected="true" tabindex="-1">
                         <i class="fa fa-calendar-check-o mr-2"></i>
                         <span class="font-weight-bold small text-uppercase">RESUMEN DE ENTREGAS</span>
                     </a>
@@ -51,11 +51,10 @@
                     </a>
 
                     <!-- TÍTULO DE LA ÚLTIMA PESTAÑA: "CONTENIDO DE LOS ENTREGABLES X Y Z"
-                         Ajusta los números según los avances del momento. Esta pestaña
-                         es la activa por defecto (active, aria-selected="true", tabindex="0") -->
-                    <a class="nav-link mb-3 p-3 shadow border active" id="v-pills-settings-tab"
+                         Ajusta los números según los avances del momento. -->
+                    <a class="nav-link mb-3 p-3 shadow border" id="v-pills-settings-tab"
                         data-toggle="pill" href="#v-pills-settings" role="tab"
-                        aria-controls="v-pills-settings" aria-selected="true" tabindex="0">
+                        aria-controls="v-pills-settings" aria-selected="false" tabindex="0">
                         <i class="fa fa-pencil-square-o mr-2"></i>
                         <span class="font-weight-bold small text-uppercase">CONTENIDO DE LOS ENTREGABLES [N] Y [N]</span>
                     </a>
@@ -72,12 +71,14 @@
                     <!-- ─────────────────────────────────────────────────────
                          PESTAÑA 1: RESUMEN DE ENTREGAS
                          ───────────────────────────────────────────────────── -->
-                    <div class="tab-pane fade shadow rounded bg-white p-5"
+                    <div class="tab-pane fade shadow rounded bg-white p-5 active show"
                         id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
                         <h4 class="mb-4">Resumen de Entregas</h4>
                         <div style="text-align: center;">
                             <table class="table table-bordered">
                                 <tbody>
+                                    <!-- ⚠️ ENCABEZADOS FIJOS — NUNCA modificar, renombrar ni agregar columnas.
+                                         Siempre son exactamente estas 5 celdas <th>, en este orden y con este texto. -->
                                     <tr>
                                         <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Momento Evaluativo</th>
                                         <th bgcolor="#F9F9F9" style="vertical-align: middle; text-align: center;">Duración Semana</th>
@@ -175,10 +176,10 @@
 
                     <!-- ─────────────────────────────────────────────────────
                          PESTAÑA 5: CONTENIDO DE LOS ENTREGABLES
-                         Esta pestaña es la activa por defecto (active show).
+                         La pestaña activa por defecto es RESUMEN DE ENTREGAS (v-pills-home).
                          Contiene nav-tabs horizontales, UNA PESTAÑA POR SEMANA INDIVIDUAL.
                          ───────────────────────────────────────────────────── -->
-                    <div class="tab-pane fade shadow rounded bg-white p-5 active show"
+                    <div class="tab-pane fade shadow rounded bg-white p-5"
                         id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">
                         <h4 class="mb-4">Contenido de los Entregables [N] y [N]</h4>
                         <div>
