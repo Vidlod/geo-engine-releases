@@ -54,6 +54,58 @@ Una tabla por verbo, con clase estándar y SIN estilos inline en los `<td>`:
 - Si la fuente es la RAE (u otro enlace), usa la misma tabla y enlaza en la columna
   FUENTE con `target="_blank" rel="noreferrer noopener"`.
 
+## Estructura del XML para Importación (Moodle)
+
+Para la importación exitosa del glosario en Moodle, el XML generado debe seguir las siguientes pautas estructurales estrictas:
+
+1. **Ubicación de `<ENTRIES>`:** El bloque `<ENTRIES>` que contiene los elementos del glosario **debe estar anidado dentro** de la etiqueta `<INFO>`.
+2. **Escapado de HTML (No usar CDATA):** El HTML de la definición (`<DEFINITION>`) y del concepto (`<CONCEPT>`) no debe envolverse en etiquetas `<![CDATA[ ... ]]>`. Todos los caracteres de marcado HTML deben convertirse a entidades XML estándar:
+   - `<` se escapa como `&lt;`
+   - `>` se escapa como `&gt;`
+   - `"` se escapa como `&quot;`
+   - `&` se escapa como `&amp;`
+3. **Parámetros de Categoría:** Cada categoría asignada a una entrada debe incluir el nodo de enlace dinámico desactivado: `<USEDYNALINK>0</USEDYNALINK>`.
+
+### Estructura de ejemplo del XML:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<GLOSSARY>
+  <INFO>
+    <NAME>Glosario</NAME>
+    <INTRO>&lt;h4 style=&quot;text-align: center;&quot;&gt;Glosario&lt;/h4&gt;</INTRO>
+    <INTROFORMAT>1</INTROFORMAT>
+    <ALLOWDUPLICATEDENTRIES>0</ALLOWDUPLICATEDENTRIES>
+    <DISPLAYFORMAT>continuous</DISPLAYFORMAT>
+    <SHOWSPECIAL>1</SHOWSPECIAL>
+    <SHOWALPHABET>0</SHOWALPHABET>
+    <SHOWALL>1</SHOWALL>
+    <ALLOWCOMMENTS>0</ALLOWCOMMENTS>
+    <USEDYNALINK>0</USEDYNALINK>
+    <DEFAULTAPPROVAL>1</DEFAULTAPPROVAL>
+    <GLOBALGLOSSARY>0</GLOBALGLOSSARY>
+    <ENTBYPAGE>30</ENTBYPAGE>
+    <ENTRIES>
+      <ENTRY>
+        <CONCEPT>Analizar</CONCEPT>
+        <DEFINITION>&lt;table class=&quot;table table-striped table-bordered&quot;&gt;...&lt;/table&gt;</DEFINITION>
+        <FORMAT>1</FORMAT>
+        <USEDYNALINK>0</USEDYNALINK>
+        <CASESENSITIVE>0</CASESENSITIVE>
+        <FULLMATCH>0</FULLMATCH>
+        <TEACHERENTRY>1</TEACHERENTRY>
+        <CATEGORIES>
+          <CATEGORY>
+            <NAME>SABER</NAME>
+            <USEDYNALINK>0</USEDYNALINK>
+          </CATEGORY>
+        </CATEGORIES>
+      </ENTRY>
+    </ENTRIES>
+  </INFO>
+</GLOSSARY>
+```
+
 ## Reglas de criterio / formato
 
 1. **Orden alfabético estricto** por VERBO (A→Z), sin importar la dimensión.
@@ -80,8 +132,10 @@ Al cargar cada verbo en la herramienta Glosario de Moodle:
 
 - [ ] Una tabla por verbo, orden alfabético A→Z.
 - [ ] Estructura de tabla y cierre `<br>` + `<p></p>` correctos.
+- [ ] El XML cumple con la estructura requerida (ENTRIES dentro de INFO y caracteres HTML escapados en lugar de CDATA).
 - [ ] Capitalización de fuentes aplicada.
 - [ ] Enlaces RAE con `rel="noreferrer noopener"` y verificados.
 - [ ] Indicado el mapeo Concepto / Definición / Categoría por verbo.
 - [ ] `python cli.py check` sin errores.
 - [ ] Lista de FLAGS entregada.
+
